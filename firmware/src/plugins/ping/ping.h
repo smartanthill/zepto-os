@@ -22,15 +22,15 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "../../common/sa_common.h"
 #include "../../common/sa_data_types.h"
 
-typedef struct _PingPluginConfig
+typedef struct _ping_plugin_config
 {
-	uint8_t dummy;
-} PingPluginConfig;
 
-typedef struct _PingPluginState
+} ping_plugin_config;
+
+typedef struct _ping_plugin_state
 {
-	uint8_t dummy;
-} PingPluginState;
+
+} ping_plugin_state;
 
 uint8_t ping_plugin_handler_init( const void* plugin_config, void* plugin_state );
 uint8_t ping_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte );

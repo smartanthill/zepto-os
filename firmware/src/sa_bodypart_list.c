@@ -25,15 +25,15 @@ THIS FILE IS MANUALLY OR AUTOMATICALLY GENERATED BASED ON DESIRED PLUGIN LIST
 // include declarations of respective plugins
 #include "plugins/smart_echo/smart_echo.h"
 
-SmartEchoPluginConfig SmartEchoPluginConfig_struct =
+smart_echo_plugin_config smart_echo_plugin_config_struct =
 {
 	0,
 };
 
-SmartEchoPluginState SmartEchoPluginState_struct;
+smart_echo_plugin_state smart_echo_plugin_state_struct;
 
 
 const bodypart_item bodyparts[ BODYPARTS_MAX ] ZEPTO_PROG_CONSTANT_LOCATION =
 {
-	{ smart_echo_plugin_handler_init, smart_echo_plugin_handler, &SmartEchoPluginConfig_struct, &SmartEchoPluginState_struct },
+	{ smart_echo_plugin_handler_init, smart_echo_plugin_handler, &smart_echo_plugin_config_struct, &smart_echo_plugin_state_struct },
 };

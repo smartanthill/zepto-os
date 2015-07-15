@@ -24,7 +24,7 @@ Copyright (C) 2015 OLogN Technologies AG
 uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_state )
 {
 	//perform sensor initialization if necessary
-	SmartEchoPluginState* ps = (SmartEchoPluginState*)plugin_state;
+	smart_echo_plugin_state* ps = (smart_echo_plugin_state*)plugin_state;
 	ps->state = 0;
 	ps->currChainIdBase[0] = 0;
 	ps->currChainIdBase[1] = MASTER_SLAVE_BIT << 15;
@@ -34,8 +34,8 @@ uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_
 
 uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply )
 {
-//	const SmartEchoPluginConfig* pc = (SmartEchoPluginConfig*) plugin_config;
-	SmartEchoPluginState* ps = (SmartEchoPluginState*)plugin_state;
+//	const smart_echo_plugin_config* pc = (smart_echo_plugin_config*) plugin_config;
+	smart_echo_plugin_state* ps = (smart_echo_plugin_state*)plugin_state;
 	uint8_t varln = 6 - ps->self_id % 7; // 0:6
 
 	zepto_write_uint8( reply, ps->first_byte );
@@ -73,8 +73,8 @@ uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plu
 
 uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte )
 {
-//	const SmartEchoPluginConfig* pc = (SmartEchoPluginConfig*) plugin_config;
-	SmartEchoPluginState* ps = (SmartEchoPluginState*)plugin_state;
+//	const smart_echo_plugin_config* pc = (smart_echo_plugin_config*) plugin_config;
+	smart_echo_plugin_state* ps = (smart_echo_plugin_state*)plugin_state;
 
 	if ( ps->state == 0 )
 	{
