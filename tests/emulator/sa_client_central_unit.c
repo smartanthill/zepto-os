@@ -146,7 +146,7 @@ wait_for_comm_event:
 		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 		switch ( ret_code )
 		{
-			case CONTROL_PROG_PASS_LOWER_THEN_IDLE:
+			case CONTROL_PROG_CHAIN_DONE:
 			{
 				ret_code = default_test_control_program_start_new( &DefaultTestingControlProgramState_struct, MEMORY_HANDLE_MAIN_LOOP_1 );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -154,9 +154,18 @@ wait_for_comm_event:
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 				break;
 			}
-			case CONTROL_PROG_PASS_LOWER:
+			case CONTROL_PROG_CHAIN_CONTINUE:
 			{
 				break;
+			}
+			case CONTROL_PROG_CHAIN_CONTINUE_LAST:
+			{
+				send_to_commm_stack( MEMORY_HANDLE_MAIN_LOOP_1 );
+				ret_code = default_test_control_program_start_new( &DefaultTestingControlProgramState_struct, MEMORY_HANDLE_MAIN_LOOP_1 );
+				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+				handler_saccp_prepare_to_send( MEMORY_HANDLE_MAIN_LOOP_1 );
+				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+break;
 			}
 			default:
 			{

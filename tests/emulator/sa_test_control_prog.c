@@ -123,7 +123,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 	INCREMENT_COUNTER( 3, "master_start(), chain started" );
 
 	// return status
-	return CONTROL_PROG_PASS_LOWER;
+	return CONTROL_PROG_CHAIN_CONTINUE;
 }
 
 
@@ -172,7 +172,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 		zepto_write_uint8( reply, (uint8_t)SAGDP_P_STATUS_INTERMEDIATE ); // TODO: if padding is required, add necessary data here
 //		reply_sz = zepto_writer_get_response_size( reply );
 		zepto_write_prepend_byte( reply, SAGDP_P_STATUS_INTERMEDIATE );
-		return CONTROL_PROG_PASS_LOWER;
+		return CONTROL_PROG_CHAIN_CONTINUE;
 	}
 	else
 	{
@@ -184,12 +184,12 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 		if (ps->chain_ini_size == ps->self_id + 1)
 		{
 			zepto_write_prepend_byte( reply, SAGDP_P_STATUS_INTERMEDIATE );
-			return CONTROL_PROG_PASS_LOWER;
+			return CONTROL_PROG_CHAIN_CONTINUE;
 		}
 		else
 		{
 			zepto_write_prepend_byte( reply, SAGDP_P_STATUS_TERMINATING );
-			return CONTROL_PROG_PASS_LOWER_THEN_IDLE;
+			return CONTROL_PROG_CHAIN_CONTINUE_LAST;
 		}
 	}
 /*	uint8_t hdr = SACCP_NEW_PROGRAM; //TODO: we may want to add extra headers
@@ -198,7 +198,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 
 
 	// return status
-	return ps->first_byte == SAGDP_P_STATUS_TERMINATING ? CONTROL_PROG_PASS_LOWER_THEN_IDLE : CONTROL_PROG_PASS_LOWER; 
+	return ps->first_byte == SAGDP_P_STATUS_TERMINATING ? CONTROL_PROG_CHAIN_CONTINUE_LAST : CONTROL_PROG_CHAIN_CONTINUE; 
 }
 
 uint8_t _default_test_control_program_accept_reply( void* control_prog_state, uint8_t packet_status, parser_obj* received )
@@ -220,7 +220,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 		ZEPTO_DEBUG_PRINTF_1( "_default_test_control_program_accept_reply(): ERROR MESSAGE RECEIVED IN ZEPTO\n" );
 		(ps->currChainIdBase[0]) ++;
 		INCREMENT_COUNTER( 9, "master_continue(), error message received" );
-		return CONTROL_PROG_OK;
+		return CONTROL_PROG_CHAIN_DONE;
 		ZEPTO_DEBUG_ASSERT(0);
 	}
 
@@ -272,7 +272,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 //		chainContinued = false;
 		(ps->currChainIdBase[0]) ++;
 		INCREMENT_COUNTER( 6, "master_continue(), packet terminating received" );
-		return CONTROL_PROG_OK;
+		return CONTROL_PROG_CHAIN_DONE;
 	}
 
 	// fake implementation: should this packet be terminal?
@@ -286,7 +286,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 	ps->self_id++;
 	ps->last_sent_id = ps->self_id;
 
-	return CONTROL_PROG_CONTINUE;
+	return CONTROL_PROG_CHAIN_CONTINUE;
 
 #if 0
 	// scenario decision

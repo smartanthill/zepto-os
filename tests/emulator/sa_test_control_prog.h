@@ -24,11 +24,16 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "../../firmware/src/common/sa_data_types.h"
 #include "../../firmware/src/common/zepto_mem_mngmt.h"
 
-#define CONTROL_PROG_OK 0
+/*#define CONTROL_PROG_OK 0
 #define CONTROL_PROG_CONTINUE 1
 #define CONTROL_PROG_PASS_LOWER 2
-#define CONTROL_PROG_PASS_LOWER_THEN_IDLE 4
+#define CONTROL_PROG_PASS_LOWER_THEN_IDLE 4*/
 /*#define CONTROL_PROG_WAIT_TO_CONTINUE 4*/
+#define CONTROL_PROG_FAILED 0
+#define CONTROL_PROG_OK 1
+#define CONTROL_PROG_CHAIN_CONTINUE 2
+#define CONTROL_PROG_CHAIN_CONTINUE_LAST 3
+#define CONTROL_PROG_CHAIN_DONE 4
 
 typedef struct _DefaultTestingControlProgramState 
 {

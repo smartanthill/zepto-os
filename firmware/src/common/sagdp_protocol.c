@@ -1103,7 +1103,41 @@ uint8_t handler_sagdp_receive_hlp( sa_time_val* currt, waiting_for* wf, sasp_non
 		if ( packet_status & SAGDP_P_STATUS_FIRST )
 		{
 #ifdef USED_AS_MASTER
-			// TODO: should we do anything else but error reporting?
+			// it's a right of Master to start a chain over at any time
+			if ( nonce == NULL )
+				return SAGDP_RET_NEED_NONCE;
+
+			ZEPTO_DEBUG_PRINTF_7( "handlerSAGDP_receivePID(): PID: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
+
+			// apply nonce
+			sa_uint48_init_by( sagdp_data.prev_first_last_sent_packet_id, sagdp_data.first_last_sent_packet_id );
+			sa_uint48_init_by( sagdp_data.first_last_sent_packet_id, nonce );
+			sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
+			// "chain id" is shared between devices and therefore, should be unique for both sides, that is, shoud have master/slave distinguishing bit
+			sa_uint48_init_by( sagdp_data.last_received_chain_id, nonce );
+			//+++ TODO: next line and related MUST be re-thought and re-designed!!!!
+			*(sagdp_data.last_received_chain_id + SASP_NONCE_TYPE_SIZE - 1) |= ( MASTER_SLAVE_BIT << 7 ); //!!!TODO: use bit field procesing instead; also: make sure this operation is safe
+
+			// form a UP packet
+			ZEPTO_DEBUG_ASSERT( ( packet_status & ( ~( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) ) ) == 0 ); // TODO: can we rely on sanity of the caller?
+			parser_obj po1;
+			zepto_parser_init_by_parser( &po1, &po );
+			uint16_t body_size = zepto_parsing_remaining_bytes( &po );
+			zepto_parse_skip_block( &po1, body_size );
+			zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
+			zepto_parser_encode_and_prepend_sa_uint48( mem_h, sagdp_data.last_received_chain_id );
+			zepto_write_prepend_byte( mem_h, packet_status & ( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) );
+
+			// save a copy
+			zepto_copy_response_to_response_of_another_handle( mem_h, MEMORY_HANDLE_SAGDP_LSM );
+			zepto_response_to_request( MEMORY_HANDLE_SAGDP_LSM );
+
+			// request set timer
+			SAGDP_INIT_RESENT_SEQUENCE
+
+			sagdp_data.state = SAGDP_STATE_WAIT_REMOTE;
+			INCREMENT_COUNTER( 72, "handler_sagdp_receive_hlp(), idle, PACKET=FIRST" );
+			return SAGDP_RET_TO_LOWER_NEW;
 #else
 			// send an error message to a communication partner and reinitialize
 			if ( nonce == NULL )
@@ -1111,59 +1145,63 @@ uint8_t handler_sagdp_receive_hlp( sa_time_val* currt, waiting_for* wf, sasp_non
 			zepto_write_uint8( mem_h, SAGDP_P_STATUS_ERROR_MSG );
 			// TODO: add other relevant data, if any
 			sagdp_data.state = SAGDP_STATE_NOT_INITIALIZED;
-#endif
 			INCREMENT_COUNTER( 73, "handler_sagdp_receive_hlp(), wait-remote, state/packet mismatch" );
 			return SAGDP_RET_SYS_CORRUPTED;
+#endif
 		}
-
-		if ( nonce == NULL )
-			return SAGDP_RET_NEED_NONCE;
-
-		ZEPTO_DEBUG_PRINTF_7( "handlerSAGDP_receivePID(): PID: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
-
-		// apply nonce
-		bool is_prev = sa_uint48_compare( sagdp_data.first_last_sent_packet_id, sagdp_data.next_last_sent_packet_id ) != 0;
-		if ( is_prev )
-			sa_uint48_init_by( sagdp_data.prev_first_last_sent_packet_id, sagdp_data.first_last_sent_packet_id );
-		else
-			sa_uint48_init_by( sagdp_data.prev_first_last_sent_packet_id, nonce );
-		sa_uint48_init_by( sagdp_data.first_last_sent_packet_id, nonce );
-		sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
-
-		// form a UP packet
-		ZEPTO_DEBUG_ASSERT( ( packet_status & ( ~( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) ) ) == 0 ); // TODO: can we rely on sanity of the caller?
-		parser_obj po1;
-		zepto_parser_init_by_parser( &po1, &po );
-		uint16_t body_size = zepto_parsing_remaining_bytes( &po );
-		zepto_parse_skip_block( &po1, body_size );
-		zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
-		zepto_parser_encode_and_prepend_sa_uint48( mem_h, sagdp_data.last_received_packet_id );
-		zepto_write_prepend_byte( mem_h, packet_status & ( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) );
-
-		// save a copy
-		zepto_copy_response_to_response_of_another_handle( mem_h, MEMORY_HANDLE_SAGDP_LSM );
-		zepto_response_to_request( MEMORY_HANDLE_SAGDP_LSM );
-
-		// request set timer
-		if ( packet_status & SAGDP_P_STATUS_TERMINATING )
+		else // any but first
 		{
-			// just do nothing
-			SAGDP_ASSERT_NO_SEQUENCE;
-		}
-		else
-		{
-			SAGDP_INIT_RESENT_SEQUENCE;
-		}
+			if ( nonce == NULL )
+				return SAGDP_RET_NEED_NONCE;
 
-		sagdp_data.state = packet_status == SAGDP_P_STATUS_TERMINATING ? SAGDP_STATE_IDLE : SAGDP_STATE_WAIT_REMOTE;
-		INCREMENT_COUNTER( 74, "handler_sagdp_receive_hlp(), wait-remote, intermediate/terminating" );
-		INCREMENT_COUNTER_IF( 75, "handler_sagdp_receive_hlp(), wait-remote, terminating", (packet_status >> 1) );
-		return SAGDP_RET_TO_LOWER_NEW;
+			ZEPTO_DEBUG_PRINTF_7( "handlerSAGDP_receivePID(): PID: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
+
+			// apply nonce
+			bool is_prev = sa_uint48_compare( sagdp_data.first_last_sent_packet_id, sagdp_data.next_last_sent_packet_id ) != 0;
+			if ( is_prev )
+				sa_uint48_init_by( sagdp_data.prev_first_last_sent_packet_id, sagdp_data.first_last_sent_packet_id );
+			else
+				sa_uint48_init_by( sagdp_data.prev_first_last_sent_packet_id, nonce );
+			sa_uint48_init_by( sagdp_data.first_last_sent_packet_id, nonce );
+			sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
+
+			// form a UP packet
+			ZEPTO_DEBUG_ASSERT( ( packet_status & ( ~( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) ) ) == 0 ); // TODO: can we rely on sanity of the caller?
+			parser_obj po1;
+			zepto_parser_init_by_parser( &po1, &po );
+			uint16_t body_size = zepto_parsing_remaining_bytes( &po );
+			zepto_parse_skip_block( &po1, body_size );
+			zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
+			zepto_parser_encode_and_prepend_sa_uint48( mem_h, sagdp_data.last_received_packet_id );
+			zepto_write_prepend_byte( mem_h, packet_status & ( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) );
+
+			// save a copy
+			zepto_copy_response_to_response_of_another_handle( mem_h, MEMORY_HANDLE_SAGDP_LSM );
+			zepto_response_to_request( MEMORY_HANDLE_SAGDP_LSM );
+
+			// request set timer
+			if ( packet_status & SAGDP_P_STATUS_TERMINATING )
+			{
+				// just do nothing
+				SAGDP_ASSERT_NO_SEQUENCE;
+			}
+			else
+			{
+				SAGDP_INIT_RESENT_SEQUENCE;
+			}
+
+			sagdp_data.state = packet_status == SAGDP_P_STATUS_TERMINATING ? SAGDP_STATE_IDLE : SAGDP_STATE_WAIT_REMOTE;
+			INCREMENT_COUNTER( 74, "handler_sagdp_receive_hlp(), wait-remote, intermediate/terminating" );
+			INCREMENT_COUNTER_IF( 75, "handler_sagdp_receive_hlp(), wait-remote, terminating", (packet_status >> 1) );
+			return SAGDP_RET_TO_LOWER_NEW;
+		}
 	}
 	else // invalid states
 	{
 #ifdef USED_AS_MASTER
-		// TODO: should we do anything else but error reporting?
+		// TODO: Master should be able to start a chain over at any time;
+		// One way is unconditional chain start;
+		// the other way is a preliminary command to reinitialize the stack
 #else
 			// send an error message to a communication partner and reinitialize
 		if ( nonce == NULL )

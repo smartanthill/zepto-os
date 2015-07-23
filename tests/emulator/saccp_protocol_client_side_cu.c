@@ -99,15 +99,18 @@ uint8_t handler_saccp_receive( MEMORY_HANDLE mem_h, sasp_nonce_type chain_id, De
 							zepto_response_to_request( mem_h );
 							switch ( ret_code )
 							{
-								case CONTROL_PROG_OK:
+								case CONTROL_PROG_CHAIN_DONE:
 								{
 					//				ret_code = handler_sacpp_start_new_chain( MEMORY_HANDLE_MAIN_LOOP, &DefaultTestingControlProgramState_struct );
 									ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct, mem_h );
+									ZEPTO_DEBUG_PRINTF_1( "-----------------------going to sleep-------------------------" );
+//									mcu_sleep( 20, 0 );
 									zepto_response_to_request( mem_h );
 									break;
 								}
-								case CONTROL_PROG_CONTINUE:
+								case CONTROL_PROG_CHAIN_CONTINUE:
 								{
+									ZEPTO_DEBUG_ASSERT( first_byte != SAGDP_P_STATUS_TERMINATING );
 					//				ret_code = handler_sacpp_continue_chain( MEMORY_HANDLE_MAIN_LOOP, &DefaultTestingControlProgramState_struct );
 									ret_code = default_test_control_program_accept_reply_continue( DefaultTestingControlProgramState_struct, mem_h );
 									zepto_response_to_request( mem_h );
