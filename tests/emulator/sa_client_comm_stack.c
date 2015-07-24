@@ -58,7 +58,7 @@ int main_loop()
 	wait_for.wait_packet = 1;
 	TIME_MILLISECONDS16_TO_TIMEVAL( 1000, wait_for.wait_time ) //+++TODO: actual processing throughout the code
 
-	uint8_t timer_val = 0xFF;
+	uint8_t timer_val = 0x1;
 	uint16_t wake_time;
 	// TODO: revise time/timer management
 
@@ -81,6 +81,12 @@ int main_loop()
 
 //	REQUEST_REPLY_HANDLE working_handle = MEMORY_HANDLE_MAIN_LOOP_2;
 //	REQUEST_REPLY_HANDLE packet_getting_handle = MEMORY_HANDLE_MAIN_LOOP_1;
+
+	// prepare fake return address
+	zepto_write_uint8( MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR, 0 );
+	zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR );
+	zepto_write_uint8( MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR, 0 );
+	zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR );
 
 
 	// MAIN LOOP
@@ -152,7 +158,7 @@ wait_for_comm_event:
 				{
 					ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
 					sa_get_time( &currt );
-					ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+					ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 					if ( ret_code == SAGDP_RET_OK )
 					{
 						zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -163,7 +169,7 @@ wait_for_comm_event:
 						ret_code = handler_sasp_get_packet_id( nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
 						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 						sa_get_time( &currt );
-						ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+						ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 //			ZEPTO_DEBUG_PRINTF_1( "ret_code = %d\n", ret_code );
 						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
 						zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -196,7 +202,7 @@ wait_for_comm_event:
 
 		// 2.1. Pass to SAoUDP
 saoudp_in:
-		ret_code = handler_saoudp_receive( MEMORY_HANDLE_MAIN_LOOP_1 );
+		ret_code = handler_saoudp_receive( MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR );
 		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 
 		switch ( ret_code )
@@ -242,7 +248,7 @@ saoudp_in:
 			{
 				ZEPTO_DEBUG_PRINTF_1( "NONCE_LAST_SENT has been reset; the last message (if any) will be resent\n" );
 				sa_get_time( &currt );
-				ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+				ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 				if ( ret_code == SAGDP_RET_TO_LOWER_NONE )
 				{
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -253,7 +259,7 @@ saoudp_in:
 					ret_code = handler_sasp_get_packet_id(  nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
 					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 					sa_get_time( &currt );
-					ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, nonce, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+					ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, nonce, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 					ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_TO_LOWER_NONE );
 				}
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -271,13 +277,13 @@ saoudp_in:
 
 		// 3. pass to SAGDP a new packet
 		sa_get_time( &currt );
-		ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+		ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
 			ret_code = handler_sasp_get_packet_id(  nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 			sa_get_time( &currt );
-			ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+			ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
 		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -288,7 +294,7 @@ saoudp_in:
 #ifdef USED_AS_MASTER
 			case SAGDP_RET_OK:
 			{
-				ZEPTO_DEBUG_PRINTF_1( "master received unexpected packet. ignored\n" );
+				ZEPTO_DEBUG_PRINTF_1( "master received unexpected or repeated packet. ignored\n" );
 				goto wait_for_comm_event;
 				break;
 			}
@@ -390,13 +396,13 @@ saoudp_in:
 		// 5. SAGDP
 		ZEPTO_DEBUG_PRINTF_3( "@client_received: rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 		sa_get_time( &currt );
-		ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+		ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
 			ret_code = handler_sasp_get_packet_id(  nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 			sa_get_time( &currt );
-			ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, MEMORY_HANDLE_MAIN_LOOP_1/*, &sagdp_data*/ );
+			ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
 		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -449,7 +455,7 @@ saspsend:
 
 		// SAoUDP
 saoudp_send:
-		ret_code = handler_saoudp_send( MEMORY_HANDLE_MAIN_LOOP_1 );
+		ret_code = handler_saoudp_send( MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR );
 		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 
 		switch ( ret_code )

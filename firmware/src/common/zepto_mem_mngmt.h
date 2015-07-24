@@ -27,24 +27,30 @@ Copyright (C) 2015 OLogN Technologies AG
 // named memory handles
 #define MEMORY_HANDLE_MAIN_LOOP_1 0
 #define MEMORY_HANDLE_MAIN_LOOP_2 1
-#define MEMORY_HANDLE_SAGDP_LSM 2
-#define MEMORY_HANDLE_ADDITIONAL_ANSWER 3
+#define MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR 2
+#define MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR 3
+#define MEMORY_HANDLE_SAGDP_LSM 4
+#define MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR 5
+#define MEMORY_HANDLE_ADDITIONAL_ANSWER 6
+
+#define MEMORY_HANDLE_SECOND_PART_START 7
+
 #if !defined PLAIN_REPLY_FRAME
-#define MEMORY_HANDLE_DEFAULT_PLUGIN 4
+#define MEMORY_HANDLE_DEFAULT_PLUGIN MEMORY_HANDLE_SECOND_PART_START
 #ifdef SA_DEBUG
-#define MEMORY_HANDLE_TEST_SUPPORT 5
-#define MEMORY_HANDLE_DBG_TMP 6
-#define MEMORY_HANDLE_MAX 7 // TODO: keep updated!!!
+#define MEMORY_HANDLE_TEST_SUPPORT (MEMORY_HANDLE_SECOND_PART_START + 1)
+#define MEMORY_HANDLE_DBG_TMP (MEMORY_HANDLE_SECOND_PART_START + 2)
+#define MEMORY_HANDLE_MAX (MEMORY_HANDLE_SECOND_PART_START + 3) // TODO: keep updated!!!
 #else
-#define MEMORY_HANDLE_MAX 5 // TODO: keep updated!!!
+#define MEMORY_HANDLE_MAX (MEMORY_HANDLE_SECOND_PART_START + 1) // TODO: keep updated!!!
 #endif
 #else
 #ifdef SA_DEBUG
-#define MEMORY_HANDLE_TEST_SUPPORT 4
-#define MEMORY_HANDLE_DBG_TMP 5
-#define MEMORY_HANDLE_MAX 6 // TODO: keep updated!!!
+#define MEMORY_HANDLE_TEST_SUPPORT MEMORY_HANDLE_SECOND_PART_START
+#define MEMORY_HANDLE_DBG_TMP (MEMORY_HANDLE_SECOND_PART_START + 1)
+#define MEMORY_HANDLE_MAX (MEMORY_HANDLE_SECOND_PART_START + 2) // TODO: keep updated!!!
 #else
-#define MEMORY_HANDLE_MAX 4 // TODO: keep updated!!!
+#define MEMORY_HANDLE_MAX MEMORY_HANDLE_SECOND_PART_START // TODO: keep updated!!!
 #endif
 #endif // PLAIN_REPLY_FRAME
 
@@ -98,6 +104,7 @@ void zepto_copy_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEM
 void zepto_append_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEMORY_HANDLE target_mem_h );
 void zepto_copy_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h );
 void zepto_append_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h );
+void zepto_prepend_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h );
 //void zepto_convert_part_of_request_to_response( MEMORY_HANDLE mem_h, parser_obj* po_start, uint16_t cutoff_cnt )
 void zepto_write_prepend_byte( MEMORY_HANDLE mem_h, uint8_t bt );
 void zepto_write_prepend_block( MEMORY_HANDLE mem_h, const uint8_t* block, uint16_t size );

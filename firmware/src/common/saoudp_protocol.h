@@ -27,8 +27,8 @@ Copyright (C) 2015 OLogN Technologies AG
 #define SAOUDP_RET_FAILED 0
 #define SAOUDP_RET_OK 1
 
-uint8_t handler_saoudp_send( MEMORY_HANDLE mem_h );
-uint8_t handler_saoudp_receive( MEMORY_HANDLE mem_h );
+uint8_t handler_saoudp_send( MEMORY_HANDLE mem_h, MEMORY_HANDLE mem_h_tag );
+uint8_t handler_saoudp_receive( MEMORY_HANDLE mem_h, MEMORY_HANDLE mem_h_tag );
 
 
 #endif // __SAOUDP_PROTOCOL_H__

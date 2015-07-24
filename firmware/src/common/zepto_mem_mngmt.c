@@ -231,9 +231,14 @@ void zepto_mem_man_init_memory_management()
 	uint8_t i;
 	for ( i=0; i<MEMORY_HANDLE_MAX; i++ )
 	{
-		memset( &(memory_objects[i]), 0, sizeof( request_reply_mem_obj ) );
+//		memset( &(memory_objects[i]), 0, sizeof( request_reply_mem_obj ) );
+		memory_objects[ i ].rq_size = 0;
+		memory_objects[ i ].rsp_size = 0;
+		memory_objects[ i ].ptr = BASE_MEM_BLOCK + 1 + i;
+		BASE_MEM_BLOCK[i] = 1;
 	}
-	BASE_MEM_BLOCK[0] = 1;
+
+/*	BASE_MEM_BLOCK[0] = 1;
 	memory_objects[ MEMORY_HANDLE_MAIN_LOOP_1 ].ptr = BASE_MEM_BLOCK + 1;
 	memory_objects[ MEMORY_HANDLE_MAIN_LOOP_1 ].rq_size = 0;
 	memory_objects[ MEMORY_HANDLE_MAIN_LOOP_1 ].rsp_size = 0;
@@ -275,7 +280,7 @@ void zepto_mem_man_init_memory_management()
 	memory_objects[ MEMORY_HANDLE_DBG_TMP ].rq_size = 0;
 	memory_objects[ MEMORY_HANDLE_DBG_TMP ].rsp_size = 0;
 #endif
-#endif // PLAIN_REPLY_FRAME
+#endif // PLAIN_REPLY_FRAME*/
 
 	uint16_t remains_at_right = BASE_MEM_BLOCK_SIZE - MEMORY_HANDLE_MAX;
 
@@ -1280,6 +1285,21 @@ void zepto_append_part_of_request_to_response_of_another_handle( MEMORY_HANDLE m
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
+	memcpy( dest_buff, src_buff, po_end->offset - po_start->offset );
+}
+
+void zepto_prepend_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h )
+{
+	ZEPTO_DEBUG_ASSERT( mem_h != target_mem_h );
+	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
+	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
+	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
+	ZEPTO_DEBUG_ASSERT( po_start->mem_handle < MEMORY_HANDLE_MAX );
+	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
+	// copying
+	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
+	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
+	uint8_t* dest_buff = memory_object_prepend( target_mem_h, po_end->offset - po_start->offset );
 	memcpy( dest_buff, src_buff, po_end->offset - po_start->offset );
 }
 
