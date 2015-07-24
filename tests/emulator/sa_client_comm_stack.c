@@ -17,7 +17,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 
 #include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/hal/hal_commlayer.h"
+#include "client_commlayer.h"
 #include "../../firmware/src/hal/hal_time_provider.h"
 #include "../../firmware/src/common/saoudp_protocol.h"
 #include "../../firmware/src/common/sasp_protocol.h"
@@ -112,10 +112,23 @@ wait_for_comm_event:
 				ret_code = try_get_message_within_master( MEMORY_HANDLE_MAIN_LOOP_1 );
 				if ( ret_code == COMMLAYER_RET_FAILED )
 					return 0;
-				ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );
-				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-				goto client_received;
-				break;
+				if ( ret_code == COMMLAYER_RET_OK_AS_CU )
+				{
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					goto client_received;
+					break;
+				}
+				else if ( ret_code == COMMLAYER_RET_OK_AS_SLAVE )
+				{
+					// regular processing will be done below in the next block
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					goto saoudp_in;
+					break;
+				}
+				else
+				{
+					ZEPTO_DEBUG_ASSERT( 0 );
+				}
 			}
 			case COMMLAYER_RET_FROM_DEV:
 			{
