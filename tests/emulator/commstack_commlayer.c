@@ -15,7 +15,7 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "client_commlayer.h"
+#include "commstack_commlayer.h"
 #include "../../firmware/src/hal/hal_waiting.h"
 #include <stdio.h>
 
@@ -58,21 +58,6 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #endif // _MSC_VER
 
-#ifdef _MSC_VER
-SOCKET sock;
-SOCKET sock_accepted;
-#else
-int sock;
-int sock_accepted;
-#endif
-struct sockaddr_in sa_self, sa_other;
-const char* inet_addr_as_string = "127.0.0.1";
-
-uint16_t self_port_num = 7667;
-uint16_t other_port_num = 7654;
-
-uint16_t buffer_in_pos;
-
 
 
 bool communication_preinitialize()
@@ -92,6 +77,28 @@ bool communication_preinitialize()
 	return true;
 #endif
 }
+
+
+
+#if 0
+
+
+#ifdef _MSC_VER
+SOCKET sock;
+SOCKET sock_accepted;
+#else
+int sock;
+int sock_accepted;
+#endif
+struct sockaddr_in sa_self, sa_other;
+const char* inet_addr_as_string = "127.0.0.1";
+
+uint16_t self_port_num = 7667;
+uint16_t other_port_num = 7654;
+
+uint16_t buffer_in_pos;
+
+
 
 bool _communication_initialize()
 {
@@ -360,6 +367,14 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	return HAL_GET_PACKET_BYTES_DONE;
 }
 
+#endif // 0
+
+
+
+
+
+
+
 
 
 #ifdef _MSC_VER
@@ -477,7 +492,8 @@ bool communication_initialize()
 #ifdef USED_AS_MASTER_CORE
 	return communication_preinitialize() && communication_with_comm_layer_initialize();
 #elif defined USED_AS_MASTER_COMMSTACK
-	return communication_preinitialize() && communication_with_comm_layer_initialize() && _communication_initialize();
+//	return communication_preinitialize() && communication_with_comm_layer_initialize() && _communication_initialize();
+	return communication_preinitialize() && communication_with_comm_layer_initialize();
 #else // 2 in 1
 	return communication_preinitialize() && _communication_initialize();
 #endif
@@ -485,7 +501,7 @@ bool communication_initialize()
 
 void communication_terminate()
 {
-	_communication_terminate();
+//	_communication_terminate();
 	communication_with_comm_layer_terminate();
 }
 
@@ -651,14 +667,8 @@ uint8_t wait_for_communication_event( unsigned int timeout )
     /* Watch stdin (fd 0) to see when it has input. */
     FD_ZERO(&rfds);
 
-#ifdef USED_AS_MASTER_COMMSTACK
-    FD_SET(sock, &rfds);
-	FD_SET(sock_with_cl, &rfds);
-	fd_cnt = (int)(sock > sock_with_cl ? sock + 1 : sock_with_cl + 1);
-#else
     FD_SET(sock_with_cl, &rfds);
 	fd_cnt = (int)(sock_with_cl + 1);
-#endif
 
     /* Wait */
     tv.tv_sec = timeout / 1000;
@@ -683,92 +693,12 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 	}
     else if (retval)
 	{
-		if ( FD_ISSET(sock, &rfds) )
-		{
-/*			uint8_t ret_code = try_get_message( mem_h );
-			if ( ret_code == COMMLAYER_RET_FAILED )
-				return ret_code;
-			ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );*/
-			return COMMLAYER_RET_FROM_DEV;
-		}
-		else
-		{
-//			ZEPTO_DEBUG_ASSERT( rfds.fd_array[0] == sock_with_cl );
-			ZEPTO_DEBUG_ASSERT( FD_ISSET(sock_with_cl, &rfds) );
-/*			uint8_t ret_code = try_get_message_within_master( mem_h );
-			if ( ret_code == COMMLAYER_RET_FAILED )
-				return ret_code;
-			ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );*/
-			return COMMLAYER_RET_FROM_CENTRAL_UNIT;
-		}
+		return COMMLAYER_RET_FROM_CENTRAL_UNIT;
 	}
     else
 	{
         return COMMLAYER_RET_TIMEOUT;
 	}
-}
-
-uint8_t wait_for_timeout( unsigned int timeout)
-{
-    struct timeval tv;
-    int retval;
-    tv.tv_sec = timeout / 1000;
-    tv.tv_usec = ((long)timeout % 1000) * 1000;
-
-    retval = select(0, NULL, NULL, NULL, &tv);
-
-    if (retval == -1)
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-		ZEPTO_DEBUG_PRINTF_2( "error %d\n", error );
-#else
-        perror("select()");
-//		int error = errno;
-//		if ( error == EAGAIN || error == EWOULDBLOCK )
-#endif
-		ZEPTO_DEBUG_ASSERT(0);
-		return COMMLAYER_RET_FAILED;
-	}
-    else
-	{
-        return COMMLAYER_RET_TIMEOUT;
-	}
-}
-
-uint8_t hal_wait_for( waiting_for* wf )
-{
-	unsigned int timeout = wf->wait_time.high_t;
-	timeout <<= 16;
-	timeout += wf->wait_time.low_t;
-	uint8_t ret_code;
-	ZEPTO_DEBUG_ASSERT( wf->wait_legs == 0 ); // not implemented
-	ZEPTO_DEBUG_ASSERT( wf->wait_i2c == 0 ); // not implemented
-	if ( wf->wait_packet )
-	{
-		ret_code = wait_for_communication_event( timeout );
-		switch ( ret_code )
-		{
-			case COMMLAYER_RET_FROM_DEV: return WAIT_RESULTED_IN_PACKET; break;
-			case COMMLAYER_RET_TIMEOUT: return WAIT_RESULTED_IN_TIMEOUT; break;
-			case COMMLAYER_RET_FAILED: return WAIT_RESULTED_IN_FAILURE; break;
-			default: return WAIT_RESULTED_IN_FAILURE;
-		}
-	}
-	else
-	{
-		ret_code = wait_for_timeout( timeout );
-		switch ( ret_code )
-		{
-			case COMMLAYER_RET_TIMEOUT: return WAIT_RESULTED_IN_TIMEOUT; break;
-			default: return WAIT_RESULTED_IN_FAILURE;
-		}
-	}
-}
-
-void keep_transmitter_on( bool keep_on )
-{
-	// TODO: add reasonable implementation
 }
 
 uint8_t send_message( MEMORY_HANDLE mem_h )
@@ -796,4 +726,4 @@ uint8_t send_to_commm_stack( MEMORY_HANDLE mem_h )
 
 
 // from comm.stack: 35: intended for slave; 37: intended for central unit
-//   to comm.stack: 40: received from slave; 40: received from central unit
+//   to comm.stack: 40: received from slave; 38: received from central unit

@@ -21,7 +21,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 
 #include "../../firmware/src/common/sa_common.h"
-#include "client_commlayer.h"
+#include "cu_commlayer.h"
 //#include "saccp_protocol.h"
 #include "sa_test_control_prog.h"
 #include "test_generator.h"
@@ -102,23 +102,50 @@ wait_for_comm_event:
 
 		switch ( ret_code )
 		{
+			case COMMLAYER_RET_TIMEOUT:
+			{
+				// regular processing will be done below in the next block
+//				ZEPTO_DEBUG_PRINTF_1( "just waiting...\n" );
+				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+				goto wait_for_comm_event;
+				break;
+			}
 			case COMMLAYER_RET_FROM_COMMM_STACK:
 			{
 				// regular processing will be done below in the next block
 				ret_code = try_get_message_within_master( MEMORY_HANDLE_MAIN_LOOP_1 );
 				if ( ret_code == COMMLAYER_RET_FAILED )
 					return 0;
-				ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );
-				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-				ZEPTO_DEBUG_PRINTF_3( "msg received; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
-				goto process_reply;
-				break;
+				if ( ret_code == COMMLAYER_RET_OK_FOR_CU )
+				{
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					ZEPTO_DEBUG_PRINTF_3( "msg received; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+					goto process_reply;
+					break;
+				}
+				else if ( ret_code == COMMLAYER_RET_OK_FOR_SLAVE )
+				{
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					ZEPTO_DEBUG_PRINTF_3( "msg is about to be sent to slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+					send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
+					goto wait_for_comm_event;
+					break;
+				}
+				else
+				{
+					ZEPTO_DEBUG_ASSERT( 0 );
+				}
 			}
-			case COMMLAYER_RET_TIMEOUT:
+			case COMMLAYER_RET_FROM_DEV:
 			{
 				// regular processing will be done below in the next block
-//				ZEPTO_DEBUG_PRINTF_1( "just waiting...\n" );
+				ret_code = hal_get_packet_bytes( MEMORY_HANDLE_MAIN_LOOP_1 );
+				if ( ret_code == HAL_GET_PACKET_BYTES_FAILED )
+					return 0;
+				ZEPTO_DEBUG_ASSERT( ret_code == HAL_GET_PACKET_BYTES_DONE );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+				ZEPTO_DEBUG_PRINTF_3( "msg received from slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+				send_to_commm_stack_as_from_slave( MEMORY_HANDLE_MAIN_LOOP_1 );
 				goto wait_for_comm_event;
 				break;
 			}
@@ -160,7 +187,7 @@ wait_for_comm_event:
 			}
 			case CONTROL_PROG_CHAIN_CONTINUE_LAST:
 			{
-				send_to_commm_stack( MEMORY_HANDLE_MAIN_LOOP_1 );
+				send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1 );
 				ret_code = default_test_control_program_start_new( &DefaultTestingControlProgramState_struct, MEMORY_HANDLE_MAIN_LOOP_1 );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 				handler_saccp_prepare_to_send( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -221,7 +248,7 @@ process_reply:
 
 send_command:
 		ZEPTO_DEBUG_PRINTF_3( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
-		send_to_commm_stack( MEMORY_HANDLE_MAIN_LOOP_1 );
+		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1 );
 	}
 
 	communication_terminate();

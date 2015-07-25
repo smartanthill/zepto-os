@@ -17,7 +17,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 
 #include "../../firmware/src/common/sa_common.h"
-#include "client_commlayer.h"
+#include "commstack_commlayer.h"
 #include "../../firmware/src/hal/hal_time_provider.h"
 #include "../../firmware/src/common/saoudp_protocol.h"
 #include "../../firmware/src/common/sasp_protocol.h"
@@ -130,7 +130,7 @@ wait_for_comm_event:
 					ZEPTO_DEBUG_ASSERT( 0 );
 				}
 			}
-			case COMMLAYER_RET_FROM_DEV:
+/*			case COMMLAYER_RET_FROM_DEV:
 			{
 				// regular processing will be done below in the next block
 				ret_code = hal_get_packet_bytes( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -140,7 +140,7 @@ wait_for_comm_event:
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 				goto saoudp_in;
 				break;
-			}
+			}*/
 			case COMMLAYER_RET_TIMEOUT:
 			{
 				// regular processing will be done below in the next block
