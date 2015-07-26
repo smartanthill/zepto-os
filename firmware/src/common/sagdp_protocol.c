@@ -631,7 +631,7 @@ uint8_t handler_sagdp_receive_up( sa_time_val* currt, waiting_for* wf, sasp_nonc
 //					return SAGDP_RET_NEED_NONCE;
 				INCREMENT_COUNTER( 42, "handler_sagdp_receive_up(), wait-remote, first, resent" );
 
-				ZEPTO_DEBUG_PRINTF_7( "handler_sagdp_receive_up(): nonce: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
+//				ZEPTO_DEBUG_PRINTF_7( "handler_sagdp_receive_up(): nonce: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
 
 				// apply nonce
 //				sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
