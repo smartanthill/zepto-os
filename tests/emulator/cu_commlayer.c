@@ -100,7 +100,6 @@ bool _communication_initialize()
 	memset(&sa_other, 0, sizeof sa_other);
 
 	//create an internet, datagram, socket using UDP
-//	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (-1 == sock) /* if socket failed to initialize, exit */
 	{
@@ -131,14 +130,7 @@ bool _communication_initialize()
 		CLOSE_SOCKET(sock);
 		return false;
 	}
-/*
-#ifdef _MSC_VER
-    unsigned long ul = 1;
-    ioctlsocket(sock, FIONBIO, &ul);
-#else
-    fcntl(sock,F_SETFL,O_NONBLOCK);
-#endif
-	*/
+
 	if (-1 == connect(sock, (struct sockaddr *)&sa_other, sizeof(sa_other)))
 		{
 		  perror("connect failed");
@@ -155,27 +147,6 @@ void _communication_terminate()
 
 uint8_t send_message_to_slave( MEMORY_HANDLE mem_h )
 {
-/*	uint16_t sz = memory_object_get_request_size( mem_h );
-	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-	uint8_t* buff = memory_object_get_request_ptr( mem_h );
-	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	int bytes_sent = sendto(sock, (char*)buff, sz, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
-	if (bytes_sent < 0)
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-		ZEPTO_DEBUG_PRINTF_2( "Error %d sending packet\n", error );
-#else
-		ZEPTO_DEBUG_PRINTF_2("Error sending packet: %s\n", strerror(errno));
-#endif
-		return COMMLAYER_RET_FAILED;
-	}
-#ifdef _MSC_VER
-	ZEPTO_DEBUG_PRINTF_4( "[%d] message sent; mem_h = %d, size = %d\n", GetTickCount(), mem_h, sz );
-#else
-	ZEPTO_DEBUG_PRINTF_3( "[--] message sent; mem_h = %d, size = %d\n", mem_h, sz );
-#endif
-	return COMMLAYER_RET_OK;*/
 	ZEPTO_DEBUG_PRINTF_1( "send_message() called...\n" );
 
 	uint16_t sz = memory_object_get_request_size( mem_h );
@@ -183,13 +154,10 @@ uint8_t send_message_to_slave( MEMORY_HANDLE mem_h )
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
 	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
 	uint8_t* buff = memory_object_prepend( mem_h, 2 );
-//	uint8_t* buff = memory_object_prepend( mem_h, 3 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
 	buff[1] = sz >> 8;
-//	buff[2] = 35;
 	int bytes_sent = sendto(sock, (char*)buff, sz+2, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
-//	int bytes_sent = sendto(sock, (char*)buff, sz+3, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
 	memory_object_response_to_request( mem_h );
@@ -213,49 +181,6 @@ uint8_t send_message_to_slave( MEMORY_HANDLE mem_h )
 	return COMMLAYER_RET_OK;
 }
 
-/*
-uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
-{
-	// Implementation notes:
-	// It is assumed in the current implementation that the system is able to receive a whole packet up to MAX_PACKET_SIZE BYTES first and store it in a buffer of a respective size. 
-	// Then bytes of the received packet are appended at once to the response referenced by handle.
-	//
-	// In some other implementations a packet may first be received by parts so that each part is first stored in a relatively small intermediate buffer.
-	// In this case this function appends bytes accumulated in the buffer to the response, cleares the buffer, and starts accumulaation over.
-	// This process ends when the whole packet is written to the response behind the handle
-
-	// do cleanup
-	uint8_t buffer[ MAX_PACKET_SIZE ];
-	socklen_t fromlen = sizeof(sa_other);
-	uint16_t recsize = recvfrom(sock, (char *)buffer, MAX_PACKET_SIZE, 0, (struct sockaddr *)&sa_other, &fromlen);
-
-	if (recsize < 0)
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-		if ( error == WSAEWOULDBLOCK )
-#else
-		int error = errno;
-		if ( error == EAGAIN || error == EWOULDBLOCK )
-#endif
-		{
-			return COMMLAYER_RET_PENDING;
-		}
-		else
-		{
-			ZEPTO_DEBUG_PRINTF_2( "unexpected error %d received while getting message\n", error );
-			return HAL_GET_PACKET_BYTES_FAILED;
-		}
-	}
-	else
-	{
-		ZEPTO_DEBUG_ASSERT( recsize && recsize <= MAX_PACKET_SIZE );
-		zepto_write_block( mem_h, buffer, recsize );
-		return HAL_GET_PACKET_BYTES_DONE;
-	}
-
-}
-*/
 uint8_t try_get_packet( uint8_t* buff, uint16_t sz )
 {
 	socklen_t fromlen = sizeof(sa_other);
@@ -292,8 +217,6 @@ uint8_t try_get_packet( uint8_t* buff, uint16_t sz )
 
 uint8_t try_get_packet_size( uint8_t* buff )
 {
-	// NOTE: size is 2 bytes; then 1 byte reserved (used to indicate destination)
-	// this is specific for this testing environment only
 	socklen_t fromlen = sizeof(sa_other);
 	int recsize = recvfrom(sock, (char *)(buff + buffer_in_pos), 2 - buffer_in_pos, 0, (struct sockaddr *)&sa_other, &fromlen);
 	if (recsize < 0)
@@ -344,7 +267,6 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	if ( ret != COMMLAYER_RET_OK )
 		return ret;
 	uint16_t sz = buff[1]; sz <<= 8; sz += buff[0];
-//	ZEPTO_DEBUG_ASSERT( buff[2] == 36 );
 
 	buffer_in_pos = 0;
 	do //TODO: add delays or some waiting
@@ -356,7 +278,6 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	memory_object_response_to_request( mem_h );
 	memory_object_cut_and_make_response( mem_h, 0, sz );
 
-//	return ret;
 	return HAL_GET_PACKET_BYTES_DONE;
 }
 
@@ -372,15 +293,8 @@ int sock_with_cl_accepted;
 const char* inet_addr_as_string_with_cl = "127.0.0.1";
 struct sockaddr_in sa_self_with_cl, sa_other_with_cl;
 
-#ifdef USED_AS_MASTER_COMMSTACK
-uint16_t self_port_num_with_cl = 7665;
-uint16_t other_port_num_with_cl = 7655;
-#elif defined USED_AS_MASTER_CORE
 uint16_t self_port_num_with_cl = 7655;
 uint16_t other_port_num_with_cl = 7665;
-#else
-#error Unexpected configuration
-#endif // USED_AS_MASTER_COMMSTACK
 
 uint16_t buffer_in_with_cl_pos;
 
@@ -410,59 +324,12 @@ bool communication_with_comm_layer_initialize()
 	sa_self_with_cl.sin_port = htons( self_port_num_with_cl );
 	sa_other_with_cl.sin_port = htons( other_port_num_with_cl );
 
-#ifdef USED_AS_MASTER_COMMSTACK
-	if (-1 == bind(sock_with_cl, (struct sockaddr *)&sa_self_with_cl, sizeof(sa_self_with_cl)))
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-#else
-		int error = errno;
-#endif
-		ZEPTO_DEBUG_PRINTF_2( "bind sock_with_cl failed; error %d\n", error );
-		CLOSE_SOCKET(sock_with_cl);
-		return false;
-	}
-/*
-#ifdef _MSC_VER
-    unsigned long ul = 1;
-    ioctlsocket(sock_with_cl, FIONBIO, &ul);
-#else
-    fcntl(sock_with_cl,F_SETFL,O_NONBLOCK);
-#endif
-*/
-	if(-1 == listen(sock_with_cl, 10))
-    {
-      perror("error listen failed");
-      CLOSE_SOCKET(sock_with_cl);
-      return false;
-    }
-
-	sock_with_cl_accepted = accept(sock_with_cl, NULL, NULL);
-
-      if ( 0 > sock_with_cl_accepted )
-      {
-        perror("error accept failed");
-        CLOSE_SOCKET(sock_with_cl);
-        exit(EXIT_FAILURE);
-      }
-
-	  sock_with_cl = sock_with_cl_accepted; /*just to keep names*/
-
-#ifdef _MSC_VER
-    unsigned long ul = 1;
-    ioctlsocket(sock_with_cl, FIONBIO, &ul);
-#else
-    fcntl(sock_with_cl,F_SETFL,O_NONBLOCK);
-#endif
-
-#else // USED_AS_MASTER_COMMSTACK
-if (-1 == connect(sock_with_cl, (struct sockaddr *)&sa_other_with_cl, sizeof(sa_other_with_cl)))
+	if (-1 == connect(sock_with_cl, (struct sockaddr *)&sa_other_with_cl, sizeof(sa_other_with_cl)))
     {
       perror("connect failed");
         CLOSE_SOCKET(sock_with_cl);
       return false;
     }
-#endif // USED_AS_MASTER_COMMSTACK
 
 	return true;
 }
@@ -474,14 +341,7 @@ void communication_with_comm_layer_terminate()
 
 bool communication_initialize()
 {
-#ifdef USED_AS_MASTER_CORE
-//	return communication_preinitialize() && communication_with_comm_layer_initialize();
 	return communication_preinitialize() && communication_with_comm_layer_initialize() && _communication_initialize();
-#elif defined USED_AS_MASTER_COMMSTACK
-	return communication_preinitialize() && communication_with_comm_layer_initialize() && _communication_initialize();
-#else // 2 in 1
-	return communication_preinitialize() && _communication_initialize();
-#endif
 }
 
 void communication_terminate()
@@ -605,13 +465,11 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint8_t destination )
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
 	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-//	uint8_t* buff = memory_object_prepend( mem_h, 2 );
 	uint8_t* buff = memory_object_prepend( mem_h, 3 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
 	buff[1] = sz >> 8;
 	buff[2] = destination;
-//	int bytes_sent = sendto(sock_with_cl, (char*)buff, sz+2, 0, (struct sockaddr*)&sa_other_with_cl, sizeof sa_other_with_cl);
 	int bytes_sent = sendto(sock_with_cl, (char*)buff, sz+3, 0, (struct sockaddr*)&sa_other_with_cl, sizeof sa_other_with_cl);
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
@@ -637,7 +495,6 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint8_t destination )
 }
 
 
-//uint8_t wait_for_communication_event( MEMORY_HANDLE mem_h, uint16_t timeout )
 uint8_t wait_for_communication_event( unsigned int timeout )
 {
 	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()... " );
@@ -679,21 +536,12 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 	{
 		if ( FD_ISSET(sock, &rfds) )
 		{
-/*			uint8_t ret_code = try_get_message( mem_h );
-			if ( ret_code == COMMLAYER_RET_FAILED )
-				return ret_code;
-			ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );*/
 			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
 			return COMMLAYER_RET_FROM_DEV;
 		}
 		else
 		{
-//			ZEPTO_DEBUG_ASSERT( rfds.fd_array[0] == sock_with_cl );
 			ZEPTO_DEBUG_ASSERT( FD_ISSET(sock_with_cl, &rfds) );
-/*			uint8_t ret_code = try_get_message_within_master( mem_h );
-			if ( ret_code == COMMLAYER_RET_FAILED )
-				return ret_code;
-			ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );*/
 			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_CENTRAL_UNIT\n" );
 			return COMMLAYER_RET_FROM_CENTRAL_UNIT;
 		}
@@ -704,74 +552,10 @@ uint8_t wait_for_communication_event( unsigned int timeout )
         return COMMLAYER_RET_TIMEOUT;
 	}
 }
-/*
-uint8_t wait_for_timeout( unsigned int timeout)
-{
-    struct timeval tv;
-    int retval;
-    tv.tv_sec = timeout / 1000;
-    tv.tv_usec = ((long)timeout % 1000) * 1000;
 
-    retval = select(0, NULL, NULL, NULL, &tv);
-
-    if (retval == -1)
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-		ZEPTO_DEBUG_PRINTF_2( "error %d\n", error );
-#else
-        perror("select()");
-//		int error = errno;
-//		if ( error == EAGAIN || error == EWOULDBLOCK )
-#endif
-		ZEPTO_DEBUG_ASSERT(0);
-		return COMMLAYER_RET_FAILED;
-	}
-    else
-	{
-        return COMMLAYER_RET_TIMEOUT;
-	}
-}
-
-uint8_t hal_wait_for( waiting_for* wf )
-{
-	unsigned int timeout = wf->wait_time.high_t;
-	timeout <<= 16;
-	timeout += wf->wait_time.low_t;
-	uint8_t ret_code;
-	ZEPTO_DEBUG_ASSERT( wf->wait_legs == 0 ); // not implemented
-	ZEPTO_DEBUG_ASSERT( wf->wait_i2c == 0 ); // not implemented
-	if ( wf->wait_packet )
-	{
-		ret_code = wait_for_communication_event( timeout );
-		switch ( ret_code )
-		{
-			case COMMLAYER_RET_FROM_DEV: return WAIT_RESULTED_IN_PACKET; break;
-			case COMMLAYER_RET_TIMEOUT: return WAIT_RESULTED_IN_TIMEOUT; break;
-			case COMMLAYER_RET_FAILED: return WAIT_RESULTED_IN_FAILURE; break;
-			default: return WAIT_RESULTED_IN_FAILURE;
-		}
-	}
-	else
-	{
-		ret_code = wait_for_timeout( timeout );
-		switch ( ret_code )
-		{
-			case COMMLAYER_RET_TIMEOUT: return WAIT_RESULTED_IN_TIMEOUT; break;
-			default: return WAIT_RESULTED_IN_FAILURE;
-		}
-	}
-}
-
-void keep_transmitter_on( bool keep_on )
-{
-	// TODO: add reasonable implementation
-}
-*/
 uint8_t send_message( MEMORY_HANDLE mem_h )
 {
 	return send_message_to_slave( mem_h );
-	//return send_within_master( mem_h, 35 );
 }
 
 
