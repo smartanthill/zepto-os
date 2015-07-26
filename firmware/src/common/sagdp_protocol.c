@@ -137,9 +137,6 @@ uint8_t handler_sagdp_timer( sa_time_val* currt, waiting_for* wf, sasp_nonce_typ
 
 		if ( SAGDP_SHOULD_RESENT )
 		{
-/*			zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM, mem_h );
-			ZEPTO_DEBUG_ASSERT( sagdp_data.state == SAGDP_STATE_WAIT_REMOTE );
-			return SAGDP_RET_TO_LOWER_REPEATED;*/
 			parser_obj po_lsm;
 			zepto_parser_init( &po_lsm, MEMORY_HANDLE_SAGDP_LSM );
 			ZEPTO_DEBUG_ASSERT ( zepto_parsing_remaining_bytes( &po_lsm ) != 0 );
@@ -374,22 +371,9 @@ uint8_t handler_sagdp_receive_up( sa_time_val* currt, waiting_for* wf, sasp_nonc
 			bool current = sa_uint48_compare( enc_reply_to, sagdp_data.last_received_chain_id ) == 0;
 			if ( current )
 			{
-//				if ( nonce == NULL )
-//					return SAGDP_RET_NEED_NONCE;
 				INCREMENT_COUNTER( 42, "handler_sagdp_receive_up(), wait-remote, first, resent" );
-
-//				ZEPTO_DEBUG_PRINTF_7( "handler_sagdp_receive_up(): nonce: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
-
-				// apply nonce
-//				sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
-
-//				zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM, mem_h );
 				zepto_copy_request_to_response_of_another_handle( mem_h_addr, MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR );
 				zepto_response_to_request( MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR );
-
-/*				SAGDP_REGISTER_SUBSEQUENT_RESENT
-				// TODO: think about going back to minimal timeout
-				return SAGDP_RET_TO_LOWER_REPEATED;*/
 
 				// we send nothing here; sending will be done by timeout
 				SAGDP_ASSERT_SEQUENCE_IN_PROGRESS
@@ -427,49 +411,17 @@ uint8_t handler_sagdp_receive_up( sa_time_val* currt, waiting_for* wf, sasp_nonc
 			bool isold = (!is_pid_zero(sagdp_data.prev_first_last_sent_packet_id)) && sa_uint48_compare( enc_reply_to, sagdp_data.first_last_sent_packet_id ) < 0  && sa_uint48_compare( enc_reply_to, sagdp_data.prev_first_last_sent_packet_id ) >= 0;
 			if ( isold )
 			{
-//				parser_obj po1;
-//				zepto_parser_init( &po1, mem_h );
-//				if ( ( zepto_parse_uint8( &po1 ) & SAGDP_P_STATUS_NO_RESEND ) == 0 )  // TODO: use bit-field processing instead
-				{
 					ZEPTO_DEBUG_PRINTF_3( "SAGDP: state = %d, packet_status = %d; isold\n", state, packet_status );
-//					if ( nonce == NULL )
-//						return SAGDP_RET_NEED_NONCE;
 					INCREMENT_COUNTER( 44, "handler_sagdp_receive_up(), wait-remote, is-old, resend requested" );
 
 					ZEPTO_DEBUG_PRINTF_7( "handler_sagdp_receive_up(): nonce: %x%x%x%x%x%x\n", nonce[0], nonce[1], nonce[2], nonce[3], nonce[4], nonce[5] );
 
-					// apply nonce
-//					sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
-
-//					cappedExponentiateLTO( &(sagdp_data.last_timeout) );
-//					*timeout = sagdp_data.last_timeout;
-/*					parser_obj po_lsm, po_lsm1;
-					zepto_parser_init( &po_lsm, MEMORY_HANDLE_SAGDP_LSM );
-					zepto_parser_init( &po_lsm1, MEMORY_HANDLE_SAGDP_LSM );
-					zepto_parse_skip_block( &po_lsm1, zepto_parsing_remaining_bytes( &po_lsm ) );
-					uint8_t first_byte_of_lsm = zepto_parse_uint8( &po_lsm );
-					first_byte_of_lsm |= SAGDP_P_STATUS_NO_RESEND;
-					zepto_copy_part_of_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM, &po_lsm, &po_lsm1, mem_h );
-					zepto_write_prepend_byte( mem_h, first_byte_of_lsm );*/
 					zepto_copy_request_to_response_of_another_handle( mem_h_addr, MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR );
 					zepto_response_to_request( MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR );
-
-					/*SAGDP_REGISTER_SUBSEQUENT_RESENT
-					// TODO: think about going back to minimal timeout
-					sagdp_data.state = SAGDP_STATE_WAIT_REMOTE; // note that PID can be changed!
-					return SAGDP_RET_TO_LOWER_REPEATED;*/
 
 					// we send nothing here; sending will be done by timeout
 					SAGDP_ASSERT_SEQUENCE_IN_PROGRESS
 					return SAGDP_RET_OK;
-				}
-/*				else
-				{
-					INCREMENT_COUNTER( 45, "handler_sagdp_receive_up(), wait-remote, is-old, resend NOT requested" );
-					ZEPTO_DEBUG_PRINTF_3( "SAGDP OK (no resend): state = %d, packet_status = %d\n", state, packet_status );
-//					SAGDP_CANCEL_RESENT_SEQUENCE
-					return SAGDP_RET_OK;
-				}*/
 			}
 			bool isreply = is_pid_in_range( enc_reply_to, sagdp_data.first_last_sent_packet_id, sagdp_data.next_last_sent_packet_id );
 			if ( !isreply ) // silently ignore
@@ -490,7 +442,6 @@ uint8_t handler_sagdp_receive_up( sa_time_val* currt, waiting_for* wf, sasp_nonc
 			{
 				INCREMENT_COUNTER( 48, "handler_sagdp_receive_up(), wait-remote, other, intermediate" );
 				ZEPTO_DEBUG_PRINTF_7( "handler_sagdp_receive_hlp(): PID of packet (LRECEIVED): %x%x%x%x%x%x\n", pid[0], pid[1], pid[2], pid[3], pid[4], pid[5] );
-//				memcpy( data + DATA_SAGDP_LRECEIVED_PID_OFFSET, pid, SAGDP_LRECEIVED_PID_SIZE );
 				sa_uint48_init_by( sagdp_data.last_received_packet_id, pid );
 			}
 			// form a packet for higher level
@@ -655,14 +606,9 @@ uint8_t handler_sagdp_receive_request_resend_lsp( sa_time_val* currt, waiting_fo
 		// apply nonce
 		sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
 
-//		cappedExponentiateLTO( &(sagdp_data.last_timeout) );
 		SAGDP_CANCEL_RESENT_SEQUENCE
-/*		SAGDP_LTO_INCREMENT_BY_CAPPED_EXP_SEC( *tval, sagdp_data.resent_ordinal );
-		(sagdp_data.resent_ordinal)++;*/
 		SAGDP_INIT_RESENT_SEQUENCE
-//		sa_hal_time_val_copy_from( &(sagdp_data.next_event_time), tval );
 
-//		*timeout = sagdp_data.last_timeout;
 		zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM, mem_h );
 		zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR, mem_h_addr );
 		sagdp_data.state = SAGDP_STATE_WAIT_REMOTE; // note that PID can be changed!
@@ -681,13 +627,6 @@ uint8_t handler_sagdp_receive_request_resend_lsp( sa_time_val* currt, waiting_fo
 		// apply nonce
 		sa_uint48_init_by( sagdp_data.next_last_sent_packet_id, nonce );
 
-//		cappedExponentiateLTO( &(sagdp_data.last_timeout) );
-//		SAGDP_CANCEL_RESENT_SEQUENCE
-/*		SAGDP_LTO_INCREMENT_BY_CAPPED_EXP_SEC( *tval, sagdp_data.resent_ordinal );
-		(sagdp_data.resent_ordinal)++;*/
-//		SAGDP_INIT_RESENT_SEQUENCE
-
-//		*timeout = sagdp_data.last_timeout;
 		zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM, mem_h );
 		zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE_SAGDP_LSM_SAOUDP_ADDR, mem_h_addr );
 		sagdp_data.state = SAGDP_STATE_IDLE; // note that PID can be changed!
@@ -706,9 +645,6 @@ uint8_t handler_sagdp_receive_request_resend_lsp( sa_time_val* currt, waiting_fo
 
 uint8_t handler_sagdp_receive_hlp( sa_time_val* currt, waiting_for* wf, sasp_nonce_type nonce, MEMORY_HANDLE mem_h, MEMORY_HANDLE mem_h_addr/*, SAGDP_DATA* sagdp_data*/ )
 {
-	// It is a responsibility of a higher level to report the status of a packet. 
-	//
-
 	// init parser object
 	parser_obj po;
 	zepto_parser_init( &po, mem_h );
