@@ -182,14 +182,14 @@ uint8_t send_message_to_slave( MEMORY_HANDLE mem_h )
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
 	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-//	uint8_t* buff = memory_object_prepend( mem_h, 2 );
-	uint8_t* buff = memory_object_prepend( mem_h, 3 );
+	uint8_t* buff = memory_object_prepend( mem_h, 2 );
+//	uint8_t* buff = memory_object_prepend( mem_h, 3 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
 	buff[1] = sz >> 8;
-	buff[2] = 35;
-//	int bytes_sent = sendto(sock, (char*)buff, sz+2, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
-	int bytes_sent = sendto(sock, (char*)buff, sz+3, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
+//	buff[2] = 35;
+	int bytes_sent = sendto(sock, (char*)buff, sz+2, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
+//	int bytes_sent = sendto(sock, (char*)buff, sz+3, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
 	memory_object_response_to_request( mem_h );
@@ -295,7 +295,7 @@ uint8_t try_get_packet_size( uint8_t* buff )
 	// NOTE: size is 2 bytes; then 1 byte reserved (used to indicate destination)
 	// this is specific for this testing environment only
 	socklen_t fromlen = sizeof(sa_other);
-	int recsize = recvfrom(sock, (char *)(buff + buffer_in_pos), 3 - buffer_in_pos, 0, (struct sockaddr *)&sa_other, &fromlen);
+	int recsize = recvfrom(sock, (char *)(buff + buffer_in_pos), 2 - buffer_in_pos, 0, (struct sockaddr *)&sa_other, &fromlen);
 	if (recsize < 0)
 	{
 #ifdef _MSC_VER
@@ -317,7 +317,7 @@ uint8_t try_get_packet_size( uint8_t* buff )
 	else
 	{
 		buffer_in_pos += recsize;
-		if ( buffer_in_pos < 3 )
+		if ( buffer_in_pos < 2 )
 		{
 			return COMMLAYER_RET_PENDING;
 		}
@@ -344,7 +344,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	if ( ret != COMMLAYER_RET_OK )
 		return ret;
 	uint16_t sz = buff[1]; sz <<= 8; sz += buff[0];
-	ZEPTO_DEBUG_ASSERT( buff[2] == 36 );
+//	ZEPTO_DEBUG_ASSERT( buff[2] == 36 );
 
 	buffer_in_pos = 0;
 	do //TODO: add delays or some waiting
