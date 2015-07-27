@@ -15,7 +15,7 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "../../firmware/src/hal/hal_time_provider.h"
+#include "commstack_time_provider.h"
 #include "commstack_commlayer.h"
 
 
