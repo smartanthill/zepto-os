@@ -161,7 +161,7 @@ bool _communication_initialize()
     unsigned long ul = 1;
     ioctlsocket(sock, FIONBIO, &ul);
 #else
-    fcntl(sock_with_cl,F_SETFL,O_NONBLOCK);
+    fcntl(sock,F_SETFL,O_NONBLOCK);
 #endif
 	return true;
 }
@@ -231,7 +231,7 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
 uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 {
 	// Implementation notes:
-	// It is assumed in the current implementation that the system is able to receive a whole packet up to MAX_PACKET_SIZE BYTES first and store it in a buffer of a respective size. 
+	// It is assumed in the current implementation that the system is able to receive a whole packet up to MAX_PACKET_SIZE BYTES first and store it in a buffer of a respective size.
 	// Then bytes of the received packet are appended at once to the response referenced by handle.
 	//
 	// In some other implementations a packet may first be received by parts so that each part is first stored in a relatively small intermediate buffer.
