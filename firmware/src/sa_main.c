@@ -25,7 +25,6 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "common/sasp_protocol.h"
 #include "common/sagdp_protocol.h"
 #include "common/saccp_protocol.h"
-#include "plugins/smart_echo/smart_echo.h"
 #include "zepto_config.h"
 
 
@@ -192,12 +191,12 @@ wait_for_comm_event:
 						case HAL_GET_PACKET_BYTES_FAILED:
 						{
 							zepto_parser_free_memory( packet_getting_handle.packet_h );
-							goto start_over; 
+							goto start_over;
 							break;
 						}
 						case HAL_GET_PACKET_BYTES_IN_PROGRESS:
 						{
-							goto start_over; 
+							goto start_over;
 							break;
 						}
 						case HAL_GET_PACKET_BYTES_DONE:
