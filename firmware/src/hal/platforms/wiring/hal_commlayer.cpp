@@ -19,7 +19,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "../../hal_waiting.h"
 
 #define MAX_PACKET_SIZE 50
-#define START_OF_PACKET 0x1
+#define START_OF_PACKET 0x01
 #define END_OF_TRANSMISSION 0x17
 #define BYTE_MARKER 0xFF
 
@@ -48,7 +48,6 @@ uint8_t wait_for_timeout( uint32_t timeout)
 uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 {
     uint8_t buffer[ MAX_PACKET_SIZE ];
-
     uint8_t i, byte, marker_detected = 0;
     uint32_t timeout = 2000; // in ms
     uint32_t start_reading  = getTime();
@@ -58,6 +57,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
             continue;
 
         byte = Serial.read();
+
         if (byte == BYTE_MARKER)
         {
             marker_detected = true;
@@ -67,7 +67,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
         {
             ZEPTO_DEBUG_ASSERT( i && i <= MAX_PACKET_SIZE );
             zepto_write_block( mem_h, buffer, i );
-            return HAL_GET_PACKET_BYTES_DONE;
+            return WAIT_RESULTED_IN_PACKET;
         }
         else if (marker_detected)
         {
@@ -83,7 +83,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
                     value = 0xFF;
                     break;
                 default:
-                    return HAL_GET_PACKET_BYTES_FAILED;
+                    return WAIT_RESULTED_IN_FAILURE;
             }
             buffer[i++] = value;
             marker_detected = false;
@@ -94,23 +94,53 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
         }
     }
 
-    return HAL_GET_PACKET_BYTES_FAILED;
+    return WAIT_RESULTED_IN_FAILURE;
 }
 
 bool communication_initialize()
 {
     Serial.begin(9600);
+    while (!Serial) {
+        // wait for serial port to connect. Needed for Leonardo only
+    }
     return true;
 }
 
 uint8_t send_message( MEMORY_HANDLE mem_h )
 {
+    uint8_t i = 0;
     uint16_t sz = memory_object_get_request_size( mem_h );
     ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
     uint8_t* buff = memory_object_get_request_ptr( mem_h );
     ZEPTO_DEBUG_ASSERT( buff != NULL );
-    if (Serial.write (buff, sz) != sz)
-        return COMMLAYER_RET_FAILED;
-    else
-        return COMMLAYER_RET_OK;
+
+    Serial.write(START_OF_PACKET);
+    for (i = 0; i < sz; i++) {
+        switch (buff[i]) {
+            case START_OF_PACKET:
+                Serial.write(BYTE_MARKER);
+                Serial.write(0x00);
+            break;
+
+            case END_OF_TRANSMISSION:
+                Serial.write(BYTE_MARKER);
+                Serial.write(0x02);
+            break;
+
+            case BYTE_MARKER:
+                Serial.write(BYTE_MARKER);
+                Serial.write(0x03);
+            break;
+
+            default:
+                if (!Serial.write(buff[i])) {
+                    return COMMLAYER_RET_FAILED;
+                }
+            break;
+        }
+
+    }
+    Serial.write(END_OF_TRANSMISSION);
+
+    return COMMLAYER_RET_OK;
 }
