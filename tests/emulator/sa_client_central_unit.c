@@ -2,7 +2,7 @@
 Copyright (C) 2015 OLogN Technologies AG
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation.
 
     This program is distributed in the hope that it will be useful,
@@ -37,7 +37,7 @@ int main_loop()
 	INIT_COUNTER_SYSTEM
 #endif // ENABLE_COUNTER_SYSTEM
 
-		
+
 	ZEPTO_DEBUG_PRINTF_1("starting CLIENT...\n");
 	ZEPTO_DEBUG_PRINTF_1("==================\n\n");
 
@@ -82,7 +82,7 @@ int main_loop()
 		ZEPTO_DEBUG_PRINTF_3( "%c [0x%x]\n", bu[k], bu[k] );
 	return 0;*/
 #else
-	uint8_t buff_base[] = {0x2, 0x0, 0x8, 0x1, 0x1, 0x2, 0x0, 0x1, '-', '-', '>' }; 
+	uint8_t buff_base[] = {0x2, 0x0, 0x8, 0x1, 0x1, 0x2, 0x0, 0x1, '-', '-', '>' };
 	uint8_t buff[128];
 	buff[0] = 1; // first in the chain
 	memcpy( buff+1, buff_base, sizeof(buff_base) );
@@ -258,7 +258,8 @@ send_command:
 
 void set_port_from_command_line(int argc, char *argv[])
 {
-	for ( uint8_t i = 1; i<argc; i++ )
+	uint8_t i;
+	for ( i = 1; i<argc; i++ )
 	{
 		if ( memcmp( argv[i], "--port=", 7 ) == 0 )
 		{

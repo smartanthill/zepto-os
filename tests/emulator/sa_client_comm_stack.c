@@ -2,7 +2,7 @@
 Copyright (C) 2015 OLogN Technologies AG
 
     This program is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License version 2 as 
+    it under the terms of the GNU General Public License version 2 as
     published by the Free Software Foundation.
 
     This program is distributed in the hope that it will be useful,
@@ -24,7 +24,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "../../firmware/src/common/sagdp_protocol.h"
 #include "saccp_protocol_client_side.h"
 #include "test_generator.h"
-#include <stdio.h> 
+#include <stdio.h>
 #include "../../firmware/src/zepto_config.h"
 #include "hal_commstack_persistent_storage.h"
 
@@ -40,7 +40,7 @@ int main_loop()
 	INIT_COUNTER_SYSTEM
 #endif // ENABLE_COUNTER_SYSTEM
 
-		
+
 	ZEPTO_DEBUG_PRINTF_1("starting CLIENT's COMMM STACK...\n");
 	ZEPTO_DEBUG_PRINTF_1("================================\n\n");
 
@@ -76,7 +76,7 @@ int main_loop()
 	sagdp_init();
 	sasp_init_at_lifestart();
 
-	// Try to initialize connection 
+	// Try to initialize connection
 	if ( !communication_initialize() )
 		return -1;
 
@@ -322,7 +322,7 @@ saoudp_in:
 #endif
 			case SAGDP_RET_TO_HIGHER:
 			{
-				// regular processing will be done below, but we need to jump over 
+				// regular processing will be done below, but we need to jump over
 				break;
 			}
 #if 0
@@ -384,7 +384,7 @@ saoudp_in:
 		}
 
 #else	// ...instead we just send whatever we have received  to the Central Unit.
-		// Note: we may need to add some data (such as chain ID) or to somehow restructure the packet data; 
+		// Note: we may need to add some data (such as chain ID) or to somehow restructure the packet data;
 		//       in this case this is a right place to do that
 
 		ret_code = send_to_central_unit( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -393,7 +393,7 @@ saoudp_in:
 
 #endif // 0
 
-#endif			
+#endif
 
 
 
@@ -548,7 +548,8 @@ saoudp_send:
 
 void set_port_from_command_line(int argc, char *argv[])
 {
-	for ( uint8_t i = 1; i<argc; i++ )
+	uint8_t i;
+	for ( i = 1; i<argc; i++ )
 	{
 		if ( memcmp( argv[i], "--port=", 7 ) == 0 )
 		{
@@ -563,7 +564,8 @@ void set_port_from_command_line(int argc, char *argv[])
 
 char* get_persistent_storage_path_from_command_line(int argc, char *argv[])
 {
-	for ( uint8_t i = 1; i<argc; i++ )
+	uint8_t i;
+	for ( i = 1; i<argc; i++ )
 		if ( memcmp( argv[i], "--psp=", 6 ) == 0 )
 		{
 			ZEPTO_DEBUG_PRINTF_2( "persistent storage is at: \"%s\"\n", argv[i]+6 );
