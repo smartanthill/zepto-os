@@ -26,6 +26,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "test_generator.h"
 #include <stdio.h> 
 #include "../../firmware/src/zepto_config.h"
+#include "hal_commstack_persistent_storage.h"
 
 DECLARE_AES_ENCRYPTION_KEY
 
@@ -96,7 +97,7 @@ wait_for_comm_event:
 //		ret_code = wait_for_communication_event( MEMORY_HANDLE_MAIN_LOOP_1, timer_val*100 ); // TODO: recalculation
 		ret_code = wait_for_communication_event( timer_val*100 ); // TODO: recalculation
 //		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-		ZEPTO_DEBUG_PRINTF_4( "=============================================Msg wait event; ret = %d, rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+//		ZEPTO_DEBUG_PRINTF_4( "=============================================Msg wait event; ret = %d, rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 
 		switch ( ret_code )
 		{
@@ -545,12 +546,63 @@ saoudp_send:
 	return 0;
 }
 
+void set_port_from_command_line(int argc, char *argv[])
+{
+	for ( uint8_t i = 1; i<argc; i++ )
+	{
+		if ( memcmp( argv[i], "--port=", 7 ) == 0 )
+		{
+			int port = atoi( argv[i]+7);
+			ZEPTO_DEBUG_ASSERT( port >= 0 && port < 0x10000 );
+			ZEPTO_DEBUG_PRINTF_2( "port to be actually used: %d\n", port );
+			self_port_num_with_cl = port;
+			return;
+		}
+	}
+}
+
+char* get_persistent_storage_path_from_command_line(int argc, char *argv[])
+{
+	for ( uint8_t i = 1; i<argc; i++ )
+		if ( memcmp( argv[i], "--psp=", 6 ) == 0 )
+		{
+			ZEPTO_DEBUG_PRINTF_2( "persistent storage is at: \"%s\"\n", argv[i]+6 );
+			return argv[i]+6;
+		}
+	ZEPTO_DEBUG_PRINTF_1( "default persistent storage location will be used\n" );
+	return NULL;
+}
+
 int main(int argc, char *argv[])
 {
+	set_port_from_command_line( argc, argv );
+
 	zepto_mem_man_init_memory_management();
-	if (!init_eeprom_access())
-		return 0;
-//	format_eeprom_at_lifestart();
+
+	// TODO: logic of accessing/intializing persistent storage must be totally revised toward more secure version
+//	if (!init_eeprom_access())
+//		return 0;
+	char* persistent_storage_path = get_persistent_storage_path_from_command_line( argc, argv );
+	uint8_t ret_code = hal_init_eeprom_access( persistent_storage_path );
+	switch ( ret_code )
+	{
+		case HAL_PS_INIT_FAILED:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "init_eeprom_access() failed\n" );
+			return 0;
+		}
+		case HAL_PS_INIT_OK:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "init_eeprom_access() passed\n" );
+			break;
+		}
+		case HAL_PS_INIT_OK_NEEDS_INITIALIZATION:
+		{
+			format_eeprom_at_lifestart();
+			ZEPTO_DEBUG_PRINTF_1( "init_eeprom_access() passed\n" );
+			break;
+		}
+	}
 
 	return main_loop();
 //	return 0;

@@ -449,10 +449,19 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h )
 	memory_object_cut_and_make_response( mem_h, 0, sz );
 
 	ZEPTO_DEBUG_ASSERT( packet_src == 37 || packet_src == 35 );
+#if 0//def _DEBUG
+		uint16_t debug_sz = memory_object_get_response_size( mem_h );
+		uint8_t* debug_ptr = memory_object_get_response_ptr( mem_h );
+		ZEPTO_DEBUG_PRINTF_3( "try_get_message_within_master(), packet size = %d, for %s\n", debug_sz, packet_src == 37 ? "CU" : "SLAVE" );
+		while ( debug_sz-- )
+			ZEPTO_DEBUG_PRINTF_2( "%02x ", (debug_ptr++)[0] );
+		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
+#endif
 	if ( packet_src == 37 )
 		return COMMLAYER_RET_OK_FOR_CU;
 	if ( packet_src == 35 )
 		return COMMLAYER_RET_OK_FOR_SLAVE;
+
 
 	return ret;
 }
@@ -561,11 +570,29 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
 
 uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h )
 {
+#ifdef _DEBUG
+	parser_obj po;
+	zepto_parser_init( &po, mem_h );
+	uint16_t sz = zepto_parsing_remaining_bytes( &po );
+	ZEPTO_DEBUG_PRINTF_2( "send_to_commm_stack_as_from_master(), packet size = %d\n", sz );
+	while ( sz-- )
+		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
+	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
+#endif
 	return send_within_master( mem_h, 38 );
 }
 
 uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h )
 {
+#if 0//def _DEBUG
+	parser_obj po;
+	zepto_parser_init( &po, mem_h );
+	uint16_t sz = zepto_parsing_remaining_bytes( &po );
+	ZEPTO_DEBUG_PRINTF_2( "send_to_commm_stack_as_from_slave(), packet size = %d\n", sz );
+	while ( sz-- )
+		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
+	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
+#endif
 	return send_within_master( mem_h, 40 );
 }
 

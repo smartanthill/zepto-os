@@ -43,6 +43,8 @@ Copyright (C) 2015 OLogN Technologies AG
 extern "C" {
 #endif
 
+extern uint16_t self_port_num_with_cl;
+
 bool communication_initialize();
 void communication_terminate();
 uint8_t send_message( MEMORY_HANDLE mem_h );

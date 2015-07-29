@@ -43,6 +43,8 @@ Copyright (C) 2015 OLogN Technologies AG
 extern "C" {
 #endif
 
+extern uint16_t other_port_num_with_cl; // TODO: in general, it will be more elaborated when more than a single commstack (one for each of multiple slaves) will be used
+
 bool communication_initialize();
 void communication_terminate();
 

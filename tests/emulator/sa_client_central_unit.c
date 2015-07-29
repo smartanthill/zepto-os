@@ -256,8 +256,24 @@ send_command:
 	return 0;
 }
 
+void set_port_from_command_line(int argc, char *argv[])
+{
+	for ( uint8_t i = 1; i<argc; i++ )
+	{
+		if ( memcmp( argv[i], "--port=", 7 ) == 0 )
+		{
+			int port = atoi( argv[i]+7);
+			ZEPTO_DEBUG_ASSERT( port >= 0 && port < 0x10000 );
+			ZEPTO_DEBUG_PRINTF_2( "port to be actually used: %d\n", port );
+			other_port_num_with_cl = port;
+			return;
+		}
+	}
+}
+
 int main(int argc, char *argv[])
 {
+	set_port_from_command_line( argc, argv );
 	zepto_mem_man_init_memory_management();
 
 	return main_loop();
