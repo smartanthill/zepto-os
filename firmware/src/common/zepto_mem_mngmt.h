@@ -123,9 +123,19 @@ void zepto_writer_get_copy_of_response( MEMORY_HANDLE mem_h, uint8_t* buff );
 //void zepto_parser_decode_uint( const uint8_t** packed_num_bytes, uint8_t* bytes_out, uint8_t target_size );
 //uint16_t zepto_parse_encoded_uint16( parser_obj* po );
 uint16_t zepto_parse_encoded_uint16( parser_obj* po );
+INLINE int16_t zepto_parse_encoded_signed_int16( parser_obj* po )
+{
+	uint16_t ux = zepto_parse_encoded_uint16( po );
+	return (int16_t)((ux >> 1) ^ (-(ux & 1)));
+}
 void zepto_parser_decode_uint( parser_obj* po, uint8_t* bytes_out, uint8_t target_size );
 
 void zepto_parser_encode_and_append_uint16( MEMORY_HANDLE mem_h, uint16_t num );
+INLINE void zepto_parser_encode_and_append_signed_int16( MEMORY_HANDLE mem_h, int16_t sx )
+{
+	uint16_t ux = (uint16_t)((sx << 1) ^ (sx>>15));
+	zepto_parser_encode_and_append_uint16( mem_h, ux );
+}
 void zepto_parser_encode_and_append_uint( MEMORY_HANDLE mem_h, const uint8_t* num_bytes, uint8_t num_sz_max );
 void zepto_parser_encode_and_prepend_uint16( MEMORY_HANDLE mem_h, uint16_t num );
 void zepto_parser_encode_and_prepend_uint( MEMORY_HANDLE mem_h, const uint8_t* num_bytes, uint8_t num_sz_max );

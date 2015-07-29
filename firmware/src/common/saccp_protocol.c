@@ -66,13 +66,15 @@ void handler_zepto_vm( MEMORY_HANDLE mem_h, uint8_t first_byte, waiting_for* wf 
 		{
 			case ZEPTOVM_OP_EXEC:
 			{
-//				int16_t body_part = zepto_parse_encoded_int16( &po );
+				int16_t body_part = zepto_parse_encoded_signed_int16( &po );
+#if 0
 				// TODO: code below is HIGHLY temporary stub and should be replaced by the commented line above (with proper implementation of the respective function ASAP
 				// (for the sake of quick progress of mainstream development currently we assume that the value of body_part is within single +/- decimal digit)
 				uint16_t body_part = zepto_parse_encoded_uint16( &po );
 				ZEPTO_DEBUG_ASSERT( body_part < 128 && body_part < BODYPARTS_MAX );
 				// body_part -= 64; @TODO WHY??? Overflow!
 				// TODO: reimplement lines above ASAP to go back to signed int for bodypart number
+#endif
 
 				uint16_t data_sz = zepto_parse_encoded_uint16( &po );
 
@@ -113,9 +115,6 @@ void handler_zepto_vm( MEMORY_HANDLE mem_h, uint8_t first_byte, waiting_for* wf 
 			}
 			case ZEPTOVM_OP_DEVICECAPS:
 			{
-//				int16_t body_part = zepto_parse_encoded_int16( &po );
-				// TODO: code below is HIGHLY temporary stub and should be replaced by the commented line above (with proper implementation of the respective function ASAP
-				// (for the sake of quick progress of mainstream development currently we assume that the value of body_part is within single +/- decimal digit)
 #ifdef ZEPTO_VM_USE_SIMPLE_FRAME
 				MEMORY_HANDLE reply_handle = mem_h;
 				zepto_write_uint8( reply_handle, FRAME_TYPE_DESCRIPTOR_REGULAR ); // regular frame start
