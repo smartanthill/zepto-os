@@ -114,22 +114,22 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
     uint8_t* buff = memory_object_get_request_ptr( mem_h );
     ZEPTO_DEBUG_ASSERT( buff != NULL );
 
-    Serial.write(START_OF_PACKET);
+    Serial.write((uint8_t) START_OF_PACKET);
     for (i = 0; i < sz; i++) {
         switch (buff[i]) {
             case START_OF_PACKET:
-                Serial.write(BYTE_MARKER);
-                Serial.write(0x00);
+                Serial.write((uint8_t) BYTE_MARKER);
+                Serial.write((uint8_t) 0x00);
             break;
 
             case END_OF_TRANSMISSION:
-                Serial.write(BYTE_MARKER);
-                Serial.write(0x02);
+                Serial.write((uint8_t) BYTE_MARKER);
+                Serial.write((uint8_t) 0x02);
             break;
 
             case BYTE_MARKER:
-                Serial.write(BYTE_MARKER);
-                Serial.write(0x03);
+                Serial.write((uint8_t) BYTE_MARKER);
+                Serial.write((uint8_t) 0x03);
             break;
 
             default:
@@ -140,7 +140,7 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
         }
 
     }
-    Serial.write(END_OF_TRANSMISSION);
+    Serial.write((uint8_t) END_OF_TRANSMISSION);
 
     return COMMLAYER_RET_OK;
 }
