@@ -1,0 +1,3 @@
+[submodule "firmware/src/simpleiot"]
+	path = firmware/src/simpleiot
+	url = https://github.com/smartanthill/smartanthill-simpleiot.git
