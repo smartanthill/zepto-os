@@ -170,7 +170,7 @@ wait_for_comm_event:
 //				if ( sagdp_data.event_type ) //TODO: temporary solution
 				if (1) //TODO: temporary solution
 				{
-					ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
+					// ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
 					sa_get_time( &currt );
 					ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR/*, &sagdp_data*/ );
 					if ( ret_code == SAGDP_RET_OK )

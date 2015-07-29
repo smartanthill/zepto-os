@@ -325,7 +325,7 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint8_t destination )
 
 uint8_t wait_for_communication_event( unsigned int timeout )
 {
-	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()\n" );
+	// ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()\n" );
     fd_set rfds;
     struct timeval tv;
     int retval;
