@@ -16,10 +16,10 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 
-#include "sa_common.h"
-
 #ifndef __SA_AES_128_H__
 #define __SA_AES_128_H__
+
+#include "sa_common.h"
 
 void sa_aes_128_encrypt_block( const uint8_t* key, const uint8_t* _block, uint8_t* res );
 
