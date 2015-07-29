@@ -22,6 +22,9 @@ Copyright (C) 2015 OLogN Technologies AG
 #ifdef _MSC_VER
 #include <windows.h>
 #include <io.h>
+#else
+#include <sys/types.h>
+#include <unistd.h>
 #endif
 
 #ifndef O_BINARY

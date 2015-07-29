@@ -345,7 +345,7 @@ uint8_t handler_sasp_receive( const uint8_t* key, uint8_t* pid, MEMORY_HANDLE me
 			INCREMENT_COUNTER( 14, "handler_sasp_receive(), nonce las updated" );
 			memcpy( nls, new_nls, SASP_NONCE_SIZE );
 //			sa_uint48_increment( sasp_data.nonce_ls );
-			SASP_increment_nonce_last_sent( sasp_data );
+			SASP_increment_nonce_last_sent( /*sasp_data*/ );
 			// TODO: shuold we do anything else?
 			return SASP_RET_TO_HIGHER_LAST_SEND_FAILED;
 		}
@@ -389,7 +389,7 @@ uint8_t handler_sasp_receive( const uint8_t* key, uint8_t* pid, MEMORY_HANDLE me
 
 uint8_t handler_sasp_get_packet_id( sa_uint48_t buffOut, int buffOutSize/*, SASP_DATA* sasp_data*/ )
 {
-	SASP_increment_nonce_last_sent( sasp_data );
+	SASP_increment_nonce_last_sent( /*sasp_data*/ );
 	sa_uint48_init_by( buffOut, sasp_data.nonce_ls );
 	return SASP_RET_NONCE;
 }
