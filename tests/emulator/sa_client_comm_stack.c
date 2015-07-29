@@ -601,7 +601,7 @@ int main(int argc, char *argv[])
 		case HAL_PS_INIT_OK_NEEDS_INITIALIZATION:
 		{
 			format_eeprom_at_lifestart();
-			ZEPTO_DEBUG_PRINTF_1( "init_eeprom_access() passed\n" );
+			ZEPTO_DEBUG_PRINTF_1( "format_eeprom_at_lifestart() passed\n" );
 			break;
 		}
 	}

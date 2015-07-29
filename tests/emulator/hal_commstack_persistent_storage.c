@@ -42,30 +42,28 @@ uint8_t hal_init_eeprom_access( char* path )
 {
 	FILE* ftest;
 	if ( path == NULL ) path = "sa-eeprom-master.dat";
-	// does file exist?
+
+	bool exists = false;
 	ftest = fopen( path, "r" );
 	if ( ftest )
 	{
+		exists = true;
 		fclose( ftest );
-	//	f = fopen( MASTER_SLAVE_BIT == 1 ? "sa-eeprom-master": "sa-eeprom-slave", "rw+b" );
-		efile = open( "sa-eeprom-master.dat", O_RDWR | O_CREAT | O_BINARY, S_IWRITE | S_IREAD );
-#ifdef _MSC_VER
-		hfile = (HANDLE) _get_osfhandle (efile);
-		if ( hfile == INVALID_HANDLE_VALUE )
-			return HAL_PS_INIT_FAILED;
-#endif
-		return efile != -1 ? HAL_PS_INIT_OK : HAL_PS_INIT_FAILED;
 	}
+
+	efile = open( path, O_RDWR | O_CREAT | O_BINARY, S_IWRITE | S_IREAD );
+#ifdef _MSC_VER
+	hfile = (HANDLE) _get_osfhandle (efile);
+	if ( hfile == INVALID_HANDLE_VALUE )
+		return HAL_PS_INIT_FAILED;
+#endif
+
+	if (exists && efile != -1)
+		return HAL_PS_INIT_OK;
+	else if (efile != -1)
+		return HAL_PS_INIT_OK_NEEDS_INITIALIZATION;
 	else
-	{
-		efile = open( "sa-eeprom-master.dat", O_RDWR | O_CREAT | O_BINARY, S_IWRITE | S_IREAD );
-#ifdef _MSC_VER
-		hfile = (HANDLE) _get_osfhandle (efile);
-		if ( hfile == INVALID_HANDLE_VALUE )
-			return HAL_PS_INIT_FAILED;
-#endif
-		return efile != -1 ? HAL_PS_INIT_OK_NEEDS_INITIALIZATION : HAL_PS_INIT_FAILED;
-	}
+		return HAL_PS_INIT_FAILED;
 }
 
 bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint16_t address )
