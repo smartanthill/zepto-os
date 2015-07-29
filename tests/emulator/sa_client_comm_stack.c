@@ -28,6 +28,8 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "../../firmware/src/zepto_config.h"
 #include "hal_commstack_persistent_storage.h"
 
+#include <stdlib.h>     /* atoi */
+
 DECLARE_AES_ENCRYPTION_KEY
 
 
