@@ -505,7 +505,7 @@ saoudp_send:
 void set_port_from_command_line(int argc, char *argv[])
 {
 	uint8_t i;
-	for ( i = 1; i<argc; i++ )
+	for ( i = 0; i<argc; i++ )
 	{
 		if ( memcmp( argv[i], "--port=", 7 ) == 0 )
 		{
@@ -521,7 +521,7 @@ void set_port_from_command_line(int argc, char *argv[])
 char* get_persistent_storage_path_from_command_line(int argc, char *argv[])
 {
 	uint8_t i;
-	for ( i = 1; i<argc; i++ )
+	for ( i = 0; i<argc; i++ )
 		if ( memcmp( argv[i], "--psp=", 6 ) == 0 )
 		{
 			ZEPTO_DEBUG_PRINTF_2( "persistent storage is at: \"%s\"\n", argv[i]+6 );
