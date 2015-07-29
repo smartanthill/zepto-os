@@ -44,8 +44,6 @@ int main_loop()
 	ZEPTO_DEBUG_PRINTF_1("starting CLIENT's COMMM STACK...\n");
 	ZEPTO_DEBUG_PRINTF_1("================================\n\n");
 
-	tester_initTestSystem();
-
 	// TODO: actual key loading, etc
 //	uint8_t AES_ENCRYPTION_KEY[16];
 //	memcpy( AES_ENCRYPTION_KEY, "16-byte fake key", 16 );
@@ -209,7 +207,6 @@ wait_for_comm_event:
 		}
 
 
-		tester_registerIncomingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
 		ZEPTO_DEBUG_PRINTF_1("Message from server received\n");
 		ZEPTO_DEBUG_PRINTF_4( "ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 
@@ -488,55 +485,12 @@ saoudp_send:
 			}
 		}
 
-		tester_registerOutgoingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
-
-		bool syncSendReceive;
-		bool is_packet_to_send = true;
-		if ( tester_holdPacketOnRequest( MEMORY_HANDLE_MAIN_LOOP_1 ) )
+		// send packet
+		ret_code = send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
+		zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
+		if (ret_code != COMMLAYER_RET_OK )
 		{
-			INCREMENT_COUNTER( 95, "MAIN LOOP, holdPacketOnRequest() called" );
-			syncSendReceive = false;
-			is_packet_to_send = false;
-		}
-		else
-			syncSendReceive = tester_get_rand_val() % 4 == 0 && !tester_isOutgoingPacketOnHold();
-
-		if ( syncSendReceive )
-		{
-			INCREMENT_COUNTER( 94, "MAIN LOOP, holdOutgoingPacket() called" );
-			tester_holdOutgoingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
-		}
-		else
-		{
-#ifdef SA_DEBUG
-			if ( tester_shouldInsertOutgoingPacket( MEMORY_HANDLE_TEST_SUPPORT ) )
-			{
-				INCREMENT_COUNTER( 80, "MAIN LOOP, packet inserted" );
-				zepto_response_to_request( MEMORY_HANDLE_TEST_SUPPORT );
-				send_message( MEMORY_HANDLE_TEST_SUPPORT );
-				zepto_response_to_request( MEMORY_HANDLE_TEST_SUPPORT );
-			}
-#endif
-
-			if ( !tester_shouldDropOutgoingPacket() )
-			{
-				if ( is_packet_to_send )
-				{
-					ret_code = send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
-					zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
-					if (ret_code != COMMLAYER_RET_OK )
-					{
-						return -1;
-					}
-					INCREMENT_COUNTER( 82, "MAIN LOOP, packet sent" );
-					ZEPTO_DEBUG_PRINTF_1("\nMessage sent to comm peer\n");
-				}
-			}
-			else
-			{
-				INCREMENT_COUNTER( 81, "MAIN LOOP, packet dropped" );
-				ZEPTO_DEBUG_PRINTF_1("\nMessage lost on the way...\n");
-			}
+			return -1;
 		}
 
 	}
