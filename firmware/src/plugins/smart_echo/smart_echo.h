@@ -20,8 +20,9 @@ Copyright (C) 2015 OLogN Technologies AG
 #define __SA_SMART_ECHO_PLUGIN_H__
 
 #include "../../common/sa_common.h"
-#include "../../common/sa_data_types.h"
+#include <simpleiot/siot_data_types.h>
 #include "../../common/zepto_mem_mngmt.h"
+#include <simpleiot/siot_gd_protocol.h> // for packet flags
 
 #define PLUGIN_OK 0
 #define PLUGIN_WAIT_TO_CONTINUE 1

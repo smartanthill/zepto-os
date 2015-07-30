@@ -16,18 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 
-#include "common/sa_common.h"
-#include "common/sa_uint48.h"
-#include "hal/hal_time_provider.h"
-#include "hal/hal_commlayer.h"
-#include "hal/hal_waiting.h"
-#include "common/saoudp_protocol.h"
-#include "common/sasp_protocol.h"
-#include "common/sagdp_protocol.h"
-#include "common/saccp_protocol.h"
-#include "zepto_config.h"
-
-
+#include "sa_main.h"
 
 // TODO: actual key loading, etc
 //uint8_t AES_ENCRYPTION_KEY[16];

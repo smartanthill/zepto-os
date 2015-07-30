@@ -15,13 +15,10 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __ZEPTO_MEM_MNGMT_BASE_H__
-#define __ZEPTO_MEM_MNGMT_BASE_H__
 
-#include "sa_common.h"
+#if !defined __SA_COMMON_H__
+#define __SA_COMMON_H__
 
-#define MEMORY_HANDLE uint8_t
-#define REQUEST_REPLY_HANDLE MEMORY_HANDLE
-#define MEMORY_HANDLE_INVALID 0xFF
+#include <simpleiot/siot_common.h>
 
-#endif // __ZEPTO_MEM_MNGMT_BASE_H__
+#endif // __SA_COMMON_H__

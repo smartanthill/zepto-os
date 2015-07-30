@@ -18,7 +18,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __ZEPTO_MEM_MNGMT_HAL_SPEC_H__
 #define __ZEPTO_MEM_MNGMT_HAL_SPEC_H__
 
-#include "../common/zepto_mem_mngmt_base.h"
+#include <simpleiot/siot_mem_mngmt_base.h>
 
 #ifdef __cplusplus
 extern "C" {

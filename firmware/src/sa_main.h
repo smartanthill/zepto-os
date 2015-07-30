@@ -19,6 +19,15 @@ Copyright (C) 2015 OLogN Technologies AG
 #define __SA_MAIN_H__
 
 #include "common/sa_common.h"
+#include <simpleiot/siot_uint48.h>
+#include "hal/hal_time_provider.h"
+#include "hal/hal_commlayer.h"
+#include "hal/hal_waiting.h"
+#include <simpleiot/siot_oud_protocol.h>
+#include <simpleiot/siot_s_protocol.h>
+#include <simpleiot/siot_gd_protocol.h>
+#include <simpleiot/siot_cc_protocol.h>
+#include "zepto_config.h"
 
 #ifdef __cplusplus
 extern "C" {

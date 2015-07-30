@@ -20,7 +20,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define __SA_SA_BODYPART_LIST_COMMON_H__
 
 #include "sa_common.h"
-#include "sa_data_types.h"
+#include <simpleiot/siot_data_types.h>
 #include "zepto_mem_mngmt.h"
 
 typedef uint8_t (*plugin_handler_config_fn)(const void* plugin_config, void* plugin_state);

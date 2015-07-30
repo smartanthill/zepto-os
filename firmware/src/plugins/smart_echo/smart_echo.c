@@ -17,7 +17,6 @@ Copyright (C) 2015 OLogN Technologies AG
 
 
 #include "smart_echo.h"
-#include "../../common/sagdp_protocol.h" // for packet flags
 
 #include <stdio.h> // for sprintf() in fake implementation
 
