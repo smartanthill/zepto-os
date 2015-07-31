@@ -19,7 +19,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __SA_PING_PLUGIN_H__
 #define __SA_PING_PLUGIN_H__
 
-#include "../../common/sa_common.h"
+#include <simpleiot/siot_common.h>
 #include <simpleiot/siot_data_types.h>
 
 typedef struct _ping_plugin_config

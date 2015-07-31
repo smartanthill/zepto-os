@@ -18,9 +18,9 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __SA_COMMLAYER_H__
 #define __SA_COMMLAYER_H__
 
-#include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/hal/hal_common/zepto_mem_mngmt_hal_spec.h"
-#include "../../firmware/src/common/zepto_mem_mngmt.h"
+#include <simpleiot/siot_common.h>
+#include <simpleiot/siot_mem_mngmt.h>
+#include <zepto_mem_mngmt_hal_spec.h>
 
 // RET codes
 #define COMMLAYER_RET_FAILED 0

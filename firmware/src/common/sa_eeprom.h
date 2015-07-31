@@ -18,7 +18,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __SA_EEPROM_H__
 #define __SA_EEPROM_H__
 
-#include "sa_common.h"
+#include <simpleiot/siot_common.h>
 
 // data IDs (for communication with eeprom
 #define EEPROM_SLOT_DATA_SASP_NONCE_LW_ID 0 // Nonce Lower Watermark

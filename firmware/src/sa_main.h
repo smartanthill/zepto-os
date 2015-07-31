@@ -18,11 +18,11 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __SA_MAIN_H__
 #define __SA_MAIN_H__
 
-#include "common/sa_common.h"
+#include <simpleiot/siot_common.h>
 #include <simpleiot/siot_uint48.h>
-#include "hal/hal_common/hal_time_provider.h"
+#include <hal_time_provider.h>
 #include <hal_commlayer.h>
-#include "hal/hal_common/hal_waiting.h"
+#include <hal_waiting.h>
 #include <simpleiot/siot_oud_protocol.h>
 #include <simpleiot/siot_s_protocol.h>
 #include <simpleiot/siot_gd_protocol.h>

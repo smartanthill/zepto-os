@@ -18,8 +18,8 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __TEST_GENERATOR_H__
 #define __TEST_GENERATOR_H__
 
-#include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/common/zepto_mem_mngmt.h"
+#include <simpleiot/siot_common.h>
+#include <simpleiot/siot_mem_mngmt.h>
 
 // initialization
 void tester_initTestSystem();
