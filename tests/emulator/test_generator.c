@@ -15,8 +15,8 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/hal/hal_commlayer.h"
+#include <simpleiot/siot_common.h>
+#include <hal_commlayer.h>
 #include <stdlib.h> // for get_rand_val()
 
 #define MAX_IPACKETS_TO_STORE ((uint16_t)5)

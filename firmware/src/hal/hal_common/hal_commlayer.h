@@ -15,29 +15,38 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __SA_MAIN_H__
-#define __SA_MAIN_H__
+#if !defined __SA_COMMLAYER_H__
+#define __SA_COMMLAYER_H__
 
-#include "common/sa_common.h"
-#include <simpleiot/siot_uint48.h>
-#include "hal/hal_common/hal_time_provider.h"
-#include <hal_commlayer.h>
-#include "hal/hal_common/hal_waiting.h"
-#include <simpleiot/siot_oud_protocol.h>
-#include <simpleiot/siot_s_protocol.h>
-#include <simpleiot/siot_gd_protocol.h>
-#include <simpleiot/siot_cc_protocol.h>
-#include "zepto_config.h"
+#include <simpleiot/siot_common.h>
+#include "zepto_mem_mngmt_hal_spec.h"
+#include <simpleiot/siot_mem_mngmt.h>
+
+// RET codes
+#define COMMLAYER_RET_FAILED 0
+#define COMMLAYER_RET_OK 1
+#define COMMLAYER_RET_PENDING 2
+
+#define HAL_GET_PACKET_BYTES_IN_PROGRESS 0
+#define HAL_GET_PACKET_BYTES_FAILED 1
+#define HAL_GET_PACKET_BYTES_DONE 2
+
+#define COMMLAYER_RET_FROM_DEV 11
+#define COMMLAYER_RET_TIMEOUT 12
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool sa_main_init();
-int sa_main_loop();
+bool communication_initialize();
+void communication_terminate();
+uint8_t send_message( MEMORY_HANDLE mem_h );
+uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h );
+void keep_transmitter_on( bool keep_on );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __SA_MAIN_H__
+
+#endif // __SA_COMMLAYER_H__

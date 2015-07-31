@@ -16,7 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 #include "sa_eeprom.h"
-#include "../hal/hal_eeprom.h"
+#include <hal_eeprom.h>
 
 // slot structure:
 // [byte 0]   record selection bit

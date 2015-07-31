@@ -15,7 +15,7 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "../../hal_eeprom.h"
+#include <hal_eeprom.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdio.h>

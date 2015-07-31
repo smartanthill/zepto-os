@@ -15,29 +15,22 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __SA_MAIN_H__
-#define __SA_MAIN_H__
+#if !defined __HAL_EEPROM_H__
+#define __HAL_EEPROM_H__
 
-#include "common/sa_common.h"
-#include <simpleiot/siot_uint48.h>
-#include "hal/hal_common/hal_time_provider.h"
-#include <hal_commlayer.h>
-#include "hal/hal_common/hal_waiting.h"
-#include <simpleiot/siot_oud_protocol.h>
-#include <simpleiot/siot_s_protocol.h>
-#include <simpleiot/siot_gd_protocol.h>
-#include <simpleiot/siot_cc_protocol.h>
-#include "zepto_config.h"
+#include <simpleiot/siot_common.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool sa_main_init();
-int sa_main_loop();
+bool hal_init_eeprom_access();
+bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint16_t address );
+bool hal_eeprom_read( uint8_t* data, uint16_t size, uint16_t address);
+void hal_eeprom_flush();
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __SA_MAIN_H__
+#endif // __HAL_EEPROM_H__

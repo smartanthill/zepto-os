@@ -15,8 +15,8 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "../../hal_common/hal_time_provider.h"
-#include "../../hal_commlayer.h"
+#include <hal_time_provider.h>
+#include <hal_commlayer.h>
 
 
 #ifdef _MSC_VER
