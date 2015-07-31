@@ -22,7 +22,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include <simpleiot/siot_common.h>
 #include <simpleiot/siot_data_types.h>
-#include <simpleiot/siot_mem_mngmt.h>
+#include <simpleiot_hal/siot_mem_mngmt.h>
 
 /*#define CONTROL_PROG_OK 0
 #define CONTROL_PROG_CONTINUE 1

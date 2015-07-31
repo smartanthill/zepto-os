@@ -19,7 +19,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define __TEST_GENERATOR_H__
 
 #include <simpleiot/siot_common.h>
-#include <simpleiot/siot_mem_mngmt.h>
+#include <simpleiot_hal/siot_mem_mngmt.h>
 
 // initialization
 void tester_initTestSystem();

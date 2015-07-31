@@ -21,7 +21,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include <simpleiot/siot_common.h>
 #include <simpleiot/siot_data_types.h>
-#include <simpleiot/siot_mem_mngmt.h>
+#include <simpleiot_hal/siot_mem_mngmt.h>
 #include <simpleiot/siot_gd_protocol.h> // for packet flags
 
 #define PLUGIN_OK 0

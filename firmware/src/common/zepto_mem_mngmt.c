@@ -15,7 +15,7 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include <simpleiot/siot_mem_mngmt.h>
+#include <simpleiot_hal/siot_mem_mngmt.h>
 
 #define MEM_MNGMT_ORDERED_HANDLES
 

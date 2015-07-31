@@ -15,6 +15,7 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
+#include <zepto_mem_mngmt_hal_spec.h>
 #include <simpleiot_hal/hal_commlayer.h>
 #include <simpleiot_hal/hal_waiting.h>
 #include <stdio.h>
