@@ -16,7 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 #include "cu_commlayer.h"
-#include <hal_waiting.h>
+#include <simpleiot_hal/hal_waiting.h>
 #include <stdio.h>
 
 #define MAX_PACKET_SIZE 50

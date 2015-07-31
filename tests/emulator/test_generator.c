@@ -16,7 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 #include <simpleiot/siot_common.h>
-#include <hal_commlayer.h>
+#include <simpleiot_hal/hal_commlayer.h>
 #include <stdlib.h> // for get_rand_val()
 
 #define MAX_IPACKETS_TO_STORE ((uint16_t)5)

@@ -15,7 +15,7 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include <siot_eeprom.h>
+#include <simpleiot_hal/siot_eeprom.h>
 #include <hal_eeprom.h>
 
 // slot structure:

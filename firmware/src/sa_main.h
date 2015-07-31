@@ -21,8 +21,8 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot/siot_common.h>
 #include <simpleiot/siot_uint48.h>
 #include <hal_time_provider.h>
-#include <hal_commlayer.h>
-#include <hal_waiting.h>
+#include <simpleiot_hal/hal_commlayer.h>
+#include <simpleiot_hal/hal_waiting.h>
 #include <simpleiot/siot_oud_protocol.h>
 #include <simpleiot/siot_s_protocol.h>
 #include <simpleiot/siot_gd_protocol.h>
