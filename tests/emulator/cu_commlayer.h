@@ -19,7 +19,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define __SA_COMMLAYER_H__
 
 #include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/hal/zepto_mem_mngmt_hal_spec.h"
+#include "../../firmware/src/hal/hal_common/zepto_mem_mngmt_hal_spec.h"
 #include "../../firmware/src/common/zepto_mem_mngmt.h"
 
 // RET codes
