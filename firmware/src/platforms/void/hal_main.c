@@ -15,34 +15,13 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include <hal_commlayer.h>
-#include <hal_waiting.h>
+#include "../../sa_main.h"
+#include "hal_main.h"
 
-uint8_t hal_wait_for( waiting_for* wf )
-{
-	ZEPTO_DEBUG_ASSERT(0);
-	return 0;
-}
 
-uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+int main(int argc, char *argv[])
 {
-	ZEPTO_DEBUG_ASSERT(0);
-	return 0;
-}
+    sa_main_init();
 
-bool communication_initialize()
-{
-	ZEPTO_DEBUG_ASSERT(0);
-	return false;
-}
-
-uint8_t send_message( MEMORY_HANDLE mem_h )
-{
-	ZEPTO_DEBUG_ASSERT(0);
-	return 0;
-}
-
-void keep_transmitter_on( bool keep_on )
-{
-	ZEPTO_DEBUG_ASSERT(0);
+    return sa_main_loop();
 }

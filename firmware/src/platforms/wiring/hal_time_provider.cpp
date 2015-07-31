@@ -15,13 +15,40 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "../../../sa_main.h"
-#include "hal_main.h"
+#include <hal_time_provider.h>
+#include <simpleiot_hal/hal_waiting.h>
 
-
-int main(int argc, char *argv[])
+void sa_get_time(sa_time_val* t)
 {
-    sa_main_init();
+    uint32_t sys_t = millis();
+    t->high_t = sys_t >> 16;
+    t->low_t = (uint16_t)sys_t;
+}
 
-    return sa_main_loop();
+uint32_t getTime()
+{
+    return millis();
+}
+
+void mcu_sleep( uint16_t sec, uint8_t transmitter_state_on_exit )
+{
+    if ( transmitter_state_on_exit == 0 )
+        keep_transmitter_on( false );
+    delay( ( uint16_t )sec * 1000 );
+    if ( transmitter_state_on_exit )
+        keep_transmitter_on( true );
+}
+
+void just_sleep( sa_time_val* timeval )
+{
+    uint32_t timeout = timeval->high_t;
+    timeout <<= 16;
+    timeout += timeval->low_t;
+    wait_for_timeout( timeout);
+    // TODO: add implementation
+}
+
+void keep_transmitter_on( bool keep_on )
+{
+    // TODO: add reasonable implementation
 }

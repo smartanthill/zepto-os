@@ -15,15 +15,12 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "../../../sa_main.h"
 #include "hal_main.h"
+#include "../../sa_main.h"
 
-void setup()
+int main(int argc, char *argv[])
 {
     sa_main_init();
-}
 
-void loop()
-{
-    sa_main_loop();
+    return sa_main_loop();
 }
