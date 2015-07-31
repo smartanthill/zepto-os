@@ -15,24 +15,17 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
+#if !defined __HAL_PLATFORM_H__
+#define __HAL_PLATFORM_H__
 
-#if !defined __SA_SA_BODYPART_LIST_COMMON_H__
-#define __SA_SA_BODYPART_LIST_COMMON_H__
+#if defined SA_PLATFORM_WIRING
+#include "../platforms/wiring/hal_main.h"
+#elif defined SA_PLATFORM_MBED
+#include "../platforms/mbed/hal_main.h"
+#elif defined SA_PLATFORM_DESKTOP
+#include "../platforms/desktop/hal_main.h"
+#elif defined SA_PLATFORM_VOID
+#include "../platforms/void/hal_main.h"
+#endif
 
-#include "sa_common.h"
-#include <simpleiot/siot_data_types.h>
-#include "zepto_mem_mngmt.h"
-
-typedef uint8_t (*plugin_handler_config_fn)(const void* plugin_config, void* plugin_state);
-typedef uint8_t (*plugin_handler_fn)( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte );
-
-typedef struct _bodypart_item
-{
-	plugin_handler_config_fn phi_fn;
-	plugin_handler_fn ph_fn;
-	void* ph_config;
-	void* ph_state;
-} bodypart_item;
-
-
-#endif // __SA_SA_BODYPART_LIST_COMMON_H__
+#endif // __HAL_PLATFORM_H__

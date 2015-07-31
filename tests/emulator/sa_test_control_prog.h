@@ -20,9 +20,9 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __SA_TEST_CONTROL_PROG_H__
 #define __SA_TEST_CONTROL_PROG_H__
 
-#include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/common/sa_data_types.h"
-#include "../../firmware/src/common/zepto_mem_mngmt.h"
+#include <simpleiot/siot_common.h>
+#include <simpleiot/siot_data_types.h>
+#include <simpleiot/siot_mem_mngmt.h>
 
 /*#define CONTROL_PROG_OK 0
 #define CONTROL_PROG_CONTINUE 1

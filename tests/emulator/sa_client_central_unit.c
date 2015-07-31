@@ -20,12 +20,14 @@ Copyright (C) 2015 OLogN Technologies AG
 #define MODEL_IN_EFFECT 2
 
 
-#include "../../firmware/src/common/sa_common.h"
+//#include "../../firmware/src/common/sa_common.h"
+#include <simpleiot/siot_common.h>
 #include "cu_commlayer.h"
 //#include "saccp_protocol.h"
 #include "sa_test_control_prog.h"
 #include "test_generator.h"
-#include "../../firmware/src/common/zepto_mem_mngmt.h"
+//#include "../../firmware/src/common/zepto_mem_mngmt.h"
+#include <simpleiot/siot_mem_mngmt.h>
 #include "saccp_protocol_client_side_cu.h"
 
 #include <stdio.h>

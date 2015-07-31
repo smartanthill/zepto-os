@@ -24,10 +24,10 @@ Copyright (C) 2015 OLogN Technologies AG
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
 
 
-#include "../../firmware/src/common/sa_common.h"
-#include "../../firmware/src/common/sa_data_types.h"
-#include "../../firmware/src/common/zepto_mem_mngmt.h"
-#include "../../firmware/src/common/saccp_protocol_constants.h"
+#include <simpleiot/siot_common.h>
+#include <simpleiot/siot_data_types.h>
+#include <simpleiot/siot_mem_mngmt.h>
+#include <simpleiot/siot_cc_protocol_constants.h>
 #include "sa_test_control_prog.h"
 
 

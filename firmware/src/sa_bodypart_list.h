@@ -24,7 +24,7 @@ THIS FILE IS MANUALLY OR AUTOMATICALLY GENERATED BASED ON DESIRED PLUGIN LIST
 #if !defined __SA_SA_BODYPART_LIST_H__
 #define __SA_SA_BODYPART_LIST_H__
 
-#include "common/sa_bodypart_list_common.h"
+#include <simpleiot/siot_bodypart_list_common.h>
 
 #define BODYPARTS_MAX 1
 extern const bodypart_item bodyparts[ BODYPARTS_MAX ];
