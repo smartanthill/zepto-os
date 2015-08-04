@@ -19,7 +19,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot_hal/hal_commlayer.h>
 #include <stdlib.h> // for get_rand_val()
 
-#define MAX_IPACKETS_TO_STORE ((uint16_t)5)
+#define MAX_IPACKETS_TO_STORE ((uint16_t)20)
 #define PACKET_MAX_SIZE ((uint16_t)514)
 uint8_t incomingPackets[ MAX_IPACKETS_TO_STORE * PACKET_MAX_SIZE ];
 uint8_t outgoingPackets[ MAX_IPACKETS_TO_STORE * PACKET_MAX_SIZE ];

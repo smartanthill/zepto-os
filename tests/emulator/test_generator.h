@@ -28,7 +28,7 @@ void tester_freeTestSystem();
 // common testing calls
 uint16_t tester_get_rand_val();
 
-// comm layer hooks
+// "air" layer hooks
 void tester_registerIncomingPacket( REQUEST_REPLY_HANDLE mem_h );
 void tester_registerOutgoingPacket( REQUEST_REPLY_HANDLE mem_h );
 bool tester_shouldDropIncomingPacket();

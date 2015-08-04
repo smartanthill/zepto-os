@@ -126,9 +126,52 @@ wait_for_comm_event:
 				{
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 					ZEPTO_DEBUG_PRINTF_3( "msg is about to be sent to slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+					// [[AIR test block START]]
+#ifdef SA_ACTIVE_AIR_DEBUG
+					tester_registerOutgoingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
+					if ( tester_shouldInsertOutgoingPacket( MEMORY_HANDLE_TEST_SUPPORT ) )
+					{
+//						INCREMENT_COUNTER( 80, "MAIN LOOP, packet inserted" );
+						zepto_response_to_request( MEMORY_HANDLE_TEST_SUPPORT );
+						send_message( MEMORY_HANDLE_TEST_SUPPORT );
+						zepto_response_to_request( MEMORY_HANDLE_TEST_SUPPORT );
+					}
+					bool is_packet_to_send = true;
+					if ( !tester_shouldDropOutgoingPacket() )
+					{
+						if ( is_packet_to_send )
+						{
+							ret_code = send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
+							zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
+							if (ret_code != COMMLAYER_RET_OK )
+							{
+								return -1;
+							}
+//							INCREMENT_COUNTER( 82, "MAIN LOOP, packet sent" );
+							ZEPTO_DEBUG_PRINTF_1("\nMessage sent to slave\n");
+						}
+					}
+					else
+					{
+//						INCREMENT_COUNTER( 81, "MAIN LOOP, packet dropped" );
+						ZEPTO_DEBUG_PRINTF_1("\nOutgoing message lost on the way...\n");
+					}
+#else // SA_ACTIVE_AIR_DEBUG
 					send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
+#endif // SA_ACTIVE_AIR_DEBUG
+					// [[AIR test block END]]
 					goto wait_for_comm_event;
 					break;
+				}
+				else if ( ret_code == COMMLAYER_RET_OK_FOR_CU_ERROR )
+				{
+					// since now we implement just a testing helper, we simply show the content of the error
+					parser_obj po;
+					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
+					uint8_t bt1 = zepto_parse_uint8( &po );
+					uint8_t bt2 = zepto_parse_uint8( &po );
+					ZEPTO_DEBUG_PRINTF_3("\n>>>>>>>>>>>>>>>>>>>>>>> Comm.Stack has reported an error: %d, %d\n", bt1, bt2 );
+					ZEPTO_DEBUG_ASSERT( 0 );
 				}
 				else
 				{
@@ -144,7 +187,40 @@ wait_for_comm_event:
 				ZEPTO_DEBUG_ASSERT( ret_code == HAL_GET_PACKET_BYTES_DONE );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 				ZEPTO_DEBUG_PRINTF_3( "msg received from slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+				// [[AIR test block START]]
+#ifdef SA_ACTIVE_AIR_DEBUG
+				tester_registerIncomingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
+					if ( tester_shouldInsertIncomingPacket( MEMORY_HANDLE_TEST_SUPPORT ) )
+					{
+//						INCREMENT_COUNTER( 80, "MAIN LOOP, packet inserted" );
+						zepto_response_to_request( MEMORY_HANDLE_TEST_SUPPORT );
+						send_to_commm_stack_as_from_slave( MEMORY_HANDLE_TEST_SUPPORT );
+						zepto_response_to_request( MEMORY_HANDLE_TEST_SUPPORT );
+					}
+					bool is_packet_to_send = true;
+					if ( !tester_shouldDropIncomingPacket() )
+					{
+						if ( is_packet_to_send )
+						{
+							ret_code = send_to_commm_stack_as_from_slave( MEMORY_HANDLE_MAIN_LOOP_1 );
+							zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
+							if (ret_code != COMMLAYER_RET_OK )
+							{
+								return -1;
+							}
+//							INCREMENT_COUNTER( 82, "MAIN LOOP, packet sent" );
+							ZEPTO_DEBUG_PRINTF_1("\nMessage received from slave\n");
+						}
+					}
+					else
+					{
+						INCREMENT_COUNTER( 81, "MAIN LOOP, packet dropped" );
+						ZEPTO_DEBUG_PRINTF_1("\nIncoming message lost on the way...\n");
+					}
+#else // SA_ACTIVE_AIR_DEBUG
 				send_to_commm_stack_as_from_slave( MEMORY_HANDLE_MAIN_LOOP_1 );
+#endif // SA_ACTIVE_AIR_DEBUG
+				// [[AIR test block END]]
 				goto wait_for_comm_event;
 				break;
 			}

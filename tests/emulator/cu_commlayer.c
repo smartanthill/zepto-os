@@ -448,7 +448,7 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h )
 	memory_object_response_to_request( mem_h );
 	memory_object_cut_and_make_response( mem_h, 0, sz );
 
-	ZEPTO_DEBUG_ASSERT( packet_src == 37 || packet_src == 35 );
+	ZEPTO_DEBUG_ASSERT( packet_src == 37 || packet_src == 35 || packet_src == 47 );
 #if 0//def _DEBUG
 		uint16_t debug_sz = memory_object_get_response_size( mem_h );
 		uint8_t* debug_ptr = memory_object_get_response_ptr( mem_h );
@@ -461,6 +461,8 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h )
 		return COMMLAYER_RET_OK_FOR_CU;
 	if ( packet_src == 35 )
 		return COMMLAYER_RET_OK_FOR_SLAVE;
+	if ( packet_src == 47 )
+		return COMMLAYER_RET_OK_FOR_CU_ERROR;
 
 
 	return ret;

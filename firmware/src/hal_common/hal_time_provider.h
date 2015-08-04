@@ -48,6 +48,13 @@ uint32_t getTime();
 
 // operations (to be added upon necessity)
 
+#define SA_TIME_LOAD_TICKS_FOR_1_SEC( x ) {(x).low_t = 1000; (x).high_t = 0;}
+#define SA_TIME_INCREMENT_BY_TICKS( x, y ) {(x).low_t += (y).low_t; (x).high_t += (y).high_t; (x).high_t += (x).low_t < (y).low_t ? 1 : 0;}
+#define SA_TIME_SUBTRACT_TICKS_OR_ZERO( x, y ) {if ( sa_hal_time_val_is_less( &(x), (y) ) ) {(x).low_t = 0; (x).high_t = 0;} else {(x).low_t -= (y).low_t; (x).high_t -= (y).high_t; (x).high_t -= (x).low_t < (y).low_t ? 1 : 0;} }
+#define SA_TIME_MUL_TICKS_BY_2( x ) {uint16_t tmp = ((x).low_t) >> 15; (x).low_t <<= 1; (x).high_t = ((x).high_t << 1) | tmp;}
+#define SA_TIME_MUL_TICKS_BY_1_AND_A_HALF( x ) {uint16_t lo = (x).low_t, hi = (x).high_t; uint16_t tmp = ((x).high_t) & 1; (x).low_t >>= 15; (x).low_t |= tmp << 15; (x).high_t = ((x).high_t << 1) | tmp; (x).low_t += lo; (x).high_t += hi; (x).high_t += (x).low_t < lo ? 1 : 0;}
+#define SA_TIME_SET_INFINITE_TIME( x ) {(x).low_t = 0Xffff; (x).high_t = 0xffff;}
+
 INLINE void sa_hal_time_val_copy_from( sa_time_val* t1, const sa_time_val* t2 )
 {
 	t1->high_t = t2->high_t;
@@ -61,10 +68,33 @@ INLINE bool sa_hal_time_val_is_less( sa_time_val* t1, sa_time_val* t2 )
 	return t1->low_t < t2->low_t;
 }
 
-#define SA_TIME_LOAD_TICKS_FOR_1_SEC( x ) {(x).low_t = 1000; (x).high_t = 0;}
-#define SA_TIME_INCREMENT_BY_TICKS( x, y ) {(x).low_t += (y).low_t; (x).high_t += (y).high_t; (x).high_t += (x).low_t < (y).low_t ? 1 : 0;}
-#define SA_TIME_SUBTRACT_TICKS_OR_ZERO( x, y ) {if ( sa_hal_time_val_is_less( &(x), (y) ) ) {(x).low_t = 0; (x).high_t = 0;} else {(x).low_t -= (y).low_t; (x).high_t -= (y).high_t; (x).high_t -= (x).low_t < (y).low_t ? 1 : 0;} }
-#define SA_TIME_MUL_TICKS_BY_2( x ) {uint16_t tmp = ((x).low_t) >> 15; (x).low_t <<= 1; (x).high_t = ((x).high_t << 1) | tmp;}
-#define SA_TIME_MUL_TICKS_BY_1_AND_A_HALF( x ) {uint16_t lo = (x).low_t, hi = (x).high_t; uint16_t tmp = ((x).high_t) & 1; (x).low_t >>= 15; (x).low_t |= tmp << 15; (x).high_t = ((x).high_t << 1) | tmp; (x).low_t += lo; (x).high_t += hi; (x).high_t += (x).low_t < lo ? 1 : 0;}
+INLINE bool sa_hal_time_val_get_remaining_time( sa_time_val* now, sa_time_val* expected, sa_time_val* remaining )
+{
+	if ( expected->high_t < now->high_t ) return false; // already happpened
+	if ( expected->high_t == now->high_t )
+	{
+		if ( expected->low_t <= now->low_t ) return false; // already happpened
+		else
+		{
+			remaining->high_t = 0;
+			remaining->low_t = expected->low_t - now->low_t;
+			return true;
+		}
+	}
+	else
+	{
+		if ( expected->low_t < now->low_t )
+		{
+			remaining->low_t = expected->low_t - now->low_t;
+			remaining->high_t = expected->high_t - now->high_t - 1;
+		}
+		else
+		{
+			remaining->low_t = expected->low_t - now->low_t;
+			remaining->high_t = expected->high_t - now->high_t;
+		}
+		return true;
+	}
+}
 
 #endif // __SA_HAL_TIME_PROVIDER_H__
