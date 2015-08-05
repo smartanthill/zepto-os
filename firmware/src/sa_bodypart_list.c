@@ -24,16 +24,17 @@ THIS FILE IS MANUALLY OR AUTOMATICALLY GENERATED BASED ON DESIRED PLUGIN LIST
 
 // include declarations of respective plugins
 #include "plugins/smart_echo/smart_echo.h"
+#include "plugins/ping/ping.h"
 
-smart_echo_plugin_config smart_echo_plugin_config_struct =
+ping_plugin_config ping_plugin_config_0;
+smart_echo_plugin_config smart_echo_plugin_config_1={ .dummy=1 };
+
+ping_plugin_state ping_plugin_state_0;
+smart_echo_plugin_state smart_echo_plugin_state_1;
+
+const uint8_t SA_BODYPARTS_MAX ZEPTO_PROG_CONSTANT_LOCATION = 2;
+const bodypart_item bodyparts[ 2 ] ZEPTO_PROG_CONSTANT_LOCATION =
 {
-	0,
-};
-
-smart_echo_plugin_state smart_echo_plugin_state_struct;
-
-
-const bodypart_item bodyparts[ BODYPARTS_MAX ] ZEPTO_PROG_CONSTANT_LOCATION =
-{
-	{ smart_echo_plugin_handler_init, smart_echo_plugin_handler, &smart_echo_plugin_config_struct, &smart_echo_plugin_state_struct },
+    { ping_plugin_handler_init, ping_plugin_handler, &ping_plugin_config_0, &ping_plugin_state_0 },
+{ smart_echo_plugin_handler_init, smart_echo_plugin_handler, &smart_echo_plugin_config_1, &smart_echo_plugin_state_1 }
 };
