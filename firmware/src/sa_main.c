@@ -161,6 +161,55 @@ int sa_main_loop()
 wait_for_comm_event:
 //#ifdef TEST_AVR
 #if !defined TEST_RAM_CONSUMPTION
+
+			// [[QUICK CHECK FOR UNITS POTENTIALLY WAITING FOR TIMEOUT start]]
+			// we ask each potential unit; if it reports activity, let it continue; otherwise, ask a next one
+			// IMPORTANT: once an order of units is selected and tested, do not change it without extreme necessity
+			sa_get_time( &(currt) );
+
+			// 1. test GDP
+			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+			if ( ret_code == SAGDP_RET_NEED_NONCE )
+			{
+				ret_code = handler_sasp_get_packet_id( nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
+				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
+				ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
+				zepto_response_to_request( working_handle.packet_h );
+				zepto_response_to_request( working_handle.addr_h );
+				goto saspsend;
+			}
+
+			// 2. test CCP
+			ret_code = handler_saccp_timer( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
+
+			switch ( ret_code )
+			{
+				case SACCP_RET_NO_WAITING:
+				{
+					break;
+				}
+				case SACCP_RET_PASS_LOWER:
+				{
+					zepto_response_to_request( working_handle.packet_h );
+					ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+					goto alt_entry;
+					break;
+				}
+				case SACCP_RET_DONE:
+				{
+					zepto_parser_free_memory( working_handle.packet_h );
+					break;
+				}
+				case SACCP_RET_WAIT:
+				{
+					break;
+				}
+			}
+
+			// [[QUICK CHECK FOR UNITS POTENTIALLY WAITING FOR TIMEOUT end]]
+
+
 			ret_code = hal_wait_for( &wait_for );
 
 			switch ( ret_code )
@@ -180,11 +229,7 @@ wait_for_comm_event:
 						case HAL_GET_PACKET_BYTES_FAILED:
 						{
 							zepto_parser_free_memory( packet_getting_handle.packet_h );
-							goto start_over;
-							break;
-						}
-						case HAL_GET_PACKET_BYTES_IN_PROGRESS:
-						{
+							return 0; // TODO: think about recovery (later attempts, etc)
 							goto start_over;
 							break;
 						}
@@ -207,35 +252,35 @@ wait_for_comm_event:
 				}
 				case WAIT_RESULTED_IN_TIMEOUT:
 				{
-//					if ( sagdp_data.event_type ) //TODO: temporary solution
+//					ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
+#if 0
+					sa_get_time( &(currt) );
+					ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+					if ( ret_code == SAGDP_RET_OK )
 					{
-//						ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
-						sa_get_time( &(currt) );
-						ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
-						if ( ret_code == SAGDP_RET_OK )
-						{
-							zepto_response_to_request( working_handle.packet_h );
-							zepto_response_to_request( working_handle.addr_h );
-							goto wait_for_comm_event;
-						}
-						else if ( ret_code == SAGDP_RET_NEED_NONCE )
-						{
-							ret_code = handler_sasp_get_packet_id( nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
-							ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-							sa_get_time( &(currt) );
-							ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
-							ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
-							zepto_response_to_request( working_handle.packet_h );
-							zepto_response_to_request( working_handle.addr_h );
-							goto saspsend;
-							break;
-						}
-						else
-						{
-							ZEPTO_DEBUG_PRINTF_2( "ret_code = %d\n", ret_code );
-							ZEPTO_DEBUG_ASSERT( 0 );
-						}
+						zepto_response_to_request( working_handle.packet_h );
+						zepto_response_to_request( working_handle.addr_h );
+						goto wait_for_comm_event;
 					}
+					else if ( ret_code == SAGDP_RET_NEED_NONCE )
+					{
+						ret_code = handler_sasp_get_packet_id( nonce, SASP_NONCE_SIZE/*, &sasp_data*/ );
+						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
+						sa_get_time( &(currt) );
+						ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
+						zepto_response_to_request( working_handle.packet_h );
+						zepto_response_to_request( working_handle.addr_h );
+						goto saspsend;
+						break;
+					}
+					else
+					{
+						ZEPTO_DEBUG_PRINTF_2( "ret_code = %d\n", ret_code );
+						ZEPTO_DEBUG_ASSERT( 0 );
+					}
+#endif // 0
+
 					goto wait_for_comm_event;
 					break;
 				}
@@ -494,17 +539,7 @@ saoudp_rec:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-		ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &ret_wf );
-/*		if ( ret_code == YOCTOVM_RESET_STACK )
-		{
-//			sagdp_init( &sagdp_data );
-			sagdp_init();
-			ZEPTO_DEBUG_PRINTF_1( "slave_process(): ret_code = YOCTOVM_RESET_STACK\n" );
-			// TODO: reinit the rest of stack (where applicable)
-			ret_code = master_start( sizeInOut, rwBuff, rwBuff + BUF_SIZE / 4 );
-		}*/
-		zepto_response_to_request( working_handle.packet_h );
-		ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+		ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
 
 		wait_for_incoming_chain_with_timer = false;
 
@@ -512,23 +547,19 @@ saoudp_rec:
 		{
 			case SACCP_RET_PASS_LOWER:
 			{
-				 // test generation: sometimes slave can start a new chain at not in-chain reason (although in this case it won't be accepted by Master)
-//				bool restart_chain = tester_get_rand_val() % 8 == 0;
-				bool restart_chain = false;
-				if ( restart_chain )
-				{
-//					sagdp_init( &sagdp_data );
-					sagdp_init();
-					ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &ret_wf );
-					zepto_response_to_request( working_handle.packet_h );
-					ZEPTO_DEBUG_ASSERT( ret_code == SACCP_RET_PASS_LOWER );
-				}
+				zepto_response_to_request( working_handle.packet_h );
+				ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
 				// regular processing will be done below in the next block
 				break;
 			}
 			case SACCP_RET_DONE:
 			{
 				zepto_parser_free_memory( working_handle.packet_h );
+				goto start_over;
+				break;
+			}
+			case SACCP_RET_WAIT:
+			{
 				goto start_over;
 				break;
 			}

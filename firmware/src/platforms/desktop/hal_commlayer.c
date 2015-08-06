@@ -355,7 +355,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	}
 	while ( ret == COMMLAYER_RET_PENDING );
 	if ( ret != COMMLAYER_RET_OK )
-		return ret;
+		return HAL_GET_PACKET_BYTES_FAILED;
 	uint16_t sz = buff[1]; sz <<= 8; sz += buff[0];
 
 	buffer_in_pos = 0;
@@ -368,8 +368,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	memory_object_response_to_request( mem_h );
 	memory_object_cut_and_make_response( mem_h, 0, sz );
 
-//	return ret;
-	return HAL_GET_PACKET_BYTES_DONE;
+	return ret == COMMLAYER_RET_OK ? HAL_GET_PACKET_BYTES_DONE : HAL_GET_PACKET_BYTES_FAILED;
 }
 
 

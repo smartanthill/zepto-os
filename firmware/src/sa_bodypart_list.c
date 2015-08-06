@@ -35,6 +35,6 @@ smart_echo_plugin_state smart_echo_plugin_state_1;
 const uint8_t SA_BODYPARTS_MAX ZEPTO_PROG_CONSTANT_LOCATION = 2;
 const bodypart_item bodyparts[ 2 ] ZEPTO_PROG_CONSTANT_LOCATION =
 {
+	{ smart_echo_plugin_handler_init, smart_echo_plugin_handler, &smart_echo_plugin_config_1, &smart_echo_plugin_state_1 },
     { ping_plugin_handler_init, ping_plugin_handler, &ping_plugin_config_0, &ping_plugin_state_0 },
-{ smart_echo_plugin_handler_init, smart_echo_plugin_handler, &smart_echo_plugin_config_1, &smart_echo_plugin_state_1 }
 };

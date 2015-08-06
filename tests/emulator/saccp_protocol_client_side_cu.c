@@ -176,12 +176,12 @@ uint8_t handler_saccp_receive( MEMORY_HANDLE mem_h, sasp_nonce_type chain_id, De
 		}
 		case SACCP_REPLY_EXCEPTION:
 		{
-			ZEPTO_DEBUG_ASSERT( NULL == "Error: not implemented\n" );
+			ZEPTO_DEBUG_ASSERT( NULL == "Error: SACCP_REPLY_EXCEPTION is not implemented\n" );
 			break;
 		}
 		case SACCP_REPLY_ERROR:
 		{
-			ZEPTO_DEBUG_ASSERT( NULL == "Error: not implemented\n" );
+			ZEPTO_DEBUG_ASSERT( NULL == "Error: SACCP_REPLY_ERROR is not implemented\n" );
 			break;
 		}
 		default:

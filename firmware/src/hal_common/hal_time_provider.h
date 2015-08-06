@@ -69,7 +69,7 @@ INLINE bool sa_hal_time_val_is_less( sa_time_val* t1, sa_time_val* t2 )
 	return t1->low_t < t2->low_t;
 }
 
-INLINE bool sa_hal_time_val_get_remaining_time( sa_time_val* now, sa_time_val* expected, sa_time_val* remaining )
+INLINE bool sa_hal_time_val_get_remaining_time( const sa_time_val* now, const sa_time_val* expected, sa_time_val* remaining )
 {
 	if ( expected->high_t < now->high_t ) return false; // already happpened
 	if ( expected->high_t == now->high_t )
