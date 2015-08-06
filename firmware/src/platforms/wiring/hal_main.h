@@ -20,6 +20,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include <Arduino.h>
 #include "hal_time_conversions.h"
+#include "../../common/sadlp_transport.h"
 
 #if defined __AVR
 #include <avr/pgmspace.h>
@@ -39,5 +40,15 @@ Copyright (C) 2015 OLogN Technologies AG
     for ( i=0; i<len; i++ )\
     ((uint8_t*)dest)[i] = pgm_read_byte( ((uint8_t*)src) + i ); \
 }
+
+#define SADLP_SERIAL
+#define SADLP_SERIAL_BAUDRATE 9600
+
+#ifdef SADLP_SERIAL
+extern const sadlp_transport sadlp_serial_transport;
+#define DATALINK_TRANSPORT sadlp_serial_transport
+#else
+#define DATALINK_TRANSPORT sadlp_void_transport
+#endif
 
 #endif // __HAL_PLATFORM_WIRING_MAIN_H__

@@ -15,43 +15,19 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include <simpleiot_hal/hal_commlayer.h>
-#include <simpleiot_hal/hal_waiting.h>
-#include <zepto_mem_mngmt_hal_spec.h>
+#if !defined __SADLP_TRANSPORT_H__
+#define __SADLP_TRANSPORT_H__
 
-#include "../../common/sadlp_protocol.h"
-#include "../../common/sadlp_transport.h"
+#include <simpleiot/siot_common.h>
 
-uint8_t hal_wait_for (waiting_for* wf)
-{
-    for (;;)
-    {
-        if (wf->wait_packet && handler_sadlp_is_packet(&DATALINK_TRANSPORT))
-        {
-            return WAIT_RESULTED_IN_PACKET;
-        }
-    }
+typedef struct _sadlp_transport{
 
-    return WAIT_RESULTED_IN_FAILURE;
-}
+  bool (* init)(void);
+  uint8_t (* read)(void);
+  uint32_t (* write)(uint8_t byte);
+  bool (* available)(void);
 
-uint8_t wait_for_timeout (uint32_t timeout)
-{
-    ZEPTO_DEBUG_ASSERT(0);
-    return 0;
-}
+} sadlp_transport;
 
-uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h)
-{
-    return handler_sadlp_frame_received (&DATALINK_TRANSPORT, mem_h);
-}
+#endif // __SADLP_TRANSPORT_H__
 
-bool communication_initialize()
-{
-    return DATALINK_TRANSPORT.init();
-}
-
-uint8_t send_message (MEMORY_HANDLE mem_h)
-{
-    return handler_sadlp_send_packet (&DATALINK_TRANSPORT, mem_h);
-}
