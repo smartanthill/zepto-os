@@ -1,0 +1,21 @@
+<smartanthill.plugin id="pin_digital_write" name="Pin digital write" version="1.0">
+
+  <description>Write a "1" or a "0" value to a digital pin</description>
+
+  <request>
+    <field name="value" type="encoded-uint[max=1]" min="0" max="1" />
+  </request>
+
+  <response>
+    <field name="result" type="encoded-uint[max=1]" min="0" max="1" />
+  </response>
+
+  <configuration>
+
+    <peripheral>
+      <pin type="digital" name="pin_num" title="Pin" />
+    </peripheral>
+
+  </configuration>
+
+</smartanthill.plugin>
