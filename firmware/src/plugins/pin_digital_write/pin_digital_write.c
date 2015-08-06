@@ -30,7 +30,9 @@ uint8_t pin_digital_write_plugin_handler_init( const void* plugin_config, void* 
 uint8_t pin_digital_write_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte )
 {
     pin_digital_write_plugin_config* pc = (pin_digital_write_plugin_config*)plugin_config;
-    sa_hal_gpio_write(pc->pin_num, zepto_parse_uint8( command ));
-	zepto_write_uint8( reply, 1 ); // answer with "1", all done!
-	return PLUGIN_OK;
+    uint8_t level = zepto_parse_uint8( command );
+    sa_hal_gpio_write(pc->pin_num, level);
+    zepto_write_uint8( reply, level);
+    return PLUGIN_OK;
 }
+
