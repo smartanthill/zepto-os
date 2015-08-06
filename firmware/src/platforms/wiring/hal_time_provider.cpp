@@ -52,3 +52,8 @@ void keep_transmitter_on( bool keep_on )
 {
     // TODO: add reasonable implementation
 }
+
+void sa_time_delay_ms(uint32_t ms)
+{
+    delay(ms);
+}

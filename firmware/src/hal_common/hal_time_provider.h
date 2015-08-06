@@ -41,6 +41,7 @@ extern "C" {
 
 void sa_get_time( sa_time_val* t ); // PLATFORM-SPECIFIC IMPLEMENTATION
 uint32_t getTime();
+void sa_time_delay_ms(uint32_t ms);
 
 #ifdef __cplusplus
 }
