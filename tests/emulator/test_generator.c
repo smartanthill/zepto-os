@@ -153,7 +153,7 @@ bool tester_holdOutgoingPacketCore( const uint8_t* packet, const uint16_t* size 
 	if ( isPacketOnHold )
 		return false;
 	*(uint16_t*)packetOnHold = *size;
-	memcpy( incomingPackets + 2, packet, *size );
+	ZEPTO_MEMCPY( incomingPackets + 2, packet, *size );
 	isPacketOnHold = true;
 	return true;
 }
@@ -169,7 +169,7 @@ bool tester_releaseOutgoingPacketCore( uint8_t* packet, uint16_t* size )
 	if ( !isPacketOnHold )
 		return false;
 	*size = *(uint16_t*)packetOnHold;
-	memcpy( packet, incomingPackets + 2, *size );
+	ZEPTO_MEMCPY( packet, incomingPackets + 2, *size );
 	isPacketOnHold = false;
 	return *size != 0;
 }
@@ -202,9 +202,9 @@ void tester_registerIncomingPacketCore( const uint8_t* packet, uint16_t size )
 	ZEPTO_DEBUG_ASSERT( size <= PACKET_MAX_SIZE );
 	int8_t i;
 	for ( i=MAX_IPACKETS_TO_STORE-1; i; i-- )
-		memcpy( incomingPackets + i * PACKET_MAX_SIZE, incomingPackets + (i-1)*PACKET_MAX_SIZE, PACKET_MAX_SIZE );
+		ZEPTO_MEMCPY( incomingPackets + i * PACKET_MAX_SIZE, incomingPackets + (i-1)*PACKET_MAX_SIZE, PACKET_MAX_SIZE );
 	*(uint16_t*)incomingPackets = size;
-	memcpy( incomingPackets + 2, packet, size );
+	ZEPTO_MEMCPY( incomingPackets + 2, packet, size );
 }
 
 void tester_registerOutgoingPacketCore( const uint8_t* packet, uint16_t size )
@@ -212,9 +212,9 @@ void tester_registerOutgoingPacketCore( const uint8_t* packet, uint16_t size )
 	ZEPTO_DEBUG_ASSERT( size <= PACKET_MAX_SIZE );
 	int8_t i;
 	for ( i=MAX_IPACKETS_TO_STORE-1; i; i-- )
-		memcpy( outgoingPackets + i * PACKET_MAX_SIZE, outgoingPackets + (i-1)*PACKET_MAX_SIZE, PACKET_MAX_SIZE );
+		ZEPTO_MEMCPY( outgoingPackets + i * PACKET_MAX_SIZE, outgoingPackets + (i-1)*PACKET_MAX_SIZE, PACKET_MAX_SIZE );
 	*(uint16_t*)outgoingPackets = size;
-	memcpy( outgoingPackets + 2, packet, size );
+	ZEPTO_MEMCPY( outgoingPackets + 2, packet, size );
 }
 
 
@@ -241,7 +241,7 @@ bool tester_shouldInsertIncomingPacketCore( uint8_t* packet, uint16_t* size )
 	// select one of saved incoming packets
 	uint8_t sel_packet = tester_get_rand_val() % ( MAX_IPACKETS_TO_STORE - 1 ) + 1;
 	*size = *(uint16_t*)( incomingPackets + PACKET_MAX_SIZE * sel_packet );
-	memcpy( packet, incomingPackets + PACKET_MAX_SIZE * sel_packet + 2, *size );
+	ZEPTO_MEMCPY( packet, incomingPackets + PACKET_MAX_SIZE * sel_packet + 2, *size );
 	return *size != 0;
 }
 
@@ -253,7 +253,7 @@ bool tester_shouldInsertOutgoingPacketCore( uint8_t* packet, uint16_t* size )
 	// select one of saved incoming packets
 	uint8_t sel_packet = tester_get_rand_val() % ( MAX_IPACKETS_TO_STORE - 1 ) + 1;
 	*size = *(uint16_t*)( outgoingPackets + PACKET_MAX_SIZE * sel_packet );
-	memcpy( packet, outgoingPackets + PACKET_MAX_SIZE * sel_packet + 2, *size );
+	ZEPTO_MEMCPY( packet, outgoingPackets + PACKET_MAX_SIZE * sel_packet + 2, *size );
 	return *size != 0;
 }
 

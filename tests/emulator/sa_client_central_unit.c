@@ -84,7 +84,7 @@ int main_loop()
 	uint8_t buff_base[] = {0x2, 0x0, 0x8, 0x1, 0x1, 0x2, 0x0, 0x1, '-', '-', '>' };
 	uint8_t buff[128];
 	buff[0] = 1; // first in the chain
-	memcpy( buff+1, buff_base, sizeof(buff_base) );
+	ZEPTO_MEMCPY( buff+1, buff_base, sizeof(buff_base) );
 	zepto_write_block( MEMORY_HANDLE_MAIN_LOOP_1, buff, 1+sizeof(buff_base) );
 	zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 	// should appear on the other side: Packet received: [8 bytes]  [1][0x0001][0x0001][0x0002][0x0000][0x0001]-->
@@ -336,7 +336,7 @@ void set_port_from_command_line(int argc, char *argv[])
 	uint8_t i;
 	for ( i = 1; i<argc; i++ )
 	{
-		if ( memcmp( argv[i], "--port=", 7 ) == 0 )
+		if ( ZEPTO_MEMCMP( argv[i], "--port=", 7 ) == 0 )
 		{
 			int port = atoi( argv[i]+7);
 			ZEPTO_DEBUG_ASSERT( port >= 0 && port < 0x10000 );

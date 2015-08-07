@@ -312,7 +312,7 @@ void zepto_mem_man_move_obj_max_right( REQUEST_REPLY_HANDLE mem_h )
 	uint16_t free_at_left = zepto_mem_man_parse_encoded_uint16_no_size_checks_backward( right_end_of_free_space_at_left );
 	uint8_t* left_end_of_free_space_at_left = right_end_of_free_space_at_left - free_at_left + 1;
 
-	memmove( memory_objects[ mem_h ].ptr + move_sz, memory_objects[ mem_h ].ptr, memory_objects[ mem_h ].rq_size + memory_objects[ mem_h ].rsp_size );
+	ZEPTO_MEMMOV( memory_objects[ mem_h ].ptr + move_sz, memory_objects[ mem_h ].ptr, memory_objects[ mem_h ].rq_size + memory_objects[ mem_h ].rsp_size );
 	memory_objects[ mem_h ].ptr += move_sz;
 
 	*right_end_of_free_space_at_right = 1; // by construction we have left just 1 free byte (minimal allowed value);
@@ -336,7 +336,7 @@ void zepto_mem_man_move_obj_max_left( REQUEST_REPLY_HANDLE mem_h )
 	uint16_t free_at_right = zepto_mem_man_parse_encoded_uint16_no_size_checks_forward( left_end_of_free_space_at_right );
 	uint8_t* right_end_of_free_space_at_right = left_end_of_free_space_at_right + free_at_right - 1;
 
-	memmove( memory_objects[ mem_h ].ptr - move_sz, memory_objects[ mem_h ].ptr, memory_objects[ mem_h ].rq_size + memory_objects[ mem_h ].rsp_size );
+	ZEPTO_MEMMOV( memory_objects[ mem_h ].ptr - move_sz, memory_objects[ mem_h ].ptr, memory_objects[ mem_h ].rq_size + memory_objects[ mem_h ].rsp_size );
 	memory_objects[ mem_h ].ptr -= move_sz;
 
 	*left_end_of_free_space_at_left = 1; // by construction we have left just 1 free byte (minimal allowed value);
@@ -747,7 +747,7 @@ zepto_mem_man_check_sanity();
 zepto_mem_man_check_sanity();
 	if ( ret )
 	{
-//		memcpy( memory_objects[ mem_h ].ptr, buff, size );
+//		ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, buff, size );
 zepto_mem_man_check_sanity();
 		return memory_objects[ mem_h ].ptr;
 //		return;
@@ -757,7 +757,7 @@ zepto_mem_man_check_sanity();
 zepto_mem_man_check_sanity();
 	if ( ret )
 	{
-//		memcpy( memory_objects[ mem_h ].ptr, buff, size );
+//		ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, buff, size );
 zepto_mem_man_check_sanity();
 		return memory_objects[ mem_h ].ptr;
 //		return;
@@ -773,7 +773,7 @@ zepto_mem_man_check_sanity();
 		ret = zepto_mem_man_try_move_right_expand_left( mem_h, size );
 zepto_mem_man_check_sanity();
 		ZEPTO_DEBUG_ASSERT( ret );
-//		memcpy( memory_objects[ mem_h ].ptr, buff, size );
+//		ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, buff, size );
 zepto_mem_man_check_sanity();
 		return memory_objects[ mem_h ].ptr;
 //		return;
@@ -789,7 +789,7 @@ zepto_mem_man_check_sanity();
 		ret = zepto_mem_man_try_move_right_expand_left( mem_h, size );
 zepto_mem_man_check_sanity();
 		ZEPTO_DEBUG_ASSERT( ret ); // TODO: yet to be considered: forced truncation and further error handling
-//		memcpy( memory_objects[ mem_h ].ptr, buff, size );
+//		ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, buff, size );
 zepto_mem_man_check_sanity();
 		return memory_objects[ mem_h ].ptr;
 //		return;
@@ -1103,7 +1103,7 @@ bool zepto_parse_read_block( parser_obj* po, uint8_t* block, uint16_t size )
 		return false;
 	uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	memcpy( block, buff, size );
+	ZEPTO_MEMCPY( block, buff, size );
 	(po->offset) += size;
 	return true;
 }
@@ -1177,7 +1177,7 @@ void zepto_write_block( REQUEST_REPLY_HANDLE mem_h, const uint8_t* block, uint16
 {
 	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	uint8_t* buff = memory_object_append( mem_h, size );
-	memcpy( buff, block, size );
+	ZEPTO_MEMCPY( buff, block, size );
 }
 
 void zepto_response_to_request( MEMORY_HANDLE mem_h )
@@ -1208,7 +1208,7 @@ void zepto_append_part_of_request_to_response( MEMORY_HANDLE mem_h, parser_obj* 
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( mem_h, po_end->offset - po_start->offset );
-	memcpy( dest_buff, src_buff, po_end->offset - po_start->offset );
+	ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
 	po_start->offset = po_end->offset;
 }
 
@@ -1224,7 +1224,7 @@ void zepto_copy_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEM
 	uint8_t* src_buff = memory_object_get_request_ptr( mem_h ) + memory_object_get_request_size( mem_h );
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( target_mem_h, memory_object_get_response_size( mem_h ) );
-	memcpy( dest_buff, src_buff, memory_object_get_response_size( mem_h ) );
+	ZEPTO_MEMCPY( dest_buff, src_buff, memory_object_get_response_size( mem_h ) );
 }
 
 void zepto_append_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEMORY_HANDLE target_mem_h )
@@ -1236,7 +1236,7 @@ void zepto_append_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, M
 	uint8_t* src_buff = memory_object_get_request_ptr( mem_h ) + memory_object_get_request_size( mem_h );
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( target_mem_h, memory_object_get_response_size( mem_h ) );
-	memcpy( dest_buff, src_buff, memory_object_get_response_size( mem_h ) );
+	ZEPTO_MEMCPY( dest_buff, src_buff, memory_object_get_response_size( mem_h ) );
 }
 
 void zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEMORY_HANDLE target_mem_h )
@@ -1251,7 +1251,7 @@ void zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEMO
 	uint8_t* src_buff = memory_object_get_request_ptr( mem_h );
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( target_mem_h, memory_object_get_request_size( mem_h ) );
-	memcpy( dest_buff, src_buff, memory_object_get_request_size( mem_h ) );
+	ZEPTO_MEMCPY( dest_buff, src_buff, memory_object_get_request_size( mem_h ) );
 }
 
 
@@ -1270,7 +1270,7 @@ void zepto_copy_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
-	memcpy( dest_buff, src_buff, po_end->offset - po_start->offset );
+	ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
 }
 
 void zepto_append_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h )
@@ -1285,7 +1285,7 @@ void zepto_append_part_of_request_to_response_of_another_handle( MEMORY_HANDLE m
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
-	memcpy( dest_buff, src_buff, po_end->offset - po_start->offset );
+	ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
 }
 
 void zepto_prepend_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h )
@@ -1300,7 +1300,7 @@ void zepto_prepend_part_of_request_to_response_of_another_handle( MEMORY_HANDLE 
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
 	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
 	uint8_t* dest_buff = memory_object_prepend( target_mem_h, po_end->offset - po_start->offset );
-	memcpy( dest_buff, src_buff, po_end->offset - po_start->offset );
+	ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
 }
 
 /*
@@ -1322,7 +1322,7 @@ void zepto_write_prepend_byte( MEMORY_HANDLE mem_h, uint8_t bt )
 	uint8_t b = bt;
 //	memory_object_prepend( mem_h, &b, 1 );
 	memory_object_prepend( mem_h, 1 );
-	memcpy( memory_objects[ mem_h ].ptr, &b, 1 );
+	ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, &b, 1 );
 }
 
 void zepto_write_prepend_block( MEMORY_HANDLE mem_h, const uint8_t* block, uint16_t size )
@@ -1330,7 +1330,7 @@ void zepto_write_prepend_block( MEMORY_HANDLE mem_h, const uint8_t* block, uint1
 	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 //	memory_object_prepend( mem_h, block, size );
 	memory_object_prepend( mem_h, size );
-	memcpy( memory_objects[ mem_h ].ptr, block, size );
+	ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, block, size );
 }
 
 
@@ -1344,7 +1344,7 @@ uint16_t zepto_writer_get_response_size( MEMORY_HANDLE mem_h )
 /*
 void zepto_writer_get_copy_of_response( MEMORY_HANDLE mem_h, uint8_t* buff )
 {
-	memcpy( buff, memory_object_get_response_ptr( mem_h ), memory_object_get_response_size( mem_h ) );
+	ZEPTO_MEMCPY( buff, memory_object_get_response_ptr( mem_h ), memory_object_get_response_size( mem_h ) );
 }
 */
 
@@ -1397,7 +1397,7 @@ void zepto_parser_encode_uint( const uint8_t* num_bytes, uint8_t num_sz_max, uin
 	}
 
 	uint8_t buff[16];
-	memcpy( buff, num_bytes, num_sz_max );
+	ZEPTO_MEMCPY( buff, num_bytes, num_sz_max );
 
 	for(;;)
 	{
@@ -1455,7 +1455,7 @@ void zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t* bytes_o
 {
 	ZEPTO_DEBUG_ASSERT( target_size != 0 );
 	ZEPTO_DEBUG_ASSERT( target_size <= 8 ); // TODO: implement and test for larger sizes
-	memset( bytes_out, 0, target_size );
+	ZEPTO_MEMSET( bytes_out, 0, target_size );
 #ifdef SA_DEBUG
 	uint8_t* bytes_out_start = bytes_out;
 #endif
@@ -1546,7 +1546,7 @@ void zepto_parser_encode_and_append_uint( MEMORY_HANDLE mem_h, const uint8_t* nu
 	}
 	else
 	{
-		memcpy( src_buff, num_bytes, num_sz_max );
+		ZEPTO_MEMCPY( src_buff, num_bytes, num_sz_max );
 
 		for(;;)
 		{
@@ -1567,7 +1567,7 @@ void zepto_parser_encode_and_append_uint( MEMORY_HANDLE mem_h, const uint8_t* nu
 	uint8_t sz = (uint8_t)(out_buff_end - out_buff);
 	ZEPTO_DEBUG_PRINTF_3( "zepto_parser_encode_and_append_uint(..., ..., %d) resulted in %d bytes\n", num_sz_max, sz );
 	uint8_t* buff = memory_object_append( mem_h, sz );
-	memcpy( buff, out_buff, sz );
+	ZEPTO_MEMCPY( buff, out_buff, sz );
 }
 
 void zepto_parser_encode_and_append_uint16( MEMORY_HANDLE mem_h, uint16_t num )
@@ -1593,7 +1593,7 @@ void zepto_parser_encode_and_prepend_uint( MEMORY_HANDLE mem_h, const uint8_t* n
 	}
 	else
 	{
-		memcpy( src_buff, num_bytes, num_sz_max );
+		ZEPTO_MEMCPY( src_buff, num_bytes, num_sz_max );
 
 		for(;;)
 		{
@@ -1615,7 +1615,7 @@ void zepto_parser_encode_and_prepend_uint( MEMORY_HANDLE mem_h, const uint8_t* n
 //	ZEPTO_DEBUG_PRINTF_2( "zepto_parser_encode_and_prepend_uint(..., ..., %d) resulted in %d bytes\n", num_sz_max, sz );
 //	memory_object_prepend( mem_h, out_buff, sz );
 	memory_object_prepend( mem_h, sz );
-	memcpy( memory_objects[ mem_h ].ptr, out_buff, sz );
+	ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, out_buff, sz );
 }
 
 void zepto_parser_encode_and_prepend_uint16( MEMORY_HANDLE mem_h, uint16_t num )

@@ -97,8 +97,8 @@ bool communication_preinitialize()
 bool _communication_initialize()
 {
 	//Zero out socket address
-	memset(&sa_self, 0, sizeof sa_self);
-	memset(&sa_other, 0, sizeof sa_other);
+	ZEPTO_MEMSET(&sa_self, 0, sizeof sa_self);
+	ZEPTO_MEMSET(&sa_other, 0, sizeof sa_other);
 
 	//create an internet, datagram, socket using UDP
 //	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);

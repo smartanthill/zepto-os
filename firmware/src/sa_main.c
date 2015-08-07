@@ -90,11 +90,11 @@ bool sa_main_init()
 	ZEPTO_DEBUG_PRINTF_1("STARTING SERVER...\n");
 	ZEPTO_DEBUG_PRINTF_1("==================\n\n");
 
-	memset( &wait_for, 0, sizeof( waiting_for ) );
+	ZEPTO_MEMSET( &wait_for, 0, sizeof( waiting_for ) );
 	wait_for.wait_packet = 1;
 	TIME_MILLISECONDS16_TO_TIMEVAL( 1000, wait_for.wait_time ); //+++TODO: actual processing throughout the code
 
-//    memset( AES_ENCRYPTION_KEY, 0xab, 16 );
+//    ZEPTO_MEMSET( AES_ENCRYPTION_KEY, 0xab, 16 );
 	sasp_init_at_lifestart(); // TODO: replace by more extensive restore-from-backup-etc
 	sagdp_init();
 	zepto_vm_init();

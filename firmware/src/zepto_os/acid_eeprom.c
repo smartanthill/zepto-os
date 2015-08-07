@@ -67,7 +67,7 @@ void eeprom_write( uint8_t id, uint8_t* data)
 {
 	ZEPTO_DEBUG_ASSERT( id < EEPROM_SLOT_MAX );
 	uint8_t buff[3];
-	memset( buff, 0, 3 );
+	ZEPTO_MEMSET( buff, 0, 3 );
 #ifdef SA_DEBUG
 	bool res;
 	res = hal_eeprom_read( buff, 3, eeprom_slots[id].offset );
