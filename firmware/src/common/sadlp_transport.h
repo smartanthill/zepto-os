@@ -29,5 +29,14 @@ typedef struct _sadlp_transport{
 
 } sadlp_transport;
 
-#endif // __SADLP_TRANSPORT_H__
+#define SADLP_SERIAL
+#define SADLP_SERIAL_BAUDRATE 9600
 
+#ifdef SADLP_SERIAL
+extern const sadlp_transport sadlp_serial_transport;
+#define DATALINK_TRANSPORT sadlp_serial_transport
+#else
+#define DATALINK_TRANSPORT sadlp_void_transport
+#endif
+
+#endif // __SADLP_TRANSPORT_H__
