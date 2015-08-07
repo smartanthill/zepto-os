@@ -2,21 +2,19 @@
 
   <description>Blinks a LED</description>
 
+  <request>
+    <field name="delay_ms" type="encoded-uint[max=2]" min="0" max="1000" default="200" title="Delay between blinks, ms [0-1000]" />
+    <field name="total_blinks" type="encoded-uint[max=1]" default="5" min="0" max="10" title="Total blinks [0-10]" />
+  </request>
+
   <response>
-    <field name="result" type="encoded-uint[max=1]" min="0" max="1" />
+    <field name="made_blinks" type="encoded-uint[max=1]" min="0" max="10" />
   </response>
 
   <configuration>
-
     <peripheral>
-      <pin type="digital" name="pin_led" title="LED pin" />
+      <pin name="pin_led" type="digital" title="LED pin" />
     </peripheral>
-
-    <options>
-      <option type="uint[2]" name="delay_ms" default="200" title="Delay between blinks, ms" />
-      <option type="uint[1]" name="total_blinks" default="5" title="Total blinks" />
-    </options>
-
   </configuration>
 
 </smartanthill.plugin>

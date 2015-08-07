@@ -32,13 +32,15 @@ uint8_t blink_plugin_handler( const void* plugin_config, void* plugin_state, par
 {
     blink_plugin_config* pc = (blink_plugin_config*)plugin_config;
     uint8_t i = 0;
-    for (i = 0; i < pc->total_blinks; i++)
+    uint16_t delay_ms = zepto_parse_encoded_uint16( command );
+    uint8_t total_blinks = zepto_parse_encoded_uint8( command );
+    for (i = 0; i < total_blinks; i++)
     {
         sa_hal_gpio_write(pc->pin_led, HAL_GPIO_VALUE_HIGH);
-        sa_time_delay_ms(pc->delay_ms);
+        sa_time_delay_ms(delay_ms);
         sa_hal_gpio_write(pc->pin_led, HAL_GPIO_VALUE_LOW);
-        sa_time_delay_ms(pc->delay_ms);
+        sa_time_delay_ms(delay_ms);
     }
-	zepto_write_uint8( reply, 1 ); // answer with "1", all done!
+	zepto_write_uint8( reply, i ); // answer with "1", all done!
 	return PLUGIN_OK;
 }

@@ -25,8 +25,6 @@ Copyright (C) 2015 OLogN Technologies AG
 typedef struct _blink_plugin_config
 {
     uint8_t pin_led;
-	uint16_t delay_ms;
-    uint8_t total_blinks;
 } blink_plugin_config;
 
 typedef struct _blink_plugin_state
