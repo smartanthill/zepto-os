@@ -1519,9 +1519,9 @@ void zepto_parser_decode_uint( parser_obj* po, uint8_t* bytes_out, uint8_t targe
 
 uint16_t zepto_parse_encoded_uint8( parser_obj* po )
 {
-	uint8_t buff[1];
-	zepto_parser_decode_uint( po, buff, 1 );
-	return buff[0];
+	uint8_t num_out;
+	zepto_parser_decode_uint( po, &num_out, 1 );
+	return num_out;
 }
 
 uint16_t zepto_parse_encoded_uint16( parser_obj* po )
