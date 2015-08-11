@@ -17,24 +17,31 @@ Copyright (C) 2015 OLogN Technologies AG
 
 
 #include "smart_echo.h"
+#include <simpleiot/siot_bodypart_list_common.h>
 
-#include <stdio.h> // for sprintf() in fake implementation
-
-uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_state )
+uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_persistent_state )
 {
 	//perform sensor initialization if necessary
-	smart_echo_plugin_state* ps = (smart_echo_plugin_state*)plugin_state;
+	smart_echo_plugin_persistent_state* ps = (smart_echo_plugin_persistent_state*)plugin_persistent_state;
 	ps->state = 0;
 	ps->currChainIdBase[0] = 0;
 	ps->currChainIdBase[1] = MASTER_SLAVE_BIT << 15;
+	static int check = 0;
+	check++;
+	ZEPTO_DEBUG_ASSERT( check == 1 );
+	return PLUGIN_OK;
+}
+
+uint8_t smart_echo_plugin_exec_init( const void* plugin_config, void* plugin_state )
+{
 	return PLUGIN_OK;
 }
 
 
-uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply )
+uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply )
 {
 //	const smart_echo_plugin_config* pc = (smart_echo_plugin_config*) plugin_config;
-	smart_echo_plugin_state* ps = (smart_echo_plugin_state*)plugin_state;
+	smart_echo_plugin_persistent_state* ps = (smart_echo_plugin_persistent_state*)plugin_persistent_state;
 	uint8_t varln = 6 - ps->self_id % 7; // 0:6
 
 	zepto_write_uint8( reply, ps->first_byte );
@@ -66,14 +73,14 @@ uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plu
 
 	// return status
 //	chainContinued = true;
-	return PLUGIN_PASS_LOWER;
+	return PLUGIN_OK;
 }
 
 
-uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte )
+uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte )
 {
 //	const smart_echo_plugin_config* pc = (smart_echo_plugin_config*) plugin_config;
-	smart_echo_plugin_state* ps = (smart_echo_plugin_state*)plugin_state;
+	smart_echo_plugin_persistent_state* ps = (smart_echo_plugin_persistent_state*)plugin_persistent_state;
 
 	if ( ps->state == 0 )
 	{
@@ -148,7 +155,7 @@ uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_state
 		{
 			// just go through
 //			*wait_to_process_time = 0;
-			return smart_echo_plugin_handler_continue( plugin_config, plugin_state, command, reply );
+			return smart_echo_plugin_handler_continue( plugin_config, plugin_persistent_state, plugin_state, command, reply );
 		}
 /*		else
 		{

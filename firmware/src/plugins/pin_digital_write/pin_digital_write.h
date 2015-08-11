@@ -29,7 +29,7 @@ typedef struct _pin_digital_write_plugin_config
 
 typedef struct _pin_digital_write_plugin_state
 {
-
+	uint8_t dummy;
 } pin_digital_write_plugin_state;
 
 uint8_t pin_digital_write_plugin_handler_init( const void* plugin_config, void* plugin_state );

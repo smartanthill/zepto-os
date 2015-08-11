@@ -16,14 +16,22 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 #include "ping.h"
+#include <simpleiot/siot_bodypart_list_common.h>
+#include <simpleiot_hal/hal_waiting.h>
 
-uint8_t ping_plugin_handler_init( const void* plugin_config, void* plugin_state )
+
+uint8_t ping_plugin_handler_init( const void* plugin_config, void* plugin_persistent_state )
 {
-	return 0;
+	return PLUGIN_OK;
 }
 
-uint8_t ping_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte )
+uint8_t ping_plugin_exec_init( const void* plugin_config, void* plugin_state )
+{
+	return PLUGIN_OK;
+}
+
+uint8_t ping_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte )
 {
 	zepto_write_uint8( reply, 1 ); // answer with "1", we are on-line!
-	return 0;
+	return PLUGIN_OK;
 }

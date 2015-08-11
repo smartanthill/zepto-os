@@ -24,10 +24,6 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot_hal/siot_mem_mngmt.h>
 #include <simpleiot/siot_gd_protocol.h> // for packet flags
 
-#define PLUGIN_OK 0
-#define PLUGIN_WAIT_TO_CONTINUE 1
-#define PLUGIN_PASS_LOWER 2
-
 
 typedef struct _smart_echo_plugin_config //constant structure filled with a configuration for specific 'ant body part'
 {
@@ -38,7 +34,7 @@ typedef struct _smart_echo_plugin_config //constant structure filled with a conf
 	uint8_t reply_pin_numbers[4];//pins to read when ack_pin_number shows that the data is ready*/
 } smart_echo_plugin_config;
 
-typedef struct _smart_echo_plugin_state
+typedef struct _smart_echo_plugin_persistent_state
 {
 	uint8_t state; //'0' means 'be ready to process incoming command', '1' means 'prepare reply'
 	uint16_t last_sent_id;
@@ -49,10 +45,16 @@ typedef struct _smart_echo_plugin_state
 	uint16_t chain_ini_size;
 	uint16_t reply_to_id;
 	uint16_t self_id;
+} smart_echo_plugin_persistent_state;
+
+typedef struct _smart_echo_plugin_state
+{
+	uint8_t dummy;
 } smart_echo_plugin_state;
 
-uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_state );
-uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte );
+uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_persistent_state );
+uint8_t smart_echo_plugin_exec_init( const void* plugin_config, void* plugin_state );
+uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte );
 
 
 #endif // __SA_SMART_ECHO_PLUGIN_H__
