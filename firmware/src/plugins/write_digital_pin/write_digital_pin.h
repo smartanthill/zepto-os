@@ -21,19 +21,25 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include <simpleiot/siot_common.h>
 #include <simpleiot/siot_data_types.h>
+#include <simpleiot_hal/hal_waiting.h>
 
-typedef struct _pin_digital_write_plugin_config
+typedef struct _write_digital_pin_plugin_config
 {
     uint8_t pin_num;
-} pin_digital_write_plugin_config;
+} write_digital_pin_plugin_config;
 
-typedef struct _pin_digital_write_plugin_state
+typedef struct _write_digital_pin_plugin_state
 {
-	uint8_t dummy;
-} pin_digital_write_plugin_state;
+	uint8_t dummy_byte;
+} write_digital_pin_plugin_state;
 
-uint8_t pin_digital_write_plugin_handler_init( const void* plugin_config, void* plugin_state );
-uint8_t pin_digital_write_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte );
+typedef struct _write_digital_pin_plugin_persistent_state
+{
+    uint8_t dummy_byte;
+} write_digital_pin_plugin_persistent_state;
 
+uint8_t write_digital_pin_plugin_handler_init( const void* plugin_config, void* plugin_state );
+uint8_t write_digital_pin_plugin_exec_init( const void* plugin_config, void* plugin_state );
+uint8_t write_digital_pin_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte );
 
 #endif // __SA_PIN_DIGITAL_WRITE_PLUGIN_H__

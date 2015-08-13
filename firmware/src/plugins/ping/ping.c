@@ -17,7 +17,6 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include "ping.h"
 #include <simpleiot/siot_bodypart_list_common.h>
-#include <simpleiot_hal/hal_waiting.h>
 
 
 uint8_t ping_plugin_handler_init( const void* plugin_config, void* plugin_persistent_state )

@@ -15,24 +15,28 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "pin_digital_write.h"
+
+#include "write_digital_pin.h"
+#include <simpleiot/siot_bodypart_list_common.h>
 #include "../../common/hal_gpio.h"
 
-#define PLUGIN_OK 0
-
-uint8_t pin_digital_write_plugin_handler_init( const void* plugin_config, void* plugin_state )
+uint8_t write_digital_pin_plugin_handler_init( const void* plugin_config, void* plugin_state )
 {
-    pin_digital_write_plugin_config* pc = (pin_digital_write_plugin_config*)plugin_config;
-    sa_hal_gpio_mode(pc->pin_num, HAL_GPIO_TYPE_OUTPUT);
 	return PLUGIN_OK;
 }
 
-uint8_t pin_digital_write_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte )
+uint8_t write_digital_pin_plugin_exec_init( const void* plugin_config, void* plugin_state )
 {
-    pin_digital_write_plugin_config* pc = (pin_digital_write_plugin_config*)plugin_config;
-    uint8_t level = zepto_parse_uint8( command );
-    sa_hal_gpio_write(pc->pin_num, level);
-    zepto_write_uint8( reply, level);
+    write_digital_pin_plugin_config* pc = (write_digital_pin_plugin_config*)plugin_config;
+    sa_hal_gpio_mode(pc->pin_num, HAL_GPIO_TYPE_OUTPUT);
     return PLUGIN_OK;
 }
 
+uint8_t write_digital_pin_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte )
+{
+    write_digital_pin_plugin_config* pc = (write_digital_pin_plugin_config*)plugin_config;
+    uint8_t level = zepto_parse_uint8( command );
+    sa_hal_gpio_write(pc->pin_num, level);
+    zepto_write_uint8(reply, level);
+    return PLUGIN_OK;
+}

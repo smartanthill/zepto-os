@@ -42,5 +42,4 @@ uint8_t ping_plugin_handler_init( const void* plugin_config, void* plugin_state 
 uint8_t ping_plugin_exec_init( const void* plugin_config, void* plugin_state );
 uint8_t ping_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte );
 
-
 #endif // __SA_PING_PLUGIN_H__

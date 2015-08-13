@@ -1,4 +1,4 @@
-<smartanthill.plugin id="pin_digital_write" name="Pin digital write" version="1.0">
+<smartanthill.plugin id="write_digital_pin" name="Write to Digital pin" version="1.0">
 
   <description>Write a "1" or a "0" value to a digital pin</description>
 
@@ -13,7 +13,7 @@
   <configuration>
 
     <peripheral>
-      <pin type="digital" name="pin_num" title="Pin" />
+      <pin type="digital" name="pin_num" title="Digital Pin" />
     </peripheral>
 
   </configuration>

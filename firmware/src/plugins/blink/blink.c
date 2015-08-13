@@ -15,20 +15,24 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#include "blink.h"
-#include <hal_time_provider.h>
-#include "../../common/hal_gpio.h"
 
-#define PLUGIN_OK 0
+#include "blink.h"
+#include <simpleiot/siot_bodypart_list_common.h>
+#include "../../common/hal_gpio.h"
 
 uint8_t blink_plugin_handler_init( const void* plugin_config, void* plugin_state )
 {
-    blink_plugin_config* pc = (blink_plugin_config*)plugin_config;
-    sa_hal_gpio_mode(pc->pin_led, HAL_GPIO_TYPE_OUTPUT);
 	return PLUGIN_OK;
 }
 
-uint8_t blink_plugin_handler( const void* plugin_config, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply/*, WaitingFor* waiting_for*/, uint8_t first_byte )
+uint8_t blink_plugin_exec_init( const void* plugin_config, void* plugin_state )
+{
+    blink_plugin_config* pc = (blink_plugin_config*)plugin_config;
+    sa_hal_gpio_mode(pc->pin_led, HAL_GPIO_TYPE_OUTPUT);
+    return PLUGIN_OK;
+}
+
+uint8_t blink_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte )
 {
     blink_plugin_config* pc = (blink_plugin_config*)plugin_config;
     uint8_t i = 0;
