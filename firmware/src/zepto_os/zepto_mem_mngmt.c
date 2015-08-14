@@ -551,7 +551,14 @@ uint16_t memory_object_get_request_size( REQUEST_REPLY_HANDLE mem_h )
 	ZEPTO_DEBUG_ASSERT( mem_h < MEMORY_HANDLE_MAX );
 	return memory_objects[ mem_h ].rq_size;
 }
-
+/*
+uint8_t memory_object_read_request_byte( REQUEST_REPLY_HANDLE mem_h, uint16_t offset )
+{
+	ZEPTO_DEBUG_ASSERT( mem_h < MEMORY_HANDLE_MAX );
+	ZEPTO_DEBUG_ASSERT( offset < memory_objects[ mem_h ].rq_size );
+	return *(memory_objects[ mem_h ].ptr + offset);
+}
+*/
 uint8_t* memory_object_get_response_ptr( REQUEST_REPLY_HANDLE mem_h )
 {
 	ZEPTO_DEBUG_ASSERT( mem_h < MEMORY_HANDLE_MAX );
@@ -562,6 +569,13 @@ uint16_t memory_object_get_response_size( REQUEST_REPLY_HANDLE mem_h )
 {
 	ZEPTO_DEBUG_ASSERT( mem_h < MEMORY_HANDLE_MAX );
 	return memory_objects[ mem_h ].rsp_size;
+}
+
+uint8_t memory_object_read_response_byte( REQUEST_REPLY_HANDLE mem_h, uint16_t offset )
+{
+	ZEPTO_DEBUG_ASSERT( mem_h < MEMORY_HANDLE_MAX );
+	ZEPTO_DEBUG_ASSERT( offset < memory_objects[ mem_h ].rsp_size );
+	return *(memory_objects[ mem_h ].ptr + memory_objects[ mem_h ].rq_size + offset);
 }
 
 
@@ -1535,6 +1549,21 @@ uint16_t zepto_parse_encoded_uint16( parser_obj* po )
 	return num_out;
 }
 
+uint32_t zepto_parse_encoded_uint32( parser_obj* po )
+{
+	uint32_t num_out;
+	uint8_t buff[4];
+	zepto_parser_decode_uint( po, buff, 4 );
+	num_out = buff[3];
+	num_out <<= 24;
+	num_out |= buff[2];
+	num_out <<= 16;
+	num_out |= buff[1];
+	num_out <<= 8;
+	num_out |= buff[0];
+	return num_out;
+}
+
 
 #if (SA_USED_ENDIANNES == SA_LITTLE_ENDIAN)
 
@@ -1583,6 +1612,16 @@ void zepto_parser_encode_and_append_uint16( MEMORY_HANDLE mem_h, uint16_t num )
 	buff[0] = (uint8_t)num;
 	buff[1] = (uint8_t)(num>>8);
 	zepto_parser_encode_and_append_uint( mem_h, buff, 2 );
+}
+
+void zepto_parser_encode_and_append_uint32( MEMORY_HANDLE mem_h, uint32_t num )
+{
+	uint8_t buff[4];
+	buff[0] = (uint8_t)num;
+	buff[1] = (uint8_t)(num>>8);
+	buff[2] = (uint8_t)(num>>16);
+	buff[3] = (uint8_t)(num>>24);
+	zepto_parser_encode_and_append_uint( mem_h, buff, 4 );
 }
 
 void zepto_parser_encode_and_prepend_uint( MEMORY_HANDLE mem_h, const uint8_t* num_bytes, uint8_t num_sz_max )
@@ -1655,7 +1694,6 @@ void zepto_parser_strip_beginning_of_request( parser_obj* po )
 	memory_object_strip_beginning_of_request( po->mem_handle, po->offset );
 	po->offset = 0;
 }
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

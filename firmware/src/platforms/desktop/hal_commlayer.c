@@ -456,10 +456,12 @@ void communication_terminate()
 	_communication_terminate();
 }
 
+#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
 uint8_t hal_get_busid_of_last_packet()
 {
 	return bus_id_in;
 }
+#endif
 
 uint8_t wait_for_communication_event( unsigned int timeout )
 {

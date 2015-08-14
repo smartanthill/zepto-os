@@ -30,9 +30,7 @@ void memory_object_request_to_response( REQUEST_REPLY_HANDLE mem_h );
 uint8_t* memory_object_append( REQUEST_REPLY_HANDLE mem_h, uint16_t size );
 uint8_t* memory_object_prepend( REQUEST_REPLY_HANDLE mem_h, uint16_t size );
 uint8_t* memory_object_get_request_ptr( REQUEST_REPLY_HANDLE mem_h );
-uint16_t memory_object_get_request_size( REQUEST_REPLY_HANDLE mem_h );
 uint8_t* memory_object_get_response_ptr( REQUEST_REPLY_HANDLE mem_h );
-uint16_t memory_object_get_response_size( REQUEST_REPLY_HANDLE mem_h );
 
 #ifdef __cplusplus
 }
