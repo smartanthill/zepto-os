@@ -55,3 +55,8 @@ uint8_t send_message (MEMORY_HANDLE mem_h)
 {
     return handler_sadlp_send_packet (&DATALINK_TRANSPORT, mem_h);
 }
+
+void keep_transmitter_on( bool keep_on )
+{
+    // TODO: add reasonable implementation
+}

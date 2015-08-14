@@ -89,18 +89,21 @@ void sa_get_time( sa_time_val* t )
 	t->low_t = (unsigned short)sys_t;
 }
 
-void mcu_sleep( uint16_t sec )
+void mcu_sleep( uint16_t sec, uint8_t transmitter_state_on_exit )
 {
-	unsigned int timeout = (unsigned int)sec * 1000;
-	wait_for_timeout( timeout);
+	if ( transmitter_state_on_exit == 0 )
+		keep_transmitter_on( false );
+	sleep( ( unsigned int )sec * 1000 );
+	if ( transmitter_state_on_exit )
+		keep_transmitter_on( true );
 }
 
 void just_sleep( sa_time_val* timeval )
 {
-	unsigned int timeout = timeval->high_t;
-	timeout <<= 16;
-	timeout += timeval->low_t;
-	wait_for_timeout( timeout);
+	unsigned int ms = timeval->high_t;
+	ms <<= 16;
+	ms += timeval->low_t;
+	sleep( ms );
 }
 
 
