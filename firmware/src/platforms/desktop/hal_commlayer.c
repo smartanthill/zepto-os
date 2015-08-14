@@ -59,6 +59,30 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #endif // _MSC_VER
 
+#ifdef MESH_TEST
+#ifdef SA_RETRANSMITTER
+
+#ifdef _MSC_VER
+SOCKET sock;
+SOCKET sock_accepted;
+SOCKET sock2;
+SOCKET sock_accepted2;
+#else
+int sock;
+int sock_accepted;
+int sock2;
+int sock_accepted2;
+#endif
+struct sockaddr_in sa_self, sa_other;
+const char* inet_addr_as_string = "127.0.0.1";
+uint16_t self_port_num = 7654;
+uint16_t other_port_num = 7667;
+
+struct sockaddr_in sa_self2, sa_other2;
+uint16_t self_port_num2 = 7767;
+uint16_t other_port_num2 = 7754;
+
+#else // terminal device
 #ifdef _MSC_VER
 SOCKET sock;
 SOCKET sock_accepted;
@@ -68,9 +92,22 @@ int sock_accepted;
 #endif
 struct sockaddr_in sa_self, sa_other;
 const char* inet_addr_as_string = "127.0.0.1";
-
+uint16_t self_port_num = 7754;
+uint16_t other_port_num = 7767;
+#endif
+#else
+#ifdef _MSC_VER
+SOCKET sock;
+SOCKET sock_accepted;
+#else
+int sock;
+int sock_accepted;
+#endif
+struct sockaddr_in sa_self, sa_other;
+const char* inet_addr_as_string = "127.0.0.1";
 uint16_t self_port_num = 7654;
 uint16_t other_port_num = 7667;
+#endif
 
 uint16_t buffer_in_pos;
 
@@ -93,6 +130,56 @@ bool communication_preinitialize()
 	return true;
 #endif
 }
+
+#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
+bool _communication_initialize_2()
+{
+	//Zero out socket address
+	memset(&sa_self2, 0, sizeof sa_self2);
+	memset(&sa_other2, 0, sizeof sa_other2);
+
+	//create an internet, datagram, socket using UDP
+	sock2 = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (-1 == sock2) /* if socket failed to initialize, exit */
+	{
+		ZEPTO_DEBUG_PRINTF_1("Error Creating Socket\n");
+		return false;
+	}
+
+	//The address is ipv4
+	sa_other2.sin_family = AF_INET;
+	sa_self2.sin_family = AF_INET;
+
+	//ip_v4 adresses is a uint32_t, convert a string representation of the octets to the appropriate value
+	sa_self2.sin_addr.s_addr = inet_addr( inet_addr_as_string );
+	sa_other2.sin_addr.s_addr = inet_addr( inet_addr_as_string );
+
+	//sockets are unsigned shorts, htons(x) ensures x is in network byte order, set the port to 7654
+	sa_self2.sin_port = htons( self_port_num2 );
+	sa_other2.sin_port = htons( other_port_num2 );
+
+	if (-1 == bind(sock2, (struct sockaddr *)&sa_self2, sizeof(sa_self2)))
+	{
+#ifdef _MSC_VER
+		int error = WSAGetLastError();
+#else
+		int error = errno;
+#endif
+		ZEPTO_DEBUG_PRINTF_2( "bind sock failed; error %d\n", error );
+		CLOSE_SOCKET(sock2);
+		return false;
+	}
+
+	if (-1 == connect(sock2, (struct sockaddr *)&sa_other2, sizeof(sa_other2)))
+		{
+		  perror("connect failed");
+			CLOSE_SOCKET(sock2);
+		  return false;
+		}
+	return true;
+}
+
+#endif // (defined MESH_TEST) && (defined SA_RETRANSMITTER)
 
 bool _communication_initialize()
 {
@@ -132,14 +219,6 @@ bool _communication_initialize()
 		CLOSE_SOCKET(sock);
 		return false;
 	}
-/*
-#ifdef _MSC_VER
-    unsigned long ul = 1;
-    ioctlsocket(sock, FIONBIO, &ul);
-#else
-    fcntl(sock,F_SETFL,O_NONBLOCK);
-#endif
-	*/
 	if(-1 == listen(sock, 10))
     {
       perror("error listen failed");
@@ -170,31 +249,13 @@ bool _communication_initialize()
 void _communication_terminate()
 {
 	CLOSE_SOCKET(sock);
+#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
+	CLOSE_SOCKET(sock2);
+#endif
 }
 
-uint8_t send_message( MEMORY_HANDLE mem_h )
+uint8_t internal_send_packet( MEMORY_HANDLE mem_h, int _sock, struct sockaddr* _sa_other )
 {
-/*	uint16_t sz = memory_object_get_request_size( mem_h );
-	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-	uint8_t* buff = memory_object_get_request_ptr( mem_h );
-	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	int bytes_sent = sendto(sock, (char*)buff, sz, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
-	if (bytes_sent < 0)
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-		ZEPTO_DEBUG_PRINTF_2( "Error %d sending packet\n", error );
-#else
-		ZEPTO_DEBUG_PRINTF_2("Error sending packet: %s\n", strerror(errno));
-#endif
-		return COMMLAYER_RET_FAILED;
-	}
-#ifdef _MSC_VER
-	ZEPTO_DEBUG_PRINTF_4( "[%d] message sent; mem_h = %d, size = %d\n", GetTickCount(), mem_h, sz );
-#else
-	ZEPTO_DEBUG_PRINTF_3( "[--] message sent; mem_h = %d, size = %d\n", mem_h, sz );
-#endif
-	return COMMLAYER_RET_OK;*/
 	ZEPTO_DEBUG_PRINTF_1( "send_message() called...\n" );
 
 	uint16_t sz = memory_object_get_request_size( mem_h );
@@ -205,7 +266,7 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
 	buff[1] = sz >> 8;
-	int bytes_sent = sendto(sock, (char*)buff, sz+2, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
+	int bytes_sent = sendto(_sock, (char*)buff, sz+2, 0, _sa_other, sizeof (struct sockaddr) );
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
 	memory_object_response_to_request( mem_h );
@@ -228,53 +289,35 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
 #endif
 	return COMMLAYER_RET_OK;
 }
-/*
-uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+
+#ifdef MESH_TEST
+uint8_t hal_send_packet( MEMORY_HANDLE mem_h, uint8_t bus_id, uint8_t intrabus_id )
 {
-	// Implementation notes:
-	// It is assumed in the current implementation that the system is able to receive a whole packet up to MAX_PACKET_SIZE BYTES first and store it in a buffer of a respective size.
-	// Then bytes of the received packet are appended at once to the response referenced by handle.
-	//
-	// In some other implementations a packet may first be received by parts so that each part is first stored in a relatively small intermediate buffer.
-	// In this case this function appends bytes accumulated in the buffer to the response, cleares the buffer, and starts accumulaation over.
-	// This process ends when the whole packet is written to the response behind the handle
-
-	// do cleanup
-	uint8_t buffer[ MAX_PACKET_SIZE ];
-	socklen_t fromlen = sizeof(sa_other);
-	uint16_t recsize = recvfrom(sock, (char *)buffer, MAX_PACKET_SIZE, 0, (struct sockaddr *)&sa_other, &fromlen);
-
-	if (recsize < 0)
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-		if ( error == WSAEWOULDBLOCK )
-#else
-		int error = errno;
-		if ( error == EAGAIN || error == EWOULDBLOCK )
-#endif
-		{
-			return COMMLAYER_RET_PENDING;
-		}
-		else
-		{
-			ZEPTO_DEBUG_PRINTF_2( "unexpected error %d received while getting message\n", error );
-			return HAL_GET_PACKET_BYTES_FAILED;
-		}
-	}
+#ifdef SA_RETRANSMITTER
+	if ( bus_id == 0 )
+		return internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
 	else
 	{
-		ZEPTO_DEBUG_ASSERT( recsize && recsize <= MAX_PACKET_SIZE );
-		zepto_write_block( mem_h, buffer, recsize );
-		return HAL_GET_PACKET_BYTES_DONE;
+		ZEPTO_DEBUG_ASSERT( bus_id == 1 );
+		return internal_send_packet( mem_h, sock2, (struct sockaddr *)(&sa_other2) );
 	}
-
+#else
+	ZEPTO_DEBUG_ASSERT( bus_id == 0 );
+	return internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+#endif
 }
-*/
-uint8_t try_get_packet( uint8_t* buff, uint16_t sz )
+#else
+uint8_t send_message( MEMORY_HANDLE mem_h )
 {
-	socklen_t fromlen = sizeof(sa_other);
-	int recsize = recvfrom(sock, (char *)(buff + buffer_in_pos), sz - buffer_in_pos, 0, (struct sockaddr *)&sa_other, &fromlen);
+	return internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+}
+#endif
+
+
+uint8_t try_get_packet( uint8_t* buff, uint16_t sz, int _sock, struct sockaddr* _sa_other )
+{
+	socklen_t fromlen = sizeof(struct sockaddr_in);
+	int recsize = recvfrom(_sock, (char *)(buff + buffer_in_pos), sz - buffer_in_pos, 0, _sa_other, &fromlen);
 	if (recsize < 0)
 	{
 #ifdef _MSC_VER
@@ -305,10 +348,10 @@ uint8_t try_get_packet( uint8_t* buff, uint16_t sz )
 
 }
 
-uint8_t try_get_packet_size( uint8_t* buff )
+uint8_t try_get_packet_size( uint8_t* buff, int _sock, struct sockaddr* _sa_other )
 {
-	socklen_t fromlen = sizeof(sa_other);
-	int recsize = recvfrom(sock, (char *)(buff + buffer_in_pos), 2 - buffer_in_pos, 0, (struct sockaddr *)&sa_other, &fromlen);
+	socklen_t fromlen = sizeof(struct sockaddr_in);
+	int recsize = recvfrom(_sock, (char *)(buff + buffer_in_pos), 2 - buffer_in_pos, 0, _sa_other, &fromlen);
 	if (recsize < 0)
 	{
 #ifdef _MSC_VER
@@ -339,7 +382,7 @@ uint8_t try_get_packet_size( uint8_t* buff )
 
 }
 
-uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+uint8_t internal_get_packet_bytes( MEMORY_HANDLE mem_h, int _sock, struct sockaddr* _sa_other )
 {
 	// do cleanup
 	memory_object_response_to_request( mem_h );
@@ -351,7 +394,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 
 	do //TODO: add delays or some waiting
 	{
-		ret = try_get_packet_size( buff );
+		ret = try_get_packet_size( buff, _sock, _sa_other );
 	}
 	while ( ret == COMMLAYER_RET_PENDING );
 	if ( ret != COMMLAYER_RET_OK )
@@ -361,7 +404,7 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	buffer_in_pos = 0;
 	do //TODO: add delays or some waiting
 	{
-		ret = try_get_packet( buff, sz );
+		ret = try_get_packet( buff, sz, _sock, _sa_other );
 	}
 	while ( ret == COMMLAYER_RET_PENDING );
 
@@ -371,13 +414,41 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	return ret == COMMLAYER_RET_OK ? HAL_GET_PACKET_BYTES_DONE : HAL_GET_PACKET_BYTES_FAILED;
 }
 
+#ifdef MESH_TEST
+	uint8_t bus_id_in = 0;
+#endif
+
+
+uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+{
+#ifdef MESH_TEST
+#ifdef SA_RETRANSMITTER
+	if ( bus_id_in == 0 )
+		return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
+	else
+	{
+		ZEPTO_DEBUG_ASSERT( bus_id_in == 1 );
+		return internal_get_packet_bytes( mem_h, sock2, (struct sockaddr *)(&sa_other2) );
+	}
+#else
+	ZEPTO_DEBUG_ASSERT( bus_id_in == 0 );
+	return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
+#endif
+#else
+	return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
+#endif
+}
 
 
 
 
 bool communication_initialize()
 {
+#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
+	return communication_preinitialize() && _communication_initialize() && _communication_initialize_2();
+#else
 	return communication_preinitialize() && _communication_initialize();
+#endif
 }
 
 void communication_terminate()
@@ -385,7 +456,11 @@ void communication_terminate()
 	_communication_terminate();
 }
 
-//uint8_t wait_for_communication_event( MEMORY_HANDLE mem_h, uint16_t timeout )
+uint8_t hal_get_busid_of_last_packet()
+{
+	return bus_id_in;
+}
+
 uint8_t wait_for_communication_event( unsigned int timeout )
 {
 	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()... " );
@@ -398,7 +473,16 @@ uint8_t wait_for_communication_event( unsigned int timeout )
     FD_ZERO(&rfds);
 
     FD_SET(sock, &rfds);
+#ifdef MESH_TEST
+#ifdef SA_RETRANSMITTER
+    FD_SET(sock2, &rfds);
+	fd_cnt = (int)(sock > sock2 ? sock + 1 : sock2 + 1);
+#else
 	fd_cnt = (int)(sock + 1);
+#endif
+#else
+	fd_cnt = (int)(sock + 1);
+#endif
 
     /* Wait */
     tv.tv_sec = timeout / 1000;
@@ -424,7 +508,34 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 	}
     else if (retval)
 	{
+#ifdef MESH_TEST
+#ifdef SA_RETRANSMITTER
+		// so far, just resent to the other direction
+		if ( FD_ISSET(sock, &rfds) )
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Retransmitter: packet has come from MASTER\n" );
+			bus_id_in = 0;
+/*			MEMORY_HANDLE mem_h = 0;
+			hal_get_packet_bytes( mem_h );
+			zepto_response_to_request( mem_h );
+			hal_send_packet( mem_h, 1, 0 );*/
+		}
+		else
+		{
+			ZEPTO_DEBUG_ASSERT( FD_ISSET(sock2, &rfds) );
+			ZEPTO_DEBUG_PRINTF_1( "Retransmitter: packet has come from SLAVE\n" );
+			bus_id_in = 1;
+/*			MEMORY_HANDLE mem_h = 0;
+			hal_get_packet_bytes( mem_h );
+			zepto_response_to_request( mem_h );
+			hal_send_packet( mem_h, 0, 0 );*/
+		}
+#else
 		ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
+#endif
+#else
+		ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
+#endif
 		return COMMLAYER_RET_FROM_DEV;
 	}
     else

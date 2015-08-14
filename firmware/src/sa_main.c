@@ -222,6 +222,35 @@ wait_for_comm_event:
 				}
 				case WAIT_RESULTED_IN_PACKET:
 				{
+#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
+					uint8_t bus_id = hal_get_busid_of_last_packet();
+					ret_code = hal_get_packet_bytes( packet_getting_handle.packet_h );
+					switch ( ret_code )
+					{
+						case HAL_GET_PACKET_BYTES_FAILED:
+						{
+							zepto_parser_free_memory( packet_getting_handle.packet_h );
+							return 0; // TODO: think about recovery (later attempts, etc)
+							goto start_over;
+							break;
+						}
+						case HAL_GET_PACKET_BYTES_DONE:
+						{
+							zepto_response_to_request( packet_getting_handle.packet_h );
+							hal_send_packet( packet_getting_handle.packet_h, 1-bus_id, 0 );
+							goto wait_for_comm_event;
+							break;
+						}
+						default:
+						{
+							ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+							ZEPTO_DEBUG_ASSERT( 0 );
+							return 0;
+							break;
+						}
+					}
+					goto wait_for_comm_event;
+#else							
 					// regular processing will be done below in the next block
 					ret_code = hal_get_packet_bytes( packet_getting_handle.packet_h );
 					switch ( ret_code )
@@ -237,7 +266,7 @@ wait_for_comm_event:
 						{
 							zepto_response_to_request( packet_getting_handle.packet_h );
 //							REQUEST_REPLY_HANDLE tmp_h = working_handle; working_handle = packet_getting_handle; packet_getting_handle = tmp_h;
-							SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle);
+							SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
 							goto saoudp_rec;
 							break;
 						}
@@ -249,6 +278,7 @@ wait_for_comm_event:
 							break;
 						}
 					}
+#endif
 				}
 				case WAIT_RESULTED_IN_TIMEOUT:
 				{
@@ -730,7 +760,15 @@ saoudp_send:
 			}
 		}
 
+#ifdef MESH_TEST
+#ifdef SA_RETRANSMITTER
+			ret_code = hal_send_packet( working_handle.packet_h, 0, 0 );
+#else
+			ret_code = hal_send_packet( working_handle.packet_h, 0, 0 );
+#endif
+#else
 			ret_code = send_message( working_handle.packet_h );
+#endif
 			if (ret_code != COMMLAYER_RET_OK )
 			{
 				return -1;
