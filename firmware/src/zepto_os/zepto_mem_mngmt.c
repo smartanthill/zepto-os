@@ -1498,10 +1498,6 @@ void zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t* bytes_o
 				*bytes_out = (uint8_t)interm;
 				bytes_out++;
 			}
-if ( bytes_out - bytes_out_start > target_size )
-{
-	target_size = target_size;
-}
 			ZEPTO_DEBUG_ASSERT( bytes_out - bytes_out_start <= target_size );
 			(*packed_num_bytes)++;
 			return;
