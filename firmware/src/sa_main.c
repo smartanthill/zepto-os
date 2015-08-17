@@ -267,7 +267,7 @@ wait_for_comm_event:
 							zepto_response_to_request( packet_getting_handle.packet_h );
 //							REQUEST_REPLY_HANDLE tmp_h = working_handle; working_handle = packet_getting_handle; packet_getting_handle = tmp_h;
 							SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
-							goto saoudp_rec;
+							goto siotmp_rec;
 							break;
 						}
 						default:
@@ -382,8 +382,40 @@ wait_for_comm_event:
 		ZEPTO_DEBUG_PRINTF_4( "ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
 
 
+		// 2.0. Pass to siot/mesh
+siotmp_rec:
+		ret_code = handler_siot_mesh_receive_packet( working_handle.packet_h );
+		zepto_response_to_request( working_handle.packet_h );
+
+		switch ( ret_code )
+		{
+			case SIOT_MESH_RET_PASS_TO_PROCESS:
+			{
+				// regular processing will be done below in the next block
+				break;
+			}
+			case SIOT_MESH_RET_PASS_TO_SEND:
+			{
+				goto hal_send;
+				break;
+			}
+			case SIOT_MESH_RET_GARBAGE_RECEIVED:
+			{
+				goto start_over;
+				break;
+			}
+			default:
+			{
+				// unexpected ret_code
+				ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+				ZEPTO_DEBUG_ASSERT( 0 );
+				break;
+			}
+		}
+
+
 		// 2.1. Pass to SAoUDP
-saoudp_rec:
+//saoudp_rec:
 		ret_code = handler_saoudp_receive( working_handle.packet_h, working_handle.addr_h );
 		zepto_response_to_request( working_handle.packet_h );
 		zepto_response_to_request( working_handle.addr_h );
@@ -760,6 +792,27 @@ saoudp_send:
 			}
 		}
 
+
+		ret_code = handler_siot_mesh_send_packet( working_handle.packet_h, 0 ); // we can send it only to root, if we're slave TODO: think regarding second argument
+		zepto_response_to_request( working_handle.packet_h );
+
+		switch ( ret_code )
+		{
+			case SIOT_MESH_RET_OK:
+			{
+				// regular processing will be done below in the next block
+				break;
+			}
+			default:
+			{
+				// unexpected ret_code
+				ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+				ZEPTO_DEBUG_ASSERT( 0 );
+				break;
+			}
+		}
+
+hal_send:
 #ifdef MESH_TEST
 #ifdef SA_RETRANSMITTER
 			ret_code = hal_send_packet( working_handle.packet_h, 0, 0 );
