@@ -1531,7 +1531,7 @@ void zepto_parser_decode_uint( parser_obj* po, uint8_t* bytes_out, uint8_t targe
 	po->offset += (uint16_t)(end - buff);
 }
 
-uint16_t zepto_parse_encoded_uint8( parser_obj* po )
+uint8_t zepto_parse_encoded_uint8( parser_obj* po )
 {
 	uint8_t num_out;
 	zepto_parser_decode_uint( po, &num_out, 1 );
@@ -1604,6 +1604,11 @@ void zepto_parser_encode_and_append_uint( MEMORY_HANDLE mem_h, const uint8_t* nu
 	ZEPTO_DEBUG_PRINTF_3( "zepto_parser_encode_and_append_uint(..., ..., %d) resulted in %d bytes\n", num_sz_max, sz );
 	uint8_t* buff = memory_object_append( mem_h, sz );
 	ZEPTO_MEMCPY( buff, out_buff, sz );
+}
+
+void zepto_parser_encode_and_append_uint8( MEMORY_HANDLE mem_h, uint8_t num )
+{
+	zepto_parser_encode_and_append_uint( mem_h, &num, 1 );
 }
 
 void zepto_parser_encode_and_append_uint16( MEMORY_HANDLE mem_h, uint16_t num )
