@@ -21,6 +21,7 @@ Copyright (C) 2015 OLogN Technologies AG
 // TODO: actual key loading, etc
 //uint8_t AES_ENCRYPTION_KEY[16];
 DECLARE_AES_ENCRYPTION_KEY
+DECLARE_DEVICE_ID
 
 waiting_for wait_for;
 
@@ -108,16 +109,18 @@ bool sa_main_init()
     return true;
 }
 
-typedef struct _PACKET_HANDLE_PAIR
+typedef struct _PACKET_ASSOCIATED_DATA
 {
 	REQUEST_REPLY_HANDLE packet_h;
 	REQUEST_REPLY_HANDLE addr_h;
-} PACKET_HANDLE_PAIR;
+	uint8_t mesh_val;
+} PACKET_ASSOCIATED_DATA;
 
 #define SWAP_PACKET_HANDLE_PAIR( p1, p2 ) \
 { \
 	REQUEST_REPLY_HANDLE tmp = p1.packet_h; p1.packet_h = p2.packet_h; p2.packet_h = tmp; \
 	tmp = p1.addr_h; p1.addr_h = p2.addr_h; p2.addr_h = tmp; \
+	uint8_t tmp1 = p1.mesh_val; p1.mesh_val = p2.mesh_val; p2.mesh_val = tmp1; \
 }
 
 int sa_main_loop()
@@ -130,7 +133,7 @@ int sa_main_loop()
 
 	waiting_for ret_wf;
 	uint8_t pid[ SASP_NONCE_SIZE ];
-	uint8_t nonce[ SASP_NONCE_SIZE ];
+	sa_uint48_t nonce;
 	uint8_t ret_code;
 	sa_time_val currt;
 
@@ -148,8 +151,8 @@ int sa_main_loop()
 
 /*	REQUEST_REPLY_HANDLE working_handle = MEMORY_HANDLE_MAIN_LOOP_2;
 	REQUEST_REPLY_HANDLE packet_getting_handle = MEMORY_HANDLE_MAIN_LOOP_1;*/
-	PACKET_HANDLE_PAIR working_handle = {MEMORY_HANDLE_MAIN_LOOP_2, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR };
-	PACKET_HANDLE_PAIR packet_getting_handle = {MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR };
+	PACKET_ASSOCIATED_DATA working_handle = {MEMORY_HANDLE_MAIN_LOOP_2, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR, MEMORY_HANDLE_INVALID };
+	PACKET_ASSOCIATED_DATA packet_getting_handle = {MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR, MEMORY_HANDLE_INVALID };
 
 	for (;;)
 	{
@@ -171,6 +174,7 @@ wait_for_comm_event:
 			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 			if ( ret_code == SAGDP_RET_NEED_NONCE )
 			{
+				// NOTE: here we assume that, if GDP has something to re-send by timer, working_handle is not in use (say, by CCP)
 				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
 				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 				ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
@@ -384,7 +388,7 @@ wait_for_comm_event:
 
 		// 2.0. Pass to siot/mesh
 siotmp_rec:
-		ret_code = handler_siot_mesh_receive_packet( working_handle.packet_h, 0, 0 ); // TODO: define properly two last arguments
+		ret_code = handler_siot_mesh_receive_packet( working_handle.packet_h, &(working_handle.mesh_val), 0, 0 ); // TODO: define properly two last arguments
 		zepto_response_to_request( working_handle.packet_h );
 
 		switch ( ret_code )
@@ -400,6 +404,7 @@ siotmp_rec:
 				break;
 			}
 			case SIOT_MESH_RET_GARBAGE_RECEIVED:
+			case SIOT_MESH_RET_NOT_FOR_THIS_DEV_RECEIVED:
 			{
 				goto start_over;
 				break;
@@ -463,13 +468,14 @@ siotmp_rec:
 		switch ( ret_code )
 		{
 			case SASP_RET_IGNORE_PACKET_BROKEN:
-			case SASP_RET_IGNORE_PACKET_LAST_REPEATED:
-			case SASP_RET_IGNORE_PACKET_OLD_NONCE_NA:
+			case SASP_RET_IGNORE_PACKET_NONCE_LS_NOT_APPLIED:
 			{
-				ZEPTO_DEBUG_PRINTF_1( "BAD MESSAGE_RECEIVED\n" );
+				ZEPTO_DEBUG_PRINTF_1( "BAD PACKET RECEIVED\n" );
+				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
 				goto start_over;
 				break;
 			}
+			case SASP_RET_IGNORE_PACKET_LAST_REPEATED:
 			case SASP_RET_TO_LOWER_ERROR:
 			{
 				goto saoudp_send;
@@ -795,7 +801,7 @@ saoudp_send:
 		}
 
 
-		ret_code = handler_siot_mesh_send_packet( working_handle.packet_h, 0 ); // we can send it only to root, if we're slave TODO: think regarding second argument
+		ret_code = handler_siot_mesh_send_packet( working_handle.packet_h, &(working_handle.mesh_val), 0 ); // we can send it only to root, if we're slave TODO: think regarding second argument
 		zepto_response_to_request( working_handle.packet_h );
 
 		switch ( ret_code )
