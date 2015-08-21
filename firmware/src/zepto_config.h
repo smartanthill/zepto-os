@@ -46,7 +46,7 @@ const uint8_t AES_ENCRYPTION_KEY[16] ZEPTO_PROG_CONSTANT_LOCATION = \
 }; \
 
 #define DECLARE_DEVICE_ID \
-uint16_t DEVICE_SELF_ID ZEPTO_PROG_CONSTANT_LOCATION = 1; /* definitely, not 0 */
+uint16_t DEVICE_SELF_ID = 1; /* definitely, not 0 */
 
 
 #endif // __ZEPTO_CONFIG_H__

@@ -15,24 +15,21 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __SADLP_PROTOCOL_H__
-#define __SADLP_PROTOCOL_H__
+#if !defined __SA_TRANSPORT_SERIAL_H__
+#define __SA_TRANSPORT_SERIAL_H__
 
 #include <simpleiot/siot_common.h>
-#include "sa_transport.h"
-#include "../sa_transports_list.h"
 
+typedef struct _serial_transport_config
+{
+    uint8_t rx;
+    uint8_t tx;
+    uint16_t baudrate;
+} serial_transport_config;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+typedef struct _serial_transport_state
+{
+    void *serial_obj;
+} serial_transport_state;
 
-bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_state);
-uint8_t handler_sadlp_send_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
-uint8_t handler_sadlp_frame_received(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif // __SADLP_PROTOCOL_H__
+#endif // __SA_TRANSPORT_SERIAL_H__

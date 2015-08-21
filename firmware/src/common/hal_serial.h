@@ -15,24 +15,24 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __SADLP_PROTOCOL_H__
-#define __SADLP_PROTOCOL_H__
+#if !defined __HAL_SERIAL_H__
+#define __HAL_SERIAL_H__
 
 #include <simpleiot/siot_common.h>
-#include "sa_transport.h"
-#include "../sa_transports_list.h"
-
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_state);
-uint8_t handler_sadlp_send_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
-uint8_t handler_sadlp_frame_received(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
+bool sa_hal_serial_init(const void* serial_obj, uint16_t baudrate);
+void sa_hal_serial_read(const void* serial_obj, uint8_t *buffer, uint16_t length);
+int8_t sa_hal_serial_read_byte(const void* serial_obj);
+uint16_t sa_hal_serial_write(const void* serial_obj, const uint8_t *buffer, uint16_t length);
+uint8_t sa_hal_serial_write_byte (const void* serial_obj, uint8_t byte);
+bool sa_hal_serial_readable(const void* serial_obj);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __SADLP_PROTOCOL_H__
+#endif // __HAL_SERIAL_H__

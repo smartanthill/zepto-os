@@ -15,24 +15,25 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __SADLP_PROTOCOL_H__
-#define __SADLP_PROTOCOL_H__
-
-#include <simpleiot/siot_common.h>
-#include "sa_transport.h"
-#include "../sa_transports_list.h"
+/*******************************************************************************
+THIS FILE IS MANUALLY OR AUTOMATICALLY GENERATED BASED ON DESIRED PLUGIN LIST
+*******************************************************************************/
 
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if !defined __SA_TRANSPORTS_LIST_H__
+#define __SA_TRANSPORTS_LIST_H__
 
-bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_state);
-uint8_t handler_sadlp_send_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
-uint8_t handler_sadlp_frame_received(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
+#include "common/sa_transport.h"
 
-#ifdef __cplusplus
-}
-#endif
+typedef struct _transport_item
+{
+    const sa_transport* t;
+    void* t_config;
+    void* t_state;
+} transport_item;
 
-#endif // __SADLP_PROTOCOL_H__
+extern const uint8_t SA_TRANSPORTS_MAX ZEPTO_PROG_CONSTANT_LOCATION;
+extern const transport_item transports[];
+
+
+#endif // __SA_TRANSPORTS_LIST_H__

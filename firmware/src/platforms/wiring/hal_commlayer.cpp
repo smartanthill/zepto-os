@@ -18,17 +18,30 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot_hal/hal_commlayer.h>
 #include <simpleiot_hal/hal_waiting.h>
 #include <zepto_mem_mngmt_hal_spec.h>
-
+#include "../../common/sa_transport.h"
 #include "../../common/sadlp_protocol.h"
-#include "../../common/sadlp_transport.h"
+#include "../../transports/serial/serial.h"
+
+uint8_t transport_num = 0;
 
 uint8_t hal_wait_for (waiting_for* wf)
 {
     for (;;)
     {
-        if (wf->wait_packet && handler_sadlp_is_packet(&DATALINK_TRANSPORT))
+        transport_num = 0;
+        if (wf->wait_packet)
         {
-            return WAIT_RESULTED_IN_PACKET;
+            uint16_t i;
+            for (i = 0; i < ZEPTO_PROG_CONSTANT_READ_BYTE(&SA_TRANSPORTS_MAX); i++)
+            {
+                sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t));
+                serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t_state));
+                if (handler_sadlp_is_packet(transport, ts))
+                {
+                    transport_num = i;
+                    return WAIT_RESULTED_IN_PACKET;
+                }
+            }
         }
     }
 
@@ -43,17 +56,30 @@ uint8_t wait_for_timeout (uint32_t timeout)
 
 uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h)
 {
-    return handler_sadlp_frame_received (&DATALINK_TRANSPORT, mem_h);
+    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t));
+    serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t_state));
+    return handler_sadlp_frame_received (transport, ts, mem_h);
 }
 
 bool communication_initialize()
 {
-    return DATALINK_TRANSPORT.init();
+    uint16_t i;
+    for (i = 0; i < ZEPTO_PROG_CONSTANT_READ_BYTE(&SA_TRANSPORTS_MAX); i++)
+    {
+        sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t));
+        transport->init(
+             (void*)ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t_config)),
+             (void*)ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t_state))
+            );
+    }
+    return true;
 }
 
 uint8_t send_message (MEMORY_HANDLE mem_h)
 {
-    return handler_sadlp_send_packet (&DATALINK_TRANSPORT, mem_h);
+    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t));
+    serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t_state));
+    return handler_sadlp_send_packet (transport, ts, mem_h);
 }
 
 void keep_transmitter_on( bool keep_on )
