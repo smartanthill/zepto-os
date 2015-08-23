@@ -469,13 +469,13 @@ siotmp_rec:
 		{
 			case SASP_RET_IGNORE_PACKET_BROKEN:
 			case SASP_RET_IGNORE_PACKET_NONCE_LS_NOT_APPLIED:
+			case SASP_RET_IGNORE_PACKET_LAST_REPEATED:
 			{
 				ZEPTO_DEBUG_PRINTF_1( "BAD PACKET RECEIVED\n" );
 				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
 				goto start_over;
 				break;
 			}
-			case SASP_RET_IGNORE_PACKET_LAST_REPEATED:
 			case SASP_RET_TO_LOWER_ERROR:
 			{
 				goto saoudp_send;
@@ -580,6 +580,7 @@ siotmp_rec:
 			}
 			case SAGDP_RET_OK:
 			{
+				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
 				goto start_over;
 			}
 			default:
