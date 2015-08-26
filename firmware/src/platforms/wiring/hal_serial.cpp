@@ -30,7 +30,7 @@ bool sa_hal_serial_init(const void* serial_obj, uint16_t baudrate)
 void sa_hal_serial_read(const void* serial_obj, uint8_t *buffer, uint16_t length)
 {
     HardwareSerial *_serial = (HardwareSerial*) serial_obj;
-    _serial->readBytes(buffer, length);
+    _serial->readBytes((char*)buffer, length);
 }
 
 int8_t sa_hal_serial_read_byte(const void* serial_obj)
