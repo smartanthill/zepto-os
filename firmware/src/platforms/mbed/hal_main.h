@@ -15,28 +15,14 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __SADLP_TRANSPORT_H__
-#define __SADLP_TRANSPORT_H__
-
-#include <simpleiot/siot_common.h>
-
-typedef struct _sadlp_transport{
-
-  bool (* init)(void);
-  uint8_t (* read)(void);
-  uint32_t (* write)(uint8_t byte);
-  bool (* available)(void);
-
-} sadlp_transport;
-
-#define SADLP_SERIAL
-#define SADLP_SERIAL_BAUDRATE 9600
-
-#ifdef SADLP_SERIAL
-extern const sadlp_transport sadlp_serial_transport;
-#define DATALINK_TRANSPORT sadlp_serial_transport
-#else
-#define DATALINK_TRANSPORT sadlp_void_transport
+#if !defined __HAL_PLATFORM_MBED_MAIN_H__
+#define __HAL_PLATFORM_MBED_MAIN_H__
+#include <stdint.h>
+#include "hal_time_conversions.h"
+#ifdef __cplusplus
+#include "mbed.h"
 #endif
 
-#endif // __SADLP_TRANSPORT_H__
+void _sa_mbed_time_start_timer();
+
+#endif // __HAL_PLATFORM_MBED_MAIN_H__

@@ -71,7 +71,7 @@ uint8_t handler_sadlp_send_packet (const sa_transport* transport, void* transpor
 uint8_t handler_sadlp_get_packet (const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h)
 {
 	uint8_t buffer[BUFFER_MAX_LEN];
-    uint8_t i = 0;
+    uint16_t i = 0;
     uint8_t byte = 0;
     uint8_t marker_detected = 0;
     uint32_t timeout = 2000; // in ms

@@ -28,7 +28,7 @@ serial_transport_config serial_transport_config_0 = {0, 1, 9600};
 #define SERIAL_PTR (void*)&Serial
 #elif SA_PLATFORM_MBED
 serial_transport_config serial_transport_config_0 = {USBRX, USBTX, 9600};
-Serial pc_serial(serial_transport_config_0.tx, serial_transport_config_0.rx);
+Serial pc_serial((PinName)serial_transport_config_0.tx, (PinName)serial_transport_config_0.rx);
 #define SERIAL_PTR (void*)&pc_serial
 #else
 serial_transport_config serial_transport_config_0 = {0, 1, 9600};
