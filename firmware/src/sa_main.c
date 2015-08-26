@@ -74,15 +74,21 @@ void StackPaint(void)
 
 #endif // TEST_RAM_CONSUMPTION
 
+//#define VERY_DEBUG_SIMPLE_MAIN_LOOP
+
+#if !defined VERY_DEBUG_SIMPLE_MAIN_LOOP
 bool sa_main_init()
 {
 #ifdef TEST_RAM_CONSUMPTION
 	StackPaint();
 #endif // TEST_RAM_CONSUMPTION
 	zepto_mem_man_init_memory_management();
-	if (!init_eeprom_access())
+	if (!init_eeprom_access()) // hardware failure
 		return false;
-//	format_eeprom_at_lifestart();
+	if ( !eeprom_check_at_start() ) // corrupted data; so far, at least one of slots cannot be recovered
+	{
+		sasp_init_eeprom_data_at_lifestart();
+	}
 
 #ifdef ENABLE_COUNTER_SYSTEM
 	INIT_COUNTER_SYSTEM
@@ -96,7 +102,7 @@ bool sa_main_init()
 	TIME_MILLISECONDS16_TO_TIMEVAL( 1000, wait_for.wait_time ); //+++TODO: actual processing throughout the code
 
 //    ZEPTO_MEMSET( AES_ENCRYPTION_KEY, 0xab, 16 );
-	sasp_init_at_lifestart(); // TODO: replace by more extensive restore-from-backup-etc
+	sasp_restore_from_backup();
 	sagdp_init();
 	zepto_vm_init();
 
@@ -388,6 +394,7 @@ wait_for_comm_event:
 
 		// 2.0. Pass to siot/mesh
 siotmp_rec:
+#if SIOT_MESH_IMPLEMENTATION_WORKS
 		ret_code = handler_siot_mesh_receive_packet( working_handle.packet_h, &(working_handle.mesh_val), 0, 0 ); // TODO: define properly two last arguments
 		zepto_response_to_request( working_handle.packet_h );
 
@@ -417,7 +424,7 @@ siotmp_rec:
 				break;
 			}
 		}
-
+#endif
 
 		// 2.1. Pass to SAoUDP
 //saoudp_rec:
@@ -472,7 +479,9 @@ siotmp_rec:
 			case SASP_RET_IGNORE_PACKET_LAST_REPEATED:
 			{
 				ZEPTO_DEBUG_PRINTF_1( "BAD PACKET RECEIVED\n" );
+#if SIOT_MESH_IMPLEMENTATION_WORKS
 				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
+#endif
 				goto start_over;
 				break;
 			}
@@ -580,7 +589,9 @@ siotmp_rec:
 			}
 			case SAGDP_RET_OK:
 			{
+#if SIOT_MESH_IMPLEMENTATION_WORKS
 				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
+#endif
 				goto start_over;
 			}
 			default:
@@ -801,7 +812,7 @@ saoudp_send:
 			}
 		}
 
-
+#if SIOT_MESH_IMPLEMENTATION_WORKS
 		ret_code = handler_siot_mesh_send_packet( working_handle.packet_h, &(working_handle.mesh_val), 0 ); // we can send it only to root, if we're slave TODO: think regarding second argument
 		zepto_response_to_request( working_handle.packet_h );
 
@@ -820,6 +831,7 @@ saoudp_send:
 				break;
 			}
 		}
+#endif
 
 hal_send:
 #ifdef MESH_TEST
@@ -847,3 +859,102 @@ start_over:;
 
 	return 0;
 }
+
+#else // !defined VERY_DEBUG_SIMPLE_MAIN_LOOP
+
+bool sa_main_init()
+{
+	zepto_mem_man_init_memory_management();
+	if (!init_eeprom_access())
+		return false;
+//	format_eeprom_at_lifestart();
+
+	ZEPTO_DEBUG_PRINTF_1("STARTING SERVER...\n");
+	ZEPTO_DEBUG_PRINTF_1("==================\n\n");
+
+	ZEPTO_MEMSET( &wait_for, 0, sizeof( waiting_for ) );
+	wait_for.wait_packet = 1;
+	TIME_MILLISECONDS16_TO_TIMEVAL( 1000, wait_for.wait_time ); //+++TODO: actual processing throughout the code
+
+	ZEPTO_DEBUG_PRINTF_1("\nAwaiting client connection... \n" );
+	if (!communication_initialize())
+		return false;
+
+	ZEPTO_DEBUG_PRINTF_1("Client connected.\n");
+
+    return true;
+}
+
+int sa_main_loop()
+{
+
+//	waiting_for ret_wf;
+	uint8_t ret_code;
+
+	wait_for.wait_packet = 1;
+
+	for (;;)
+	{
+		// 1. Wait for an event
+wait_for_comm_event:
+			ret_code = hal_wait_for( &wait_for );
+
+			switch ( ret_code )
+			{
+				case WAIT_RESULTED_IN_FAILURE:
+				{
+					// TODO: consider potential failures and think about proper processing
+					return 0;
+					break;
+				}
+				case WAIT_RESULTED_IN_PACKET:
+				{
+//					uint8_t bus_id = hal_get_busid_of_last_packet();
+					ret_code = hal_get_packet_bytes( MEMORY_HANDLE_MAIN_LOOP_1 );
+					switch ( ret_code )
+					{
+						case HAL_GET_PACKET_BYTES_FAILED:
+						{
+							zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
+							return 0; // TODO: think about recovery (later attempts, etc)
+							break;
+						}
+						case HAL_GET_PACKET_BYTES_DONE:
+						{
+							zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+//							hal_send_packet( MEMORY_HANDLE_MAIN_LOOP_1, 1-bus_id, 0 );
+							ret_code = send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
+							goto wait_for_comm_event;
+							break;
+						}
+						default:
+						{
+							ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+							ZEPTO_DEBUG_ASSERT( 0 );
+							return 0;
+							break;
+						}
+					}
+					goto wait_for_comm_event;
+				}
+				case WAIT_RESULTED_IN_TIMEOUT:
+				{
+					goto wait_for_comm_event;
+					break;
+				}
+				default:
+				{
+					// unexpected ret_code
+					ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+					ZEPTO_DEBUG_ASSERT( 0 );
+					break;
+				}
+			}
+
+
+	}
+
+	return 0;
+}
+
+#endif // !defined VERY_DEBUG_SIMPLE_MAIN_LOOP
