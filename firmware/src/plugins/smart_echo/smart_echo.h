@@ -52,9 +52,16 @@ typedef struct _smart_echo_plugin_state
 	uint8_t dummy;
 } smart_echo_plugin_state;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 uint8_t smart_echo_plugin_handler_init( const void* plugin_config, void* plugin_persistent_state );
 uint8_t smart_echo_plugin_exec_init( const void* plugin_config, void* plugin_state );
 uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte );
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif // __SA_SMART_ECHO_PLUGIN_H__
