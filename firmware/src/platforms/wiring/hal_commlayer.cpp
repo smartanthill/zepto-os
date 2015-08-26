@@ -58,7 +58,7 @@ uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h)
 {
     sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t));
     serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t_state));
-    return handler_sadlp_frame_received (transport, ts, mem_h);
+    return handler_sadlp_get_packet (transport, ts, mem_h);
 }
 
 bool communication_initialize()

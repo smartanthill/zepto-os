@@ -29,7 +29,7 @@ extern "C" {
 
 bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_state);
 uint8_t handler_sadlp_send_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
-uint8_t handler_sadlp_frame_received(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
+uint8_t handler_sadlp_get_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
 
 #ifdef __cplusplus
 }

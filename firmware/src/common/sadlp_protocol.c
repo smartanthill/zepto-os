@@ -58,9 +58,7 @@ uint8_t handler_sadlp_send_packet (const sa_transport* transport, void* transpor
                 transport->write_byte(transport_state, (uint8_t) 0x03);
             	break;
             default:
-                if (!transport->write_byte(transport_state, buff[i])) {
-                    return COMMLAYER_RET_FAILED;
-                }
+                transport->write_byte(transport_state, buff[i]);
             	break;
         }
     }
@@ -70,7 +68,7 @@ uint8_t handler_sadlp_send_packet (const sa_transport* transport, void* transpor
 
 }
 
-uint8_t handler_sadlp_frame_received (const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h)
+uint8_t handler_sadlp_get_packet (const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h)
 {
 	uint8_t buffer[BUFFER_MAX_LEN];
     uint8_t i = 0;
