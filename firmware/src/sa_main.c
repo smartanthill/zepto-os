@@ -79,15 +79,46 @@ void StackPaint(void)
 #if !defined VERY_DEBUG_SIMPLE_MAIN_LOOP
 bool sa_main_init()
 {
+	uint8_t ret_code;
+	uint8_t rid[DATA_REINCARNATION_ID_SIZE];
+	ZEPTO_MEMCPY( rid, AES_ENCRYPTION_KEY, DATA_REINCARNATION_ID_SIZE );
 #ifdef TEST_RAM_CONSUMPTION
 	StackPaint();
 #endif // TEST_RAM_CONSUMPTION
 	zepto_mem_man_init_memory_management();
 	if (!init_eeprom_access()) // hardware failure
 		return false;
-	if ( !eeprom_check_at_start() ) // corrupted data; so far, at least one of slots cannot be recovered
+	ret_code = eeprom_check_reincarnation( rid );
+	switch ( ret_code )
 	{
-		sasp_init_eeprom_data_at_lifestart();
+		case EEPROM_RET_REINCARNATION_ID_OLD:
+		{
+			sasp_init_eeprom_data_at_lifestart();
+			eeprom_update_reincarnation_if_necessary( rid );
+			break;
+		}
+		case EEPROM_RET_REINCARNATION_ID_OK_ONE_OK:
+		{
+			if ( !eeprom_check_at_start() ) // corrupted data; so far, at least one of slots cannot be recovered
+			{
+				sasp_init_eeprom_data_at_lifestart();
+			}
+			eeprom_update_reincarnation_if_necessary( rid );
+			break;
+		}
+		case EEPROM_RET_REINCARNATION_ID_OK_BOTH_OK:
+		{
+			if ( !eeprom_check_at_start() ) // corrupted data; so far, at least one of slots cannot be recovered
+			{
+				sasp_init_eeprom_data_at_lifestart();
+			}
+			break;
+		}
+		default:
+		{
+			ZEPTO_DEBUG_ASSERT( 0 == "Unexpected ret code" );
+			break;
+		}
 	}
 
 #ifdef ENABLE_COUNTER_SYSTEM
