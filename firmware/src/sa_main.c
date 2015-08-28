@@ -16,7 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 #if (defined VERY_DEBUG) && (defined VERY_DEBUG_SIMPLE_MAIN_LOOP)
-#include "sa_main_dbg.ink"
+#include "sa_main_dbg.inc"
 #else // (defined VERY_DEBUG) && (defined VERY_DEBUG_SIMPLE_MAIN_LOOP)
 
 #include "sa_main.h"
