@@ -1,0 +1,35 @@
+<!--
+Copyright (C) 2015 OLogN Technologies AG
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2 as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+-->
+
+<smartanthill.transport id="serial" name="Serial" version="1.0">
+
+  <description>Serial communication over UART</description>
+
+  <configuration>
+
+    <peripheral>
+      <pin type="uart[rx]" name="rx" title="UART RX pin" />
+      <pin type="uart[tx]" name="tx" title="UART TX pin" />
+    </peripheral>
+
+    <options>
+      <option type="uint[2]" name="baudrate" default="9600" title="Data rate in bits per second (baud) for serial data transmission" />
+    </options>
+
+  </configuration>
+
+</smartanthill.transport>
