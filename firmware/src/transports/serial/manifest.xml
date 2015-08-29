@@ -27,7 +27,27 @@ Copyright (C) 2015 OLogN Technologies AG
     </peripheral>
 
     <options>
-      <option type="uint[2]" name="baudrate" default="9600" title="Data rate in bits per second (baud) for serial data transmission" />
+      <option type="uint[2]" name="baudrate" default="9600" min="300" max="230400" title="Data rate in bits per second (baud) for serial data transmission">
+        <values>
+          <item value="300" title="300" />
+          <item value="600" title="600" />
+          <item value="1200" title="1200" />
+          <item value="1800" title="1800" />
+          <item value="2400" title="2400" />
+          <item value="3600" title="3600" />
+          <item value="4800" title="4800" />
+          <item value="7200" title="7200" />
+          <item value="9600" title="9600" />
+          <item value="14400" title="14400" />
+          <item value="19200" title="19200" />
+          <item value="28800" title="28800" />
+          <item value="38400" title="38400" />
+          <item value="57600" title="57600" />
+          <item value="115200" title="115200" />
+          <item value="230400" title="230400" />
+        </values>
+      </option>
+
     </options>
 
   </configuration>

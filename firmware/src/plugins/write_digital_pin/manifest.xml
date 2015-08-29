@@ -17,10 +17,15 @@ Copyright (C) 2015 OLogN Technologies AG
 
 <smartanthill.plugin id="write_digital_pin" name="Write to Digital pin" version="1.0">
 
-  <description>Write a "1" or a "0" value to a digital pin</description>
+  <description>Write a "1"(HIGH) or a "0"(LOW) value to a digital pin</description>
 
   <request>
-    <field name="value" type="encoded-uint[max=1]" min="0" max="1" />
+    <field name="value" type="encoded-uint[max=1]" min="0" max="1" default="0" title="Level">
+      <values>
+        <item value="0" title="LOW" />
+        <item value="1" title="HIGH" />
+      </values>
+    </field>
   </request>
 
   <response>
