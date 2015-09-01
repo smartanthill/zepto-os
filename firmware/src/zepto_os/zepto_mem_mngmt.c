@@ -28,7 +28,7 @@ typedef struct _request_reply_mem_obj
 	uint16_t rsp_size;
 } request_reply_mem_obj;
 
-#define BASE_MEM_BLOCK_SIZE	0xA0
+#define BASE_MEM_BLOCK_SIZE	0xC0
 uint8_t BASE_MEM_BLOCK[ BASE_MEM_BLOCK_SIZE ];
 request_reply_mem_obj memory_objects[ MEMORY_HANDLE_MAX ]; // fixed size array for a while
 

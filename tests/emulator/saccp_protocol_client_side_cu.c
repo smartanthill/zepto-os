@@ -15,6 +15,12 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
+#if (defined VERY_DEBUG) && ( defined VERY_DEBUG_SIOT_CCP)
+#include "saccp_protocol_client_side_cu_dbg.inc"
+#else // (defined VERY_DEBUG) && ( defined VERY_DEBUG_SIOT_CCP) )
+
+
+
 
 #include "saccp_protocol_client_side_cu.h"
 #include <simpleiot/siot_gd_protocol.h> // for packet status in chain
@@ -194,3 +200,4 @@ uint8_t handler_saccp_receive( MEMORY_HANDLE mem_h, sasp_nonce_type chain_id, De
 	return SACCP_RET_FAILED;
 }
 
+#endif // (defined VERY_DEBUG) && ( defined VERY_DEBUG_SIOT_CCP) )
