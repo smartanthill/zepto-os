@@ -190,6 +190,15 @@ uint8_t handler_saccp_receive( MEMORY_HANDLE mem_h, sasp_nonce_type chain_id, De
 			ZEPTO_DEBUG_ASSERT( NULL == "Error: SACCP_REPLY_ERROR is not implemented\n" );
 			break;
 		}
+		case SACCP_PHY_AND_ROUTING_DATA:
+		{
+			// TODO: clarify processing of "additional bits"
+			uint8_t additional_bits = (packet_head >> 3) & 0x7; // "additional bits" passed alongside with PHY-AND-ROUTING-DATA-REQUEST-BODY
+			ZEPTO_DEBUG_ASSERT( additional_bits == 0 ); // Route-Update-Request is always accompanied with SACCP "additional bits" equal to 0x0; bits [6..7] reserved (MUST be zeros)
+//			handler_siot_process_route_update_response( &po );
+			return CONTROL_PROG_CHAIN_DONE; // TODO: proper ret code
+			break;
+		}
 		default:
 		{
 			ZEPTO_DEBUG_ASSERT( NULL == "Error: unexpected value of packet type\n" );
