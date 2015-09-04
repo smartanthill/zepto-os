@@ -60,6 +60,11 @@ bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint16_t address )
             }
         }
     }
+    else
+    {
+        result = false;
+    }
+
     HAL_FLASH_Lock();
     return result;
 }
@@ -81,6 +86,11 @@ bool hal_eeprom_read( uint8_t* data, uint16_t size, uint16_t address)
             }
         }
     }
+    else
+    {
+        result = false;
+    }
+
     HAL_FLASH_Lock();
     return result;
 }

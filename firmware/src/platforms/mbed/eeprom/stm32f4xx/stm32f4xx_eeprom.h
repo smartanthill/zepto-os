@@ -49,8 +49,8 @@ extern "C" {
 #endif
 
 uint32_t eeprom_init(void);
-uint16_t eeprom_read_var(uint16_t VirtAddress, uint16_t* Data);
-uint32_t eeprom_write_var(uint16_t VirtAddress, uint16_t Data);
+uint16_t eeprom_read_var(uint16_t virt_address, uint16_t* data);
+uint32_t eeprom_write_var(uint16_t virt_address, uint16_t data);
 
 #ifdef __cplusplus
 }
