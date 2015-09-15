@@ -69,6 +69,13 @@ INLINE bool sa_hal_time_val_is_less( sa_time_val* t1, sa_time_val* t2 )
 	return t1->low_t < t2->low_t;
 }
 
+INLINE void sa_hal_time_val_copy_from_if_src_less( sa_time_val* t1, const sa_time_val* t2 )
+{
+	if ( t1->high_t < t2->high_t || ( t1->high_t == t2->high_t && t1->low_t <= t2->low_t ) ) return;
+	t1->high_t = t2->high_t;
+	t1->low_t = t2->low_t;
+}
+
 INLINE bool sa_hal_time_val_get_remaining_time( const sa_time_val* now, const sa_time_val* expected, sa_time_val* remaining )
 {
 	if ( expected->high_t < now->high_t ) return false; // already happpened

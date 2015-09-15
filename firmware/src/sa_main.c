@@ -258,6 +258,7 @@ wait_for_comm_event:
 
 
 			ret_code = hal_wait_for( &wait_for );
+			SA_TIME_SET_INFINITE_TIME( wait_for.wait_time );
 
 			switch ( ret_code )
 			{
@@ -732,7 +733,6 @@ alt_entry:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-//		gdp_context = SAGDP_CONTEXT_UNKNOWN;
 		ret_code = handler_sagdp_receive_hlp( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
