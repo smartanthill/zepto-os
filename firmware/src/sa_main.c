@@ -135,7 +135,8 @@ bool sa_main_init()
 //    ZEPTO_MEMSET( AES_ENCRYPTION_KEY, 0xab, 16 );
 	siot_mesh_init_tables(); // TODO: this call reflects current development stage and may or may not survive in the future
 	sasp_restore_from_backup();
-	sagdp_init();
+	sagdp_init( &sagdp_context_app );
+	sagdp_init( &sagdp_context_ctr );
 	zepto_vm_init();
 
 	ZEPTO_DEBUG_PRINTF_1("\nAwaiting client connection... \n" );
@@ -192,7 +193,7 @@ int sa_main_loop()
 	PACKET_ASSOCIATED_DATA working_handle = {MEMORY_HANDLE_MAIN_LOOP_2, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR, MEMORY_HANDLE_INVALID };
 	PACKET_ASSOCIATED_DATA packet_getting_handle = {MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR, MEMORY_HANDLE_INVALID };
 
-	uint8_t gdp_context = SAGDP_CONTEXT_UNKNOWN;
+//	uint8_t gdp_context = SAGDP_CONTEXT_UNKNOWN;
 
 	for (;;)
 	{
@@ -210,15 +211,28 @@ wait_for_comm_event:
 			// IMPORTANT: once an order of units is selected and tested, do not change it without extreme necessity
 			sa_get_time( &(currt) );
 
-			// 1. test GDP
-			gdp_context = SAGDP_CONTEXT_UNKNOWN;
-			ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+			// 1.1. test GDP-ctr
+			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 			if ( ret_code == SAGDP_RET_NEED_NONCE )
 			{
 				// NOTE: here we assume that, if GDP has something to re-send by timer, working_handle is not in use (say, by CCP)
 				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
 				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-				ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+				ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
+				zepto_response_to_request( working_handle.packet_h );
+				zepto_response_to_request( working_handle.addr_h );
+				goto saspsend;
+			}
+
+			// 1.2. test GDP-app
+			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
+			if ( ret_code == SAGDP_RET_NEED_NONCE )
+			{
+				// NOTE: here we assume that, if GDP has something to re-send by timer, working_handle is not in use (say, by CCP)
+				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
+				ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
 				zepto_response_to_request( working_handle.packet_h );
 				zepto_response_to_request( working_handle.addr_h );
@@ -239,7 +253,6 @@ wait_for_comm_event:
 					// NOTE:
 					zepto_response_to_request( working_handle.packet_h );
 					ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
-					gdp_context = SAGDP_CONTEXT_UNKNOWN;
 					goto alt_entry;
 					break;
 				}
@@ -379,6 +392,7 @@ wait_for_comm_event:
 #endif // TEST_RAM_CONSUMPTION
 
 
+#if 0
 //			if ( timer_val && getTime() >= wake_time )
 //			if ( tact.action )
 //			if ( sagdp_data.event_type ) //TODO: temporary solution
@@ -421,6 +435,7 @@ wait_for_comm_event:
 				goto alt_entry;
 				break;
 			}
+#endif
 		}
 		if ( ret_code != COMMLAYER_RET_OK )
 		{
@@ -538,22 +553,33 @@ siotmp_rec:
 			}
 			case SASP_RET_TO_HIGHER_LAST_SEND_FAILED: // as a result of error-old-nonce
 			{
+				bool use_ctr = true;
 				ZEPTO_DEBUG_PRINTF_1( "NONCE_LAST_SENT has been reset; the last message (if any) will be resent\n" );
 				sa_get_time( &(currt) );
-				gdp_context = SAGDP_CONTEXT_UNKNOWN;
-				ret_code = handler_sagdp_receive_request_resend_lsp( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+				ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+				if ( ret_code == SAGDP_RET_TO_LOWER_NONE )
+				{
+					use_ctr = false;
+					zepto_response_to_request( working_handle.packet_h );
+					zepto_response_to_request( working_handle.addr_h );
+					ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
+				}
 				if ( ret_code == SAGDP_RET_TO_LOWER_NONE )
 				{
 					zepto_response_to_request( working_handle.packet_h );
 					zepto_response_to_request( working_handle.addr_h );
-					continue;
+					goto wait_for_comm_event;
+					break;
 				}
 				if ( ret_code == SAGDP_RET_NEED_NONCE )
 				{
 					ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
 					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 					sa_get_time( &(currt) );
-					ret_code = handler_sagdp_receive_request_resend_lsp( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+					if ( use_ctr )
+						ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+					else
+						ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 					ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_TO_LOWER_NONE );
 				}
 				zepto_response_to_request( working_handle.packet_h );
@@ -588,23 +614,120 @@ siotmp_rec:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-		gdp_context = SAGDP_CONTEXT_UNKNOWN;
-		ret_code = handler_sagdp_receive_up( &gdp_context, &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+		bool for_ctr = handler_sagdp_is_up_packet_ctr( working_handle.packet_h );
+		if ( for_ctr )
+		{
+			ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+			if ( ret_code == SAGDP_RET_START_OVER_FIRST_RECEIVED )
+			{
+				sagdp_init( &sagdp_context_ctr );
+				// TODO: do remaining reinitialization
+				sa_get_time( &(currt) );
+				ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_START_OVER_FIRST_RECEIVED );
+			}
+			if ( ret_code == SAGDP_RET_NEED_NONCE )
+			{
+				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
+				sa_get_time( &(currt) );
+				ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
+			}
+			zepto_response_to_request( working_handle.packet_h );
+			ZEPTO_DEBUG_PRINTF_4( "SAGDP1 (ctr): ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+
+			switch ( ret_code )
+			{
+				case SAGDP_RET_SYS_CORRUPTED:
+				{
+					// TODO: reinitialize all
+					sagdp_init( &sagdp_context_ctr );
+	//				zepto_response_to_request( working_handle.packet_h );
+					goto saspsend;
+					break;
+				}
+				case SAGDP_RET_TO_HIGHER:
+				{
+					ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
+					ZEPTO_DEBUG_ASSERT( ret_code == SACCP_RET_PASS_LOWER_CONTROL );
+					zepto_response_to_request( working_handle.packet_h );
+					sa_get_time( &(currt) );
+					ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+					if ( ret_code == SAGDP_RET_NEED_NONCE )
+					{
+						ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
+						sa_get_time( &(currt) );
+						ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
+						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
+					}
+					zepto_response_to_request( working_handle.packet_h );
+					ZEPTO_DEBUG_PRINTF_4( "SAGDP2 (ctr): ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+			
+					switch ( ret_code )
+					{
+						case SAGDP_RET_TO_LOWER_NEW:
+						{
+							goto saspsend;
+							break;
+						}
+						case SAGDP_RET_SYS_CORRUPTED: // TODO: is it possible here?
+						{
+							// TODO: process reset
+							sagdp_init( &sagdp_context_ctr );
+							zepto_response_to_request( working_handle.packet_h );
+							goto saspsend;
+							break;
+						}
+						default:
+						{
+							// unexpected ret_code
+							ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+							ZEPTO_DEBUG_ASSERT( 0 );
+							break;
+						}
+					}
+				}
+				case SAGDP_RET_TO_LOWER_REPEATED:
+				{
+					goto saspsend;
+				}
+				case SAGDP_RET_OK:
+				{
+#if SIOT_MESH_IMPLEMENTATION_WORKS
+					handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
+#endif
+					goto start_over;
+				}
+				default:
+				{
+					// unexpected ret_code
+					ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
+					ZEPTO_DEBUG_ASSERT( 0 );
+					break;
+				}
+			}
+		}
+
+		// LIKELY BRANCH: PAACKET IS FOR APP
+
+		ZEPTO_DEBUG_ASSERT( !for_ctr ); // we are not supposed to go through the above code
+		ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 		if ( ret_code == SAGDP_RET_START_OVER_FIRST_RECEIVED )
 		{
-//			sagdp_init( &sagdp_data );
-			sagdp_init();
+			sagdp_init( & sagdp_context_app );
 			// TODO: do remaining reinitialization
 			sa_get_time( &(currt) );
-			ret_code = handler_sagdp_receive_up( &gdp_context, &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+			ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_START_OVER_FIRST_RECEIVED );
 		}
-		else if ( ret_code == SAGDP_RET_NEED_NONCE )
+		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
 			ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 			sa_get_time( &(currt) );
-			ret_code = handler_sagdp_receive_up( &gdp_context, &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+			ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
 		zepto_response_to_request( working_handle.packet_h );
@@ -615,8 +738,7 @@ siotmp_rec:
 			case SAGDP_RET_SYS_CORRUPTED:
 			{
 				// TODO: reinitialize all
-//				sagdp_init( &sagdp_data );
-				sagdp_init();
+				sagdp_init( &sagdp_context_app );
 //				zepto_response_to_request( working_handle.packet_h );
 				goto saspsend;
 				break;
@@ -624,21 +746,7 @@ siotmp_rec:
 			case SAGDP_RET_TO_HIGHER:
 			{
 				// regular processing will be done below in the next block
-				ZEPTO_DEBUG_ASSERT( gdp_context < SAGDP_CONTEXT_CNT ); // a valid value
-				if ( gdp_context == SAGDP_CONTEXT_CONTROL )
-				{
-					ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
-					ZEPTO_DEBUG_ASSERT( ret_code == SACCP_RET_PASS_LOWER_CONTROL );
-					zepto_response_to_request( working_handle.packet_h );
-					gdp_context = SAGDP_CONTEXT_CONTROL;
-					goto alt_entry;
-				}
-				else
-				{
-					ZEPTO_DEBUG_ASSERT( gdp_context == SAGDP_CONTEXT_APPLICATION );
-					gdp_context = SAGDP_CONTEXT_APPLICATION;
-					break;
-				}
+				break;
 			}
 			case SAGDP_RET_TO_LOWER_REPEATED:
 			{
@@ -678,7 +786,6 @@ siotmp_rec:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-		ZEPTO_DEBUG_ASSERT( gdp_context == SAGDP_CONTEXT_APPLICATION );
 		ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
 
 		wait_for_incoming_chain_with_timer = false;
@@ -733,13 +840,14 @@ alt_entry:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-		ret_code = handler_sagdp_receive_hlp( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+		ZEPTO_DEBUG_ASSERT( !for_ctr ); // we are not supposed to go through the above code
+		ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
 			ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 			sa_get_time( &(currt) );
-			ret_code = handler_sagdp_receive_hlp( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
+			ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
 		zepto_response_to_request( working_handle.packet_h );
@@ -767,7 +875,7 @@ alt_entry:
 			case SAGDP_RET_SYS_CORRUPTED: // TODO: is it possible here?
 			{
 				// TODO: process reset
-				sagdp_init();
+				sagdp_init( &sagdp_context_app );
 //				bool start_now = tester_get_rand_val() % 3;
 //				bool start_now = true;
 //				wake_time_to_start_new_chain = start_now ? getTime() : getTime() + tester_get_rand_val() % 8;
