@@ -15,24 +15,28 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __HAL_SERIAL_H__
-#define __HAL_SERIAL_H__
-
 #include <simpleiot/siot_common.h>
+#include "../../common/hapi_gpio.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include <gpio_api.h>
 
-bool sa_hal_serial_init(const void* serial_obj, uint16_t baudrate);
-void sa_hal_serial_read(const void* serial_obj, uint8_t *buffer, uint16_t length);
-int8_t sa_hal_serial_read_byte(const void* serial_obj);
-uint16_t sa_hal_serial_write(const void* serial_obj, const uint8_t *buffer, uint16_t length);
-uint8_t sa_hal_serial_write_byte (const void* serial_obj, uint8_t byte);
-bool sa_hal_serial_readable(const void* serial_obj);
-
-#ifdef __cplusplus
+void hapi_gpio_init (hapi_gpio_t* pin)
+{
+    gpio_init((gpio_t*)pin->pin_obj, (PinName)pin->pin_name);
 }
-#endif
 
-#endif // __HAL_SERIAL_H__
+void hapi_gpio_set_mode (hapi_gpio_t* pin, hapi_gpio_mode mode)
+{
+    gpio_dir((gpio_t*)pin->pin_obj,(PinDirection)mode);
+    gpio_mode((gpio_t*)pin->pin_obj, PullDefault);
+}
+
+uint8_t hapi_gpio_read (hapi_gpio_t* pin)
+{
+    return gpio_read ((gpio_t*)pin->pin_obj);
+}
+
+void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value)
+{
+    gpio_write((gpio_t*)pin->pin_obj, value);
+}

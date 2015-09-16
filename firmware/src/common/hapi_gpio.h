@@ -15,24 +15,38 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
+#if !defined __HAPI_GPIO_H__
+#define __HAPI_GPIO_H__
+
 #include <simpleiot/siot_common.h>
-#include "../../common/hal_gpio.h"
 
-#include "mbed.h"
+typedef enum {
+  HAPI_GPIO_TYPE_INPUT,
+  HAPI_GPIO_TYPE_OUTPUT
+} hapi_gpio_mode;
 
-void sa_hal_gpio_mode (uint8_t pin, uint8_t type)
+enum {
+  HAPI_GPIO_VALUE_LOW,
+  HAPI_GPIO_VALUE_HIGH
+};
+
+typedef struct _hapi_gpio_t
 {
+  uint32_t pin_name;
+  void* pin_obj;
+} hapi_gpio_t;
 
-}
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-uint8_t sa_hal_gpio_read (uint8_t pin)
-{
-    DigitalOut _pin((PinName)pin);
-    return _pin.read();
-}
+void hapi_gpio_init (hapi_gpio_t* pin);
+void hapi_gpio_set_mode (hapi_gpio_t* pin, hapi_gpio_mode mode);
+uint8_t hapi_gpio_read (hapi_gpio_t* pin);
+void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value);
 
-void sa_hal_gpio_write (uint8_t pin, uint8_t value)
-{
-    DigitalOut _pin((PinName)pin);
-    _pin.write(value);
+#ifdef __cplusplus
 }
+#endif
+
+#endif // __HAPI_GPIO_H__

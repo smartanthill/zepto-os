@@ -17,42 +17,42 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include <simpleiot/siot_common.h>
 #include "../../common/sa_transport.h"
-#include "../../common/hal_serial.h"
+#include "../../common/hapi_serial.h"
 
-bool sa_hal_serial_init(const void* serial_obj, uint16_t baudrate)
+bool hapi_serial_init(const hapi_serial_t *serial, uint16_t baudrate)
 {
-    Serial *_serial = (Serial*) serial_obj;
+    Serial *_serial = (Serial*) serial->obj;
     _serial->baud(baudrate);
     return true;
 }
 
-void sa_hal_serial_read(const void* serial_obj, uint8_t *buffer, uint16_t length)
+void hapi_serial_read(const hapi_serial_t *serial, uint8_t *buffer, uint16_t length)
 {
-    //Serial *_serial = (Serial*) serial_obj;
+    //Serial *_serial = (Serial*) serial->obj;
     //_serial->read(buffer, length);
 }
 
-int8_t sa_hal_serial_read_byte(const void* serial_obj)
+int8_t hapi_serial_read_byte(const hapi_serial_t *serial)
 {
-    Serial *_serial = (Serial*) serial_obj;
+    Serial *_serial = (Serial*) serial->obj;
     return _serial->getc();
 }
 
-uint16_t sa_hal_serial_write(const void* serial_obj, const uint8_t *buffer, uint16_t length)
+uint16_t hapi_serial_write(const hapi_serial_t *serial, const uint8_t *buffer, uint16_t length)
 {
-    //Serial *_serial = (Serial*) serial_obj;
+    //Serial *_serial = (Serial*) serial->obj;
     //return _serial->write(buffer, length);
     return 0;
 }
 
-uint8_t sa_hal_serial_write_byte (const void* serial_obj, uint8_t byte)
+uint8_t hapi_serial_write_byte (const hapi_serial_t *serial, uint8_t byte)
 {
-    Serial *_serial = (Serial*) serial_obj;
+    Serial *_serial = (Serial*) serial->obj;
     return _serial->putc(byte);
 }
 
-bool sa_hal_serial_readable(const void* serial_obj)
+bool hapi_serial_readable(const hapi_serial_t *serial)
 {
-    Serial *_serial = (Serial*) serial_obj;
+    Serial *_serial = (Serial*) serial->obj;
     return _serial->readable();
 }

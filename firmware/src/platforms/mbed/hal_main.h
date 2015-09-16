@@ -21,6 +21,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "hal_time_conversions.h"
 #ifdef __cplusplus
 #include "mbed.h"
+typedef gpio_t hal_gpio_t;
 #endif
 
 void _sa_mbed_time_start_timer();

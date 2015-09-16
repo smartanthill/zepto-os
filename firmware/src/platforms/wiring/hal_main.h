@@ -21,6 +21,8 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <Arduino.h>
 #include "hal_time_conversions.h"
 
+typedef uint8_t hal_gpio_t;
+
 #if defined __AVR
 #include <avr/pgmspace.h>
 #include "stdint.h"

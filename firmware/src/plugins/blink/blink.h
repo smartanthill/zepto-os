@@ -22,10 +22,11 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot/siot_common.h>
 #include <simpleiot/siot_data_types.h>
 #include <simpleiot_hal/hal_waiting.h>
+#include "../../common/hapi_gpio.h"
 
 typedef struct _blink_plugin_config
 {
-    uint8_t pin_led;
+    hapi_gpio_t* pin_led;
 } blink_plugin_config;
 
 typedef struct _blink_plugin_state

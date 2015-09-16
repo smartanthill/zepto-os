@@ -19,6 +19,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define __SA_TRANSPORT_SERIAL_H__
 
 #include <simpleiot/siot_common.h>
+#include "../../common/hapi_serial.h"
 
 typedef struct _serial_transport_config
 {
@@ -29,7 +30,7 @@ typedef struct _serial_transport_config
 
 typedef struct _serial_transport_state
 {
-    void *serial_obj;
+    hapi_serial_t* serial;
 } serial_transport_state;
 
 #endif // __SA_TRANSPORT_SERIAL_H__

@@ -15,33 +15,25 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __HAL_GPIO_H__
-#define __HAL_GPIO_H__
-
 #include <simpleiot/siot_common.h>
+#include "../../common/hapi_gpio.h"
 
-enum {
-  HAL_GPIO_TYPE_INPUT,
-  HAL_GPIO_TYPE_OUTPUT,
-  HAL_GPIO_TYPE_PULLUP
-};
-
-enum {
-  HAL_GPIO_VALUE_LOW,
-  HAL_GPIO_VALUE_HIGH
-};
-
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-void sa_hal_gpio_mode (uint8_t pin, uint8_t type);
-uint8_t sa_hal_gpio_read (uint8_t pin);
-void sa_hal_gpio_write (uint8_t pin, uint8_t value);
-
-#ifdef __cplusplus
+void hapi_gpio_init (hapi_gpio_t* pin)
+{
+    return;
 }
-#endif
 
-#endif // __HAL_GPIO_H__
+void hapi_gpio_set_mode (hapi_gpio_t* pin, hapi_gpio_mode mode)
+{
+    pinMode(pin->pin_name, (uint8_t)mode);
+}
+
+uint8_t hapi_gpio_read (hapi_gpio_t* pin)
+{
+    return digitalRead(pin->pin_name);
+}
+
+void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value)
+{
+    digitalWrite(pin->pin_name, value);
+}
