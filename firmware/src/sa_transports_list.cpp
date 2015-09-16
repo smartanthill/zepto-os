@@ -37,6 +37,10 @@ serial_transport_config serial_transport_config_0 = {0, 1, 9600};
 #define SERIAL_PTR 0
 #endif
 
+serial_transport_state serial_transport_state_0 =
+{
+    SERIAL_PTR
+};
 
 extern const sa_transport serial_transport;
 
