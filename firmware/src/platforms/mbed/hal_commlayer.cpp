@@ -38,11 +38,11 @@ uint8_t hal_wait_for (waiting_for* wf)
         if (wf->wait_packet)
         {
             uint16_t i;
-            for (i = 0; i < ZEPTO_PROG_CONSTANT_READ_BYTE(&SA_TRANSPORTS_MAX); i++)
+            for (i = 0; i < ZEPTO_PROG_CONSTANT_READ_BYTE(&SA_BUSES_MAX); i++)
             {
-                sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t));
-                serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t_state));
-                if (handler_sadlp_is_packet(transport, ts))
+                sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[i].t));
+                serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[i].t_config));
+                if (handler_sadlp_is_packet(transport, tc))
                 {
                     transport_num = i;
                     return WAIT_RESULTED_IN_PACKET;
@@ -62,30 +62,27 @@ uint8_t wait_for_timeout (uint32_t timeout)
 
 uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h)
 {
-    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t));
-    serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t_state));
-    return handler_sadlp_get_packet (transport, ts, mem_h);
+    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t));
+    serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t_config));
+    return handler_sadlp_get_packet (transport, tc, mem_h);
 }
 
 bool communication_initialize()
 {
     uint16_t i;
-    for (i = 0; i < ZEPTO_PROG_CONSTANT_READ_BYTE(&SA_TRANSPORTS_MAX); i++)
+    for (i = 0; i < ZEPTO_PROG_CONSTANT_READ_BYTE(&SA_BUSES_MAX); i++)
     {
-        sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t));
-        transport->init(
-             (void*)ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t_config)),
-             (void*)ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[i].t_state))
-            );
+        sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[i].t));
+        transport->init((void*)ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[i].t_config)));
     }
     return true;
 }
 
 uint8_t send_message (MEMORY_HANDLE mem_h)
 {
-    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t));
-    serial_transport_state* ts = (serial_transport_state*) ZEPTO_PROG_CONSTANT_READ_PTR(&(transports[transport_num].t_state));
-    return handler_sadlp_send_packet (transport, ts, mem_h);
+    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t));
+    serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t_config));
+    return handler_sadlp_send_packet (transport, tc, mem_h);
 }
 
 void keep_transmitter_on( bool keep_on )

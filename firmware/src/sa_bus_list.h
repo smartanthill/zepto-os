@@ -20,20 +20,20 @@ THIS FILE IS MANUALLY OR AUTOMATICALLY GENERATED BASED ON DESIRED PLUGIN LIST
 *******************************************************************************/
 
 
-#if !defined __SA_TRANSPORTS_LIST_H__
-#define __SA_TRANSPORTS_LIST_H__
+#if !defined __SA_BUS_LIST_H__
+#define __SA_BUS_LIST_H__
 
 #include "common/sa_transport.h"
 
-typedef struct _transport_item
+typedef struct _bus_item
 {
     const sa_transport* t;
     void* t_config;
     void* t_state;
-} transport_item;
+} bus_item;
 
-extern const uint8_t SA_TRANSPORTS_MAX ZEPTO_PROG_CONSTANT_LOCATION;
-extern const transport_item transports[];
+extern const uint8_t SA_BUSES_MAX ZEPTO_PROG_CONSTANT_LOCATION;
+extern const bus_item buses[];
 
 
-#endif // __SA_TRANSPORTS_LIST_H__
+#endif // __SA_BUS_LIST_H__
