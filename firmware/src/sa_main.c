@@ -26,6 +26,9 @@ Copyright (C) 2015 OLogN Technologies AG
 DECLARE_AES_ENCRYPTION_KEY
 DECLARE_DEVICE_ID
 
+SAGDP_DATA sagdp_context_app;
+SAGDP_DATA sagdp_context_ctr;
+
 waiting_for wait_for;
 
 //#define ALLOW_PRINTING_SASP_INCOMING_MESSAGE
