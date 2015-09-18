@@ -23,14 +23,13 @@ Copyright (C) 2015 OLogN Technologies AG
 
 typedef struct _serial_transport_config
 {
-    uint8_t rx;
-    uint8_t tx;
+    hapi_serial_t* serial;
     uint16_t baudrate;
 } serial_transport_config;
 
 typedef struct _serial_transport_state
 {
-    hapi_serial_t* serial;
+    uint8_t dymmy_byte;
 } serial_transport_state;
 
 #endif // __SA_TRANSPORT_SERIAL_H__

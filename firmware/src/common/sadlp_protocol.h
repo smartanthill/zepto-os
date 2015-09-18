@@ -20,16 +20,16 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include <simpleiot/siot_common.h>
 #include "sa_transport.h"
-#include "../sa_transports_list.h"
+#include "../sa_bus_list.h"
 
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_state);
-uint8_t handler_sadlp_send_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
-uint8_t handler_sadlp_get_packet(const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h);
+bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_config);
+uint8_t handler_sadlp_send_packet(const sa_transport* transport, void* transport_config, MEMORY_HANDLE mem_h);
+uint8_t handler_sadlp_get_packet(const sa_transport* transport, void* transport_config, MEMORY_HANDLE mem_h);
 
 #ifdef __cplusplus
 }

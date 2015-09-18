@@ -27,14 +27,14 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #define BUFFER_MAX_LEN 			300
 
-bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_state)
+bool handler_sadlp_is_packet(const sa_transport* transport, void* transport_config)
 {
-    if (transport->readable(transport_state) && transport->read_byte(transport_state) == FRAGMENT_START_CODE)
+    if (transport->readable(transport_config) && transport->read_byte(transport_config) == FRAGMENT_START_CODE)
 		return true;
 	return false;
 }
 
-uint8_t handler_sadlp_send_packet (const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h)
+uint8_t handler_sadlp_send_packet (const sa_transport* transport, void* transport_config, MEMORY_HANDLE mem_h)
 {
 	uint8_t i = 0;
     uint16_t sz = memory_object_get_request_size (mem_h);
@@ -42,33 +42,33 @@ uint8_t handler_sadlp_send_packet (const sa_transport* transport, void* transpor
     uint8_t* buff = memory_object_get_request_ptr (mem_h);
     ZEPTO_DEBUG_ASSERT (buff != NULL);
 
-    transport->write_byte(transport_state, (uint8_t) FRAGMENT_START_CODE);
+    transport->write_byte(transport_config, (uint8_t) FRAGMENT_START_CODE);
     for (i = 0; i < sz; i++) {
         switch (buff[i]) {
             case FRAGMENT_START_CODE:
-                transport->write_byte(transport_state, (uint8_t) FRAGMENT_ESCAPE_CODE);
-                transport->write_byte(transport_state, (uint8_t) 0x00);
+                transport->write_byte(transport_config, (uint8_t) FRAGMENT_ESCAPE_CODE);
+                transport->write_byte(transport_config, (uint8_t) 0x00);
             	break;
             case FRAGMENT_END_CODE:
-                transport->write_byte(transport_state, (uint8_t) FRAGMENT_ESCAPE_CODE);
-                transport->write_byte(transport_state, (uint8_t) 0x02);
+                transport->write_byte(transport_config, (uint8_t) FRAGMENT_ESCAPE_CODE);
+                transport->write_byte(transport_config, (uint8_t) 0x02);
             	break;
             case FRAGMENT_ESCAPE_CODE:
-                transport->write_byte(transport_state, (uint8_t) FRAGMENT_ESCAPE_CODE);
-                transport->write_byte(transport_state, (uint8_t) 0x03);
+                transport->write_byte(transport_config, (uint8_t) FRAGMENT_ESCAPE_CODE);
+                transport->write_byte(transport_config, (uint8_t) 0x03);
             	break;
             default:
-                transport->write_byte(transport_state, buff[i]);
+                transport->write_byte(transport_config, buff[i]);
             	break;
         }
     }
-    transport->write_byte(transport_state, (uint8_t) FRAGMENT_END_CODE);
+    transport->write_byte(transport_config, (uint8_t) FRAGMENT_END_CODE);
 
     return COMMLAYER_RET_OK;
 
 }
 
-uint8_t handler_sadlp_get_packet (const sa_transport* transport, void* transport_state, MEMORY_HANDLE mem_h)
+uint8_t handler_sadlp_get_packet (const sa_transport* transport, void* transport_config, MEMORY_HANDLE mem_h)
 {
 	uint8_t buffer[BUFFER_MAX_LEN];
     uint16_t i = 0;
@@ -78,10 +78,10 @@ uint8_t handler_sadlp_get_packet (const sa_transport* transport, void* transport
     uint32_t start_reading  = getTime();
     while ((start_reading + timeout) > getTime() && i < BUFFER_MAX_LEN)
     {
-        if (!transport->readable(transport_state))
+        if (!transport->readable(transport_config))
             continue;
 
-        byte = transport->read_byte(transport_state);
+        byte = transport->read_byte(transport_config);
 
         if (byte == FRAGMENT_ESCAPE_CODE)
         {

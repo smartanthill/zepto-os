@@ -25,13 +25,13 @@ bool hapi_serial_init(const hapi_serial_t* serial, uint16_t baudrate)
 {
     if (serial->type == SERIAL_TYPE_HARDWARE)
     {
-       HardwareSerial *_serial = (HardwareSerial*) serial->obj;
+        HardwareSerial *_serial = (HardwareSerial*) serial->obj;
         _serial->begin(baudrate);
         while (!_serial) {}
     }
     else
     {
-        static SoftwareSerial *_serial = (SoftwareSerial*) serial->obj;
+        SoftwareSerial *_serial = (SoftwareSerial*) serial->obj;
         _serial->begin(baudrate);
         while (!_serial) {}
     }

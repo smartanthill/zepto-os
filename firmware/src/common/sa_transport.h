@@ -22,12 +22,12 @@ Copyright (C) 2015 OLogN Technologies AG
 
 typedef struct _sa_transport {
 
-  bool (* init) (const void* transport_config, void* transport_state);
-  void (* read) (const void* transport_state, uint8_t *buffer, uint16_t length);
-  int8_t(* read_byte) (const void* transport_state);
-  uint16_t (* write) (const void* transport_state, const uint8_t *buffer, const uint16_t length);
-  uint8_t (* write_byte) (const void* transport_state, uint8_t byte);
-  bool (* readable) (const void* transport_state);
+  bool (* init) (const void* transport_config);
+  void (* read) (const void* transport_config, uint8_t *buffer, uint16_t length);
+  int8_t(* read_byte) (const void* transport_config);
+  uint16_t (* write) (const void* transport_config, const uint8_t *buffer, const uint16_t length);
+  uint8_t (* write_byte) (const void* transport_config, uint8_t byte);
+  bool (* readable) (const void* transport_config);
 
 } sa_transport;
 
