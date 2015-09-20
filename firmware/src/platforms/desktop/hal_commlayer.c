@@ -105,8 +105,10 @@ int sock_accepted;
 #endif
 struct sockaddr_in sa_self, sa_other;
 const char* inet_addr_as_string = "127.0.0.1";
-uint16_t self_port_num = 7654;
-uint16_t other_port_num = 7667;
+//uint16_t self_port_num = 7654;
+//uint16_t other_port_num = 7667;
+uint16_t self_port_num = 7668;
+uint16_t other_port_num = 7654;
 #endif
 
 uint16_t buffer_in_pos;
@@ -181,6 +183,8 @@ bool _communication_initialize_2()
 
 #endif // (defined MESH_TEST) && (defined SA_RETRANSMITTER)
 
+#if 0
+
 bool _communication_initialize()
 {
 	//Zero out socket address
@@ -245,6 +249,57 @@ bool _communication_initialize()
 #endif
 	return true;
 }
+
+#else // 0
+
+bool _communication_initialize()
+{
+	//Zero out socket address
+	memset(&sa_self, 0, sizeof sa_self);
+	memset(&sa_other, 0, sizeof sa_other);
+
+	//create an internet, datagram, socket using UDP
+	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (-1 == sock) /* if socket failed to initialize, exit */
+	{
+		ZEPTO_DEBUG_PRINTF_1("Error Creating Socket\n");
+		return false;
+	}
+
+	//The address is ipv4
+	sa_other.sin_family = AF_INET;
+	sa_self.sin_family = AF_INET;
+
+	//ip_v4 adresses is a uint32_t, convert a string representation of the octets to the appropriate value
+	sa_self.sin_addr.s_addr = inet_addr( inet_addr_as_string );
+	sa_other.sin_addr.s_addr = inet_addr( inet_addr_as_string );
+
+	//sockets are unsigned shorts, htons(x) ensures x is in network byte order, set the port to 7654
+	sa_self.sin_port = htons( self_port_num );
+	sa_other.sin_port = htons( other_port_num );
+
+/*	if (-1 == bind(sock, (struct sockaddr *)&sa_self, sizeof(sa_self)))
+	{
+#ifdef _MSC_VER
+		int error = WSAGetLastError();
+#else
+		int error = errno;
+#endif
+		ZEPTO_DEBUG_PRINTF_2( "bind sock failed; error %d\n", error );
+		CLOSE_SOCKET(sock);
+		return false;
+	}*/
+
+	if (-1 == connect(sock, (struct sockaddr *)&sa_other, sizeof(sa_other)))
+		{
+		  perror("connect failed");
+			CLOSE_SOCKET(sock);
+		  return false;
+		}
+	return true;
+}
+
+#endif // 0
 
 void _communication_terminate()
 {
@@ -504,6 +559,7 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 //		int error = errno;
 //		if ( error == EAGAIN || error == EWOULDBLOCK )
 #endif
+        return COMMLAYER_RET_TIMEOUT;
 		ZEPTO_DEBUG_ASSERT(0);
 		ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FAILED\n" );
 		return COMMLAYER_RET_FAILED;

@@ -41,7 +41,7 @@ HANDLE hfile = INVALID_HANDLE_VALUE;
 bool hal_init_eeprom_access()
 {
 //	f = fopen( MASTER_SLAVE_BIT == 1 ? "sa-eeprom-master": "sa-eeprom-slave", "rw+b" );
-	efile = open( MASTER_SLAVE_BIT == 1 ? "sa-eeprom-master": "sa-eeprom-slave.dat", O_RDWR | O_CREAT | O_BINARY, S_IWRITE | S_IREAD );
+	efile = open( MASTER_SLAVE_BIT == 1 ? "sa-eeprom-master.dat": "sa-eeprom-slave.dat", O_RDWR | O_CREAT | O_BINARY, S_IWRITE | S_IREAD );
 #ifdef _MSC_VER
 	hfile = (HANDLE) _get_osfhandle (efile);
 	if ( hfile == INVALID_HANDLE_VALUE )

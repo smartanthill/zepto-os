@@ -26,6 +26,7 @@ Copyright (C) 2015 OLogN Technologies AG
 DECLARE_AES_ENCRYPTION_KEY
 DECLARE_DEVICE_ID
 
+
 SAGDP_DATA sagdp_context_app;
 SAGDP_DATA sagdp_context_ctr;
 
@@ -219,7 +220,7 @@ wait_for_comm_event:
 			if ( ret_code == SAGDP_RET_NEED_NONCE )
 			{
 				// NOTE: here we assume that, if GDP has something to re-send by timer, working_handle is not in use (say, by CCP)
-				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+				ret_code = handler_sasp_get_packet_id( nonce );
 				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 				ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
@@ -233,7 +234,7 @@ wait_for_comm_event:
 			if ( ret_code == SAGDP_RET_NEED_NONCE )
 			{
 				// NOTE: here we assume that, if GDP has something to re-send by timer, working_handle is not in use (say, by CCP)
-				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+				ret_code = handler_sasp_get_packet_id( nonce );
 				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 				ret_code = handler_sagdp_timer( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
@@ -359,7 +360,7 @@ wait_for_comm_event:
 					}
 					else if ( ret_code == SAGDP_RET_NEED_NONCE )
 					{
-						ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+						ret_code = handler_sasp_get_packet_id( nonce );
 						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 						sa_get_time( &(currt) );
 						ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
@@ -413,7 +414,7 @@ wait_for_comm_event:
 				}
 				else if ( ret_code == SAGDP_RET_NEED_NONCE )
 				{
-					ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+					ret_code = handler_sasp_get_packet_id( nonce );
 					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 					sa_get_time( &(currt) );
 					ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
@@ -528,7 +529,7 @@ siotmp_rec:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-		ret_code = handler_sasp_receive( AES_ENCRYPTION_KEY, pid, working_handle.packet_h/*, &sasp_data*/ );
+		ret_code = handler_sasp_receive( AES_ENCRYPTION_KEY, pid, working_handle.packet_h );
 		zepto_response_to_request( working_handle.packet_h );
 		ZEPTO_DEBUG_PRINTF_4( "SASP1:  ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
 		switch ( ret_code )
@@ -576,7 +577,7 @@ siotmp_rec:
 				}
 				if ( ret_code == SAGDP_RET_NEED_NONCE )
 				{
-					ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+					ret_code = handler_sasp_get_packet_id( nonce );
 					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 					sa_get_time( &(currt) );
 					if ( use_ctr )
@@ -631,7 +632,7 @@ siotmp_rec:
 			}
 			if ( ret_code == SAGDP_RET_NEED_NONCE )
 			{
-				ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+				ret_code = handler_sasp_get_packet_id( nonce );
 				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 				sa_get_time( &(currt) );
 				ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
@@ -659,7 +660,7 @@ siotmp_rec:
 					ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 					if ( ret_code == SAGDP_RET_NEED_NONCE )
 					{
-						ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+						ret_code = handler_sasp_get_packet_id( nonce );
 						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 						sa_get_time( &(currt) );
 						ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
@@ -727,7 +728,7 @@ siotmp_rec:
 		}
 		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
-			ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+			ret_code = handler_sasp_get_packet_id( nonce );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 			sa_get_time( &(currt) );
 			ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
@@ -847,7 +848,7 @@ alt_entry:
 		ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 		if ( ret_code == SAGDP_RET_NEED_NONCE )
 		{
-			ret_code = handler_sasp_get_packet_id( nonce/*, &sasp_data*/ );
+			ret_code = handler_sasp_get_packet_id( nonce );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
 			sa_get_time( &(currt) );
 			ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
@@ -915,7 +916,7 @@ saspsend:
 			ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
-		ret_code = handler_sasp_send( AES_ENCRYPTION_KEY, nonce, working_handle.packet_h/*, &sasp_data*/ );
+		ret_code = handler_sasp_send( AES_ENCRYPTION_KEY, nonce, working_handle.packet_h );
 		zepto_response_to_request( working_handle.packet_h );
 		ZEPTO_DEBUG_PRINTF_4( "SASP2:  ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
 
