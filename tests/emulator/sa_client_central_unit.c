@@ -40,6 +40,7 @@ int main_loop()
 
 
 	uint8_t ret_code;
+	uint16_t dev_in_use;
 
 	// test setup values
 //	bool wait_for_incoming_chain_with_timer = false;
@@ -62,7 +63,6 @@ int main_loop()
 
 #define MAX_INSTANCES_SUPPORTED 10
 
-	uint16_t dev_in_use;
 
 	DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[ MAX_INSTANCES_SUPPORTED ];
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )

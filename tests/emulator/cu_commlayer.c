@@ -588,7 +588,7 @@ uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h, uint16_t terget
 #endif
 	zepto_parse_skip_block( &po1, sz );
 	zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
-	void zepto_parser_encode_and_prepend_uint16( mem_h, terget_id );
+	zepto_parser_encode_and_prepend_uint16( mem_h, terget_id );
 	zepto_response_to_request( mem_h );
 	return send_within_master( mem_h, 38 );
 }
