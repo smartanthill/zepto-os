@@ -570,17 +570,26 @@ uint8_t send_message( MEMORY_HANDLE mem_h )
 }
 
 
-uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h )
+uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h, uint16_t terget_id )
 {
-#ifdef _DEBUG
-	parser_obj po;
+/*	static cnt = 0;
+	cnt++;
+	if ( cnt == 2) return COMMLAYER_RET_OK;
+	Sleep(1000);*/
+	parser_obj po, po1;
 	zepto_parser_init( &po, mem_h );
+	zepto_parser_init( &po1, mem_h );
 	uint16_t sz = zepto_parsing_remaining_bytes( &po );
-	ZEPTO_DEBUG_PRINTF_2( "send_to_commm_stack_as_from_master(), packet size = %d\n", sz );
+#ifdef _DEBUG
+	ZEPTO_DEBUG_PRINTF_3( "send_to_commm_stack_as_from_master(), packet size = %d, target = %d\n", sz, terget_id );
 	while ( sz-- )
 		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
 	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 #endif
+	zepto_parse_skip_block( &po1, sz );
+	zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
+	void zepto_parser_encode_and_prepend_uint16( mem_h, terget_id );
+	zepto_response_to_request( mem_h );
 	return send_within_master( mem_h, 38 );
 }
 

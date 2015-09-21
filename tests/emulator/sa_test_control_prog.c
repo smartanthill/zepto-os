@@ -23,7 +23,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "test_generator.h"
 #include <stdio.h> // for sprintf() in fake implementation
 
-DefaultTestingControlProgramState DefaultTestingControlProgramState_struct;
+//DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[10];
 
 #define CHAIN_MAX_SIZE 9
 //#define MANUAL_TEST_DATA_ENTERING
