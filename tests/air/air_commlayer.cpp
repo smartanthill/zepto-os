@@ -77,7 +77,7 @@ uint16_t self_port_num = 7654;
 uint16_t buffer_in_with_cl_pos;
 
 #define MAX_PACKET_SIZE 0x1000
-#define MEX_DEV_CNT	 2
+#define MEX_DEV_CNT	 10
 
 DEVICE_CONNNECTION devices[ MEX_DEV_CNT ];
 int dev_count = 0;
@@ -297,8 +297,16 @@ uint8_t try_get_packet_using_context( uint8_t* buff, int max_sz, int*size, DEVIC
 	return COMMLAYER_RET_OK;
 }
 
-uint8_t send_packet_using_context( uint8_t* buff, int sz, DEVICE_CONNNECTION* conn )
+uint8_t send_packet_using_context( const uint8_t* buff, int sz, DEVICE_CONNNECTION* conn )
 {
+#if 0//defSA_DEBUG
+	uint16_t i;
+	ZEPTO_DEBUG_PRINTF_1( "packet being sent: " );
+	for ( i=0; i<sz; i++ )
+		ZEPTO_DEBUG_PRINTF_2( "%02x ", buff[i] );
+	ZEPTO_DEBUG_PRINTF_1( "\n" );
+#endif
+
 	ZEPTO_DEBUG_PRINTF_1( "send_within_master() called...\n" );
 	uint8_t buff_prefix[ 2 ];
 
@@ -440,7 +448,7 @@ uint8_t wait_for_packet( uint16_t* src )
 	}
 }
 
-uint8_t send_packet( uint8_t* buff, int size, uint16_t target )
+uint8_t send_packet( const uint8_t* buff, int size, uint16_t target )
 {
 	if ( target != 0 )
 	{

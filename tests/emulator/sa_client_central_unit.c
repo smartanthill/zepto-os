@@ -61,36 +61,41 @@ int main_loop()
 
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
 
-#define MAX_INSTANCES_SUPPORTED 10
+#define MAX_INSTANCES_SUPPORTED 2
 
 
 	DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[ MAX_INSTANCES_SUPPORTED ];
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
 		default_test_control_program_init( DefaultTestingControlProgramState_struct + dev_in_use );
 
-	ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct, MEMORY_HANDLE_MAIN_LOOP_1 );
-	zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-	handler_saccp_prepare_to_send( MEMORY_HANDLE_MAIN_LOOP_1 );
-	zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-/*	parser_obj po;
-	zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
-	uint8_t bu[40];
-	memset( bu, 0, 40 );
-	zepto_parse_read_block( &po, bu, zepto_parsing_remaining_bytes( &po ) );
-	for ( int k=0;k<30; k++)
-		ZEPTO_DEBUG_PRINTF_3( "%c [0x%x]\n", bu[k], bu[k] );
-	return 0;*/
+	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
+	{
+		ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct + dev_in_use, MEMORY_HANDLE_MAIN_LOOP_1 );
+		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+		handler_saccp_prepare_to_send( MEMORY_HANDLE_MAIN_LOOP_1 );
+		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+	/*	parser_obj po;
+		zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
+		uint8_t bu[40];
+		memset( bu, 0, 40 );
+		zepto_parse_read_block( &po, bu, zepto_parsing_remaining_bytes( &po ) );
+		for ( int k=0;k<30; k++)
+			ZEPTO_DEBUG_PRINTF_3( "%c [0x%x]\n", bu[k], bu[k] );
+		return 0;*/
 #else
-	uint8_t buff_base[] = {0x2, 0x0, 0x8, 0x1, 0x1, 0x2, 0x0, 0x1, '-', '-', '>' };
-	uint8_t buff[128];
-	buff[0] = 1; // first in the chain
-	ZEPTO_MEMCPY( buff+1, buff_base, sizeof(buff_base) );
-	zepto_write_block( MEMORY_HANDLE_MAIN_LOOP_1, buff, 1+sizeof(buff_base) );
-	zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-	// should appear on the other side: Packet received: [8 bytes]  [1][0x0001][0x0001][0x0002][0x0000][0x0001]-->
-	// should come back: 02 01 01 02 01 02 2d 2d 2d 2d 3e
+		uint8_t buff_base[] = {0x2, 0x0, 0x8, 0x1, 0x1, 0x2, 0x0, 0x1, '-', '-', '>' };
+		uint8_t buff[128];
+		buff[0] = 1; // first in the chain
+		ZEPTO_MEMCPY( buff+1, buff_base, sizeof(buff_base) );
+		zepto_write_block( MEMORY_HANDLE_MAIN_LOOP_1, buff, 1+sizeof(buff_base) );
+		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+		// should appear on the other side: Packet received: [8 bytes]  [1][0x0001][0x0001][0x0002][0x0000][0x0001]-->
+		// should come back: 02 01 01 02 01 02 2d 2d 2d 2d 3e
 #endif
-	goto send_command;
+	//	goto send_command;
+		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
+		zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
+	}
 
 	// MAIN LOOP
 	for (;;)
@@ -121,6 +126,8 @@ wait_for_comm_event:
 					parser_obj po, po1;
 					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
 					dev_in_use = zepto_parse_encoded_uint16( &po );
+					ZEPTO_DEBUG_ASSERT( dev_in_use > 0 );
+					dev_in_use --;
 					zepto_parser_init_by_parser( &po1, &po );
 					zepto_parse_skip_block( &po1, zepto_parsing_remaining_bytes( &po ) );
 					zepto_convert_part_of_request_to_response( MEMORY_HANDLE_MAIN_LOOP_1, &po, &po1 );
@@ -269,7 +276,7 @@ wait_for_comm_event:
 			}
 			case CONTROL_PROG_CHAIN_CONTINUE_LAST:
 			{
-				send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use );
+				send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
 				ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct + dev_in_use, MEMORY_HANDLE_MAIN_LOOP_1 );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 				handler_saccp_prepare_to_send( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -330,7 +337,7 @@ process_reply:
 
 send_command:
 		ZEPTO_DEBUG_PRINTF_3( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
-		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use );
+		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
 	}
 
 	communication_terminate();

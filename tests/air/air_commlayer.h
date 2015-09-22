@@ -41,7 +41,7 @@ bool communication_initialize();
 void communication_terminate();
 
 uint8_t get_packet( uint8_t* buff, int max_sz, int* size, uint16_t src );
-uint8_t send_packet( uint8_t* buff, int size, uint16_t target );
+uint8_t send_packet( const uint8_t* buff, int size, uint16_t target );
 uint8_t wait_for_packet( uint16_t* src );
 
 #ifdef __cplusplus
