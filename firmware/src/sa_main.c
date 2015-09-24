@@ -619,6 +619,7 @@ siotmp_rec:
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		bool for_ctr = handler_sagdp_is_up_packet_ctr( working_handle.packet_h );
+		ZEPTO_DEBUG_PRINTF_2( "Packet understood as for %s\n", for_ctr ? "CONTROL" : "APP" );
 		if ( for_ctr )
 		{
 			ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );

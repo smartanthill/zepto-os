@@ -61,12 +61,12 @@ int main_loop()
 
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
 
-#define MAX_INSTANCES_SUPPORTED 2
+#define MAX_INSTANCES_SUPPORTED 3
 
 
 	DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[ MAX_INSTANCES_SUPPORTED ];
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
-		default_test_control_program_init( DefaultTestingControlProgramState_struct + dev_in_use );
+		default_test_control_program_init( DefaultTestingControlProgramState_struct + dev_in_use, dev_in_use + 1 );
 
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
 	{

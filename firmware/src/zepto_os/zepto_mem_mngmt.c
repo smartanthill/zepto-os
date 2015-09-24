@@ -31,7 +31,7 @@ typedef struct _request_reply_mem_obj
 #ifdef USED_AS_MASTER
 #define BASE_MEM_BLOCK_SIZE	0x1000
 #else // USED_AS_MASTER
-#define BASE_MEM_BLOCK_SIZE	0xC0
+#define BASE_MEM_BLOCK_SIZE	0x180
 #endif // USED_AS_MASTER
 
 uint8_t BASE_MEM_BLOCK[ BASE_MEM_BLOCK_SIZE ];

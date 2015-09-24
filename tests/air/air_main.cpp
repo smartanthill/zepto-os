@@ -27,23 +27,27 @@ bool air_main_init()
 int air_main_loop()
 {
 	uint8_t packet_buff[1024];
-	uint16_t src;
+	uint16_t items[64];
+	uint8_t item_cnt;
 	int packet_sz;
 	uint8_t ret_code;
+	uint8_t i, j;
 	for (;;)
 	{
-		ret_code = wait_for_packet( &src );
+		ret_code = wait_for_packet( items, &item_cnt, 64 );
 		if ( ret_code == COMMLAYER_RET_TIMEOUT )
 		{
 			ZEPTO_DEBUG_PRINTF_1( "Waiting for incoming packets...\n" );
 			continue;
 		}
 		ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );
-		get_packet( packet_buff, 1024, &packet_sz, src );
-		int i;
-		for ( i=0; i<dev_count; i++)
-			if ( i != src )
-				send_packet( packet_buff, packet_sz, i );
+		for ( j=0; j<item_cnt; j++ )
+		{
+			get_packet( packet_buff, 1024, &packet_sz, items[j] );
+			for ( i=0; i<dev_count; i++)
+				if ( i != items[j] )
+					send_packet( packet_buff, packet_sz, i );
+		}
 	}
 	return 0;
 }

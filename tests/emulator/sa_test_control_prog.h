@@ -37,6 +37,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 typedef struct _DefaultTestingControlProgramState 
 {
+	uint16_t dev_id;
 	uint8_t state; //'0' means 'be ready to process incoming command', '1' means 'prepare reply'
 	uint16_t last_sent_id;
 	uint16_t currChainID[2];
@@ -48,7 +49,7 @@ typedef struct _DefaultTestingControlProgramState
 	uint16_t self_id;
 } DefaultTestingControlProgramState;
 
-uint8_t default_test_control_program_init( void* control_prog_state );
+uint8_t default_test_control_program_init( void* control_prog_state, uint16_t dev_id );
 //uint8_t default_test_control_program_accept_reply( void* control_prog_state, uint8_t packet_status, parser_obj* received, uint16_t sz );
 uint8_t default_test_control_program_accept_reply_continue( void* control_prog_state, MEMORY_HANDLE reply );
 uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY_HANDLE reply );

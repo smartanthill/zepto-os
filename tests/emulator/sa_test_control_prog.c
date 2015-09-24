@@ -28,10 +28,11 @@ Copyright (C) 2015 OLogN Technologies AG
 #define CHAIN_MAX_SIZE 9
 //#define MANUAL_TEST_DATA_ENTERING
 
-uint8_t default_test_control_program_init( void* control_prog_state )
+uint8_t default_test_control_program_init( void* control_prog_state, uint16_t dev_id )
 {
 	//perform sensor initialization if necessary
 	DefaultTestingControlProgramState* ps = (DefaultTestingControlProgramState*)control_prog_state;
+	ps->dev_id = dev_id;
 	ps->state = 0;
 	ps->currChainIdBase[0] = 0;
 	ps->currChainIdBase[1] = MASTER_SLAVE_BIT << 15;
@@ -76,6 +77,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 
 	// prepare outgoing packet
 	zepto_write_uint8( reply, ps->first_byte );
+	zepto_parser_encode_and_append_uint16( reply, ps->dev_id );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_id[0] );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_id[1] );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_ini_size );
@@ -101,7 +103,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 
 	// print outgoing packet
 //	PRINTF( "Zepto-Master: Packet sent    : [%d bytes]  [%d][0x%04x][0x%04x][0x%04x][0x%04x][0x%04x]%s\n", reply_sz, ps->first_byte, ps->chain_id[0], ps->chain_id[1], ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
-	ZEPTO_DEBUG_PRINTF_5( "Zepto-Master: Packet sent    : [%d bytes]  [%d][0x%04x][0x%04x]",  reply_sz, ps->first_byte, ps->chain_id[0], ps->chain_id[1] );
+	ZEPTO_DEBUG_PRINTF_6( "Zepto-Master: Packet sent    : [%d bytes]  [%d][devid:%d][0x%04x][0x%04x]",  reply_sz, ps->first_byte, ps->dev_id, ps->chain_id[0], ps->chain_id[1] );
 	ZEPTO_DEBUG_PRINTF_5( "[0x%04x][0x%04x][0x%04x]%s\n", ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
 	ZEPTO_DEBUG_ASSERT( reply_sz >= 7 && reply_sz <= 22 );
 
@@ -134,6 +136,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 	zepto_response_to_request( reply );
 
 	zepto_write_uint8( reply, ps->first_byte );
+	zepto_parser_encode_and_append_uint16( reply, ps->dev_id );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_id[0] );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_id[1] );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_ini_size );
@@ -158,7 +161,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 
 	// print outgoing packet
 //	PRINTF( "Yocto: Packet sent    : [%d bytes]  [%d][0x%04x][0x%04x][0x%04x][0x%04x][0x%04x]%s\n", msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1], ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
-	ZEPTO_DEBUG_PRINTF_5( "Zepto-Master: Packet sent    : [%d bytes]  [%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1] );
+	ZEPTO_DEBUG_PRINTF_6( "Zepto-Master: Packet sent    : [%d bytes]  [%d][devid:%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, ps->dev_id, ps->chain_id[0], ps->chain_id[1] );
 	ZEPTO_DEBUG_PRINTF_5( "[0x%04x][0x%04x][0x%04x]%s\n", ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
 	ZEPTO_DEBUG_ASSERT( msg_size >= 7 && msg_size <= 22 );
 
@@ -224,6 +227,13 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 		ZEPTO_DEBUG_ASSERT(0);
 	}
 
+	uint16_t rec_from = zepto_parse_encoded_uint16( received );
+	if ( rec_from != ps->dev_id )
+	{
+		ZEPTO_DEBUG_PRINTF_3( "_default_test_control_program_accept_reply(): reply received from a wrong device %d (expected %d)\n", rec_from, ps->dev_id );
+		return CONTROL_PROG_CHAIN_DONE;
+		ZEPTO_DEBUG_ASSERT(0);
+	}
 	ps->chain_id[0] = zepto_parse_encoded_uint16( received );
 	ps->chain_id[1] = zepto_parse_encoded_uint16( received );
 	ps->chain_ini_size = zepto_parse_encoded_uint16( received );
@@ -238,7 +248,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 
 	// print packet
 //	PRINTF( "Yocto: Packet received: [%d bytes]  [%d][0x%04x][0x%04x][0x%04x][0x%04x][0x%04x]%s\n", msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1], ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
-	ZEPTO_DEBUG_PRINTF_5( "Zepto-Master: Packet received    : [%d bytes]  [%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1] );
+	ZEPTO_DEBUG_PRINTF_6( "Zepto-Master: Packet received    : [%d bytes]  [%d][devid:%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, ps->dev_id, ps->chain_id[0], ps->chain_id[1] );
 //	ZEPTO_DEBUG_PRINTF_4( "Zepto-Master: Packet received    : [?? bytes]  [%d][0x%04x][0x%04x]",  ps->first_byte, ps->chain_id[0], ps->chain_id[1] );
 	ZEPTO_DEBUG_PRINTF_5( "[0x%04x][0x%04x][0x%04x]%s\n", ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
 

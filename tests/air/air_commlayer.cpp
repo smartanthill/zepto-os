@@ -349,7 +349,7 @@ uint8_t send_packet_using_context( const uint8_t* buff, int sz, DEVICE_CONNNECTI
 }
 
 
-uint8_t wait_for_packet_internal( uint16_t* src )
+uint8_t wait_for_packet_internal( uint16_t* src, uint8_t* cnt, uint8_t max_items )
 {
 	// ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()\n" );
     fd_set rfds;
@@ -399,12 +399,12 @@ uint8_t wait_for_packet_internal( uint16_t* src )
 	{
 		if ( FD_ISSET( sock_with_cl, &rfds) )
 			return COMMLAYER_RET_REENTER_LISTEN;
+		*cnt = 0;
 		for ( i=0; i<MEX_DEV_CNT; i++ )
-			if ( FD_ISSET( devices[i].sock_with_cl_accepted, &rfds) )
-			{
-				*src = i;
-				return COMMLAYER_RET_OK;
-			}
+			if ( FD_ISSET( devices[i].sock_with_cl_accepted, &rfds) && *cnt < max_items )
+				src[ (*cnt)++ ] = i;
+		if (*cnt)
+			return COMMLAYER_RET_OK;
 		ZEPTO_DEBUG_ASSERT(0);
 		return COMMLAYER_RET_FAILED;
 	}
@@ -435,12 +435,12 @@ uint8_t start_listening()
 }
 
 
-uint8_t wait_for_packet( uint16_t* src )
+uint8_t wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items )
 {
 	uint8_t ret_code;
 	for(;;)
 	{
-		ret_code = wait_for_packet_internal( src );
+		ret_code = wait_for_packet_internal( src, cnt, max_items );
 		if ( ret_code == COMMLAYER_RET_OK )
 			return ret_code;
 		if ( ret_code == COMMLAYER_RET_REENTER_LISTEN )

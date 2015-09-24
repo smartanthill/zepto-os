@@ -43,8 +43,10 @@ uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plu
 //	const smart_echo_plugin_config* pc = (smart_echo_plugin_config*) plugin_config;
 	smart_echo_plugin_persistent_state* ps = (smart_echo_plugin_persistent_state*)plugin_persistent_state;
 	uint8_t varln = 6 - ps->self_id % 7; // 0:6
+	extern uint16_t DEVICE_SELF_ID;
 
 	zepto_write_uint8( reply, ps->first_byte );
+	zepto_parser_encode_and_append_uint16( reply, DEVICE_SELF_ID );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_id[0] );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_id[1] );
 	zepto_parser_encode_and_append_uint16( reply, ps->chain_ini_size );
@@ -63,7 +65,7 @@ uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plu
 	// print outgoing packet
 #ifdef SA_DEBUG
 	uint16_t msg_size = 11+varln+1;
-	ZEPTO_DEBUG_PRINTF_5( "Yocto: Packet sent    : [%d bytes]  [%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1] );
+	ZEPTO_DEBUG_PRINTF_6( "Yocto: Packet sent    : [%d bytes]  [%d][devid:%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, DEVICE_SELF_ID, ps->chain_id[0], ps->chain_id[1] );
 	ZEPTO_DEBUG_PRINTF_5( "[0x%04x][0x%04x][0x%04x]%s\n", ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
 	ZEPTO_DEBUG_ASSERT( msg_size >= 7 && msg_size <= 22 );
 #endif
@@ -81,6 +83,7 @@ uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_persi
 {
 //	const smart_echo_plugin_config* pc = (smart_echo_plugin_config*) plugin_config;
 	smart_echo_plugin_persistent_state* ps = (smart_echo_plugin_persistent_state*)plugin_persistent_state;
+	extern uint16_t DEVICE_SELF_ID;
 
 	if ( ps->state == 0 )
 	{
@@ -90,6 +93,13 @@ uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_persi
 		if ( ( first_byte & ( SAGDP_P_STATUS_FIRST | SAGDP_P_STATUS_TERMINATING ) ) == SAGDP_P_STATUS_ERROR_MSG )
 		{
 			ZEPTO_DEBUG_PRINTF_1( "slave_process(): ERROR MESSAGE RECEIVED IN YOCTO\n" );
+			ZEPTO_DEBUG_ASSERT(0);
+		}
+
+		uint16_t rec_for = zepto_parse_encoded_uint16( command );
+		if ( rec_for != DEVICE_SELF_ID )
+		{
+			ZEPTO_DEBUG_PRINTF_3( "_default_test_control_program_accept_reply(): reply received from a wrong device %d (expected %d)\n", rec_for, DEVICE_SELF_ID );
 			ZEPTO_DEBUG_ASSERT(0);
 		}
 
@@ -106,7 +116,7 @@ uint8_t smart_echo_plugin_handler( const void* plugin_config, void* plugin_persi
 
 		// print packet
 //		PRINTF( "Yocto: Packet received: [%d bytes]  [%d][0x%04x][0x%04x][0x%04x][0x%04x][0x%04x]%s\n", msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1], ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
-		ZEPTO_DEBUG_PRINTF_5( "Yocto: Packet received    : [%d bytes]  [%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, ps->chain_id[0], ps->chain_id[1] );
+		ZEPTO_DEBUG_PRINTF_6( "Yocto: Packet received    : [%d bytes]  [%d][devid:%d][0x%04x][0x%04x]",  msg_size, ps->first_byte, DEVICE_SELF_ID, ps->chain_id[0], ps->chain_id[1] );
 		ZEPTO_DEBUG_PRINTF_5( "[0x%04x][0x%04x][0x%04x]%s\n", ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
 
 		// test and analyze
