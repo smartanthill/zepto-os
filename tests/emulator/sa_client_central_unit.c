@@ -61,7 +61,7 @@ int main_loop()
 
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
 
-#define MAX_INSTANCES_SUPPORTED 3
+#define MAX_INSTANCES_SUPPORTED 5
 
 
 	DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[ MAX_INSTANCES_SUPPORTED ];
@@ -69,6 +69,7 @@ int main_loop()
 		default_test_control_program_init( DefaultTestingControlProgramState_struct + dev_in_use, dev_in_use + 1 );
 
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
+//	dev_in_use=1;
 	{
 		ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct + dev_in_use, MEMORY_HANDLE_MAIN_LOOP_1 );
 		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -127,6 +128,7 @@ wait_for_comm_event:
 					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
 					dev_in_use = zepto_parse_encoded_uint16( &po );
 					ZEPTO_DEBUG_ASSERT( dev_in_use > 0 );
+					ZEPTO_DEBUG_PRINTF_2( "Packet received from device %d\n", dev_in_use );
 					dev_in_use --;
 					zepto_parser_init_by_parser( &po1, &po );
 					zepto_parse_skip_block( &po1, zepto_parsing_remaining_bytes( &po ) );
@@ -336,7 +338,7 @@ process_reply:
 #endif // MASTER_ENABLE_ALT_TEST_MODE
 
 send_command:
-		ZEPTO_DEBUG_PRINTF_3( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+		ZEPTO_DEBUG_PRINTF_4( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d; for device %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use + 1 );
 		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
 	}
 
