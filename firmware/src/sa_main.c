@@ -362,7 +362,6 @@ wait_for_comm_event:
 					{
 						ret_code = handler_sasp_get_packet_id( nonce );
 						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-						sa_get_time( &(currt) );
 						ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
 						zepto_response_to_request( working_handle.packet_h );
@@ -416,7 +415,6 @@ wait_for_comm_event:
 				{
 					ret_code = handler_sasp_get_packet_id( nonce );
 					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-					sa_get_time( &(currt) );
 					ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 		ZEPTO_DEBUG_PRINTF_2( "ret_code = %d\n", ret_code );
 					ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
@@ -559,7 +557,7 @@ siotmp_rec:
 			{
 				bool use_ctr = true;
 				ZEPTO_DEBUG_PRINTF_1( "NONCE_LAST_SENT has been reset; the last message (if any) will be resent\n" );
-				sa_get_time( &(currt) );
+				sa_get_time( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
 				ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 				if ( ret_code == SAGDP_RET_TO_LOWER_NONE )
 				{
@@ -579,7 +577,6 @@ siotmp_rec:
 				{
 					ret_code = handler_sasp_get_packet_id( nonce );
 					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-					sa_get_time( &(currt) );
 					if ( use_ctr )
 						ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 					else
@@ -601,7 +598,7 @@ siotmp_rec:
 		}
 
 		// 3. pass to SAGDP a new packet
-		sa_get_time( &(currt) );
+		sa_get_time( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
 #ifdef ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		{
 			parser_obj po;
@@ -627,7 +624,6 @@ siotmp_rec:
 			{
 				sagdp_init( &sagdp_context_ctr );
 				// TODO: do remaining reinitialization
-				sa_get_time( &(currt) );
 				ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_START_OVER_FIRST_RECEIVED );
 			}
@@ -635,7 +631,6 @@ siotmp_rec:
 			{
 				ret_code = handler_sasp_get_packet_id( nonce );
 				ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-				sa_get_time( &(currt) );
 				ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 			}
@@ -657,13 +652,12 @@ siotmp_rec:
 					ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
 					ZEPTO_DEBUG_ASSERT( ret_code == SACCP_RET_PASS_LOWER_CONTROL );
 					zepto_response_to_request( working_handle.packet_h );
-					sa_get_time( &(currt) );
+					// sa_get_time( &(currt) ); // TODO: check whether above processing of CTR packets is a potentially long operation and time should be re-requested
 					ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 					if ( ret_code == SAGDP_RET_NEED_NONCE )
 					{
 						ret_code = handler_sasp_get_packet_id( nonce );
 						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-						sa_get_time( &(currt) );
 						ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 					}
@@ -723,7 +717,6 @@ siotmp_rec:
 		{
 			sagdp_init( & sagdp_context_app );
 			// TODO: do remaining reinitialization
-			sa_get_time( &(currt) );
 			ret_code = handler_sagdp_receive_up( &currt, &wait_for, NULL, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_START_OVER_FIRST_RECEIVED );
 		}
@@ -731,7 +724,6 @@ siotmp_rec:
 		{
 			ret_code = handler_sasp_get_packet_id( nonce );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-			sa_get_time( &(currt) );
 			ret_code = handler_sagdp_receive_up( &currt, &wait_for, nonce, pid, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
@@ -851,7 +843,6 @@ alt_entry:
 		{
 			ret_code = handler_sasp_get_packet_id( nonce );
 			ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-			sa_get_time( &(currt) );
 			ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_APP, MEMORY_HANDLE_SAGDP_LSM_APP_SAOUDP_ADDR, &sagdp_context_app );
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
