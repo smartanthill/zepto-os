@@ -20,6 +20,10 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot_hal/hal_waiting.h>
 #include <stdio.h>
 
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#include "hal_commlayer_to_time_master.h"
+#endif // USE_TIME_MASTER
+
 #define MAX_PACKET_SIZE 80
 
 
@@ -477,6 +481,9 @@ uint8_t internal_get_packet_bytes( MEMORY_HANDLE mem_h, int _sock, struct sockad
 uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 {
 #ifdef MESH_TEST
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#error not implemented
+#endif // USE_TIME_MASTER
 #ifdef SA_RETRANSMITTER
 	if ( bus_id_in == 0 )
 		return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
@@ -489,8 +496,27 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 	ZEPTO_DEBUG_ASSERT( bus_id_in == 0 );
 	return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
 #endif
-#else
-	return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
+
+#else // MESH_TEST
+
+	uint8_t ret_code;
+
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#if !defined USE_TIME_MASTER_REGISTER
+	request_incoming_packet( &ret_code, mem_h );
+	return ret_code;
+#endif // USE_TIME_MASTER_REGISTER
+#endif // USE_TIME_MASTER
+
+	ret_code = internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
+
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#ifdef USE_TIME_MASTER_REGISTER
+	register_incoming_packet( ret_code, mem_h );
+#endif // USE_TIME_MASTER_REGISTER
+#endif // USE_TIME_MASTER
+
+	return ret_code;
 #endif
 }
 
@@ -499,6 +525,11 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 
 bool communication_initialize()
 {
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+	if ( !communication_initialize_with_time_master() )
+		return false;
+#endif // USE_TIME_MASTER
+
 #if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
 	return communication_preinitialize() && _communication_initialize() && _communication_initialize_2();
 #else
@@ -508,6 +539,10 @@ bool communication_initialize()
 
 void communication_terminate()
 {
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+	communication_terminate_with_time_master();
+#endif // USE_TIME_MASTER
+
 	_communication_terminate();
 }
 
@@ -518,9 +553,9 @@ uint8_t hal_get_busid_of_last_packet()
 }
 #endif
 
-uint8_t wait_for_communication_event( unsigned int timeout )
+uint8_t internal_wait_for_communication_event( unsigned int timeout )
 {
-	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()... " );
+	ZEPTO_DEBUG_PRINTF_1( "internal_wait_for_communication_event()... " );
     fd_set rfds;
     struct timeval tv;
     int retval;
@@ -603,7 +638,7 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 	}
 }
 
-uint8_t wait_for_timeout( unsigned int timeout)
+uint8_t internal_wait_for_timeout( unsigned int timeout)
 {
     struct timeval tv;
     int retval;
@@ -633,6 +668,12 @@ uint8_t wait_for_timeout( unsigned int timeout)
 
 uint8_t hal_wait_for( waiting_for* wf )
 {
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#if !defined USE_TIME_MASTER_REGISTER
+	return request_wait_request_ret_val( ret_val );
+#endif // USE_TIME_MASTER_REGISTER
+#endif // USE_TIME_MASTER
+
 	unsigned int timeout = wf->wait_time.high_t;
 	timeout <<= 16;
 	timeout += wf->wait_time.low_t;
@@ -641,24 +682,32 @@ uint8_t hal_wait_for( waiting_for* wf )
 	ZEPTO_DEBUG_ASSERT( wf->wait_i2c == 0 ); // not implemented
 	if ( wf->wait_packet )
 	{
-		ret_code = wait_for_communication_event( timeout );
+		ret_code = internal_wait_for_communication_event( timeout );
 		switch ( ret_code )
 		{
-			case COMMLAYER_RET_FROM_DEV: return WAIT_RESULTED_IN_PACKET; break;
-			case COMMLAYER_RET_TIMEOUT: return WAIT_RESULTED_IN_TIMEOUT; break;
-			case COMMLAYER_RET_FAILED: return WAIT_RESULTED_IN_FAILURE; break;
-			default: return WAIT_RESULTED_IN_FAILURE;
+			case COMMLAYER_RET_FROM_DEV: ret_code = WAIT_RESULTED_IN_PACKET; break;
+			case COMMLAYER_RET_TIMEOUT: ret_code = WAIT_RESULTED_IN_TIMEOUT; break;
+			case COMMLAYER_RET_FAILED: ret_code = WAIT_RESULTED_IN_FAILURE; break;
+			default: ret_code = WAIT_RESULTED_IN_FAILURE; break;
 		}
 	}
 	else
 	{
-		ret_code = wait_for_timeout( timeout );
+		ret_code = internal_wait_for_timeout( timeout );
 		switch ( ret_code )
 		{
-			case COMMLAYER_RET_TIMEOUT: return WAIT_RESULTED_IN_TIMEOUT; break;
-			default: return WAIT_RESULTED_IN_FAILURE;
+			case COMMLAYER_RET_TIMEOUT: ret_code = WAIT_RESULTED_IN_TIMEOUT; break;
+			default: ret_code = WAIT_RESULTED_IN_FAILURE; break;
 		}
 	}
+
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#ifdef USE_TIME_MASTER_REGISTER
+	register_wait_request_ret_val( ret_code );
+#endif // USE_TIME_MASTER_REGISTER
+#endif // USE_TIME_MASTER
+
+	return ret_code;
 }
 
 void keep_transmitter_on( bool keep_on )

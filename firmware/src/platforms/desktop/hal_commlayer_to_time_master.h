@@ -23,14 +23,27 @@ Copyright (C) 2015 OLogN Technologies AG
 #if !defined __HAL_COMMLAYER_TO_TIME_MASTER_H__
 #define __HAL_COMMLAYER_TO_TIME_MASTER_H__
 
-void register_incoming_packet( MEMORY_HANDLE mem_h );
-void register_outgoing_packet( MEMORY_HANDLE mem_h );
-void register_wait_request_ret_val( uint8_t ret_val );
-void register_time_val( const sa_time_val* in, sa_time_val* out );
+#ifdef USE_TIME_MASTER
 
-void request_incoming_packet( MEMORY_HANDLE mem_h );
-void request_outgoing_packet( MEMORY_HANDLE mem_h );
-uint8_t request_wait_request_ret_val()
-void request_time_val( sa_time_val* tv );
+bool communication_initialize_with_time_master();
+void communication_terminate_with_time_master();
+
+#ifdef USE_TIME_MASTER_REGISTER
+
+void register_incoming_packet( uint8_t ret_code, MEMORY_HANDLE mem_h );
+void register_outgoing_packet( uint8_t ret_code, MEMORY_HANDLE mem_h );
+void register_wait_request_ret_val( uint8_t ret_val );
+void register_time_val( uint8_t point_id, const sa_time_val* in, sa_time_val* out );
+
+#else // USE_TIME_MASTER_REGISTER
+
+void request_incoming_packet( uint8_t* ret_code, MEMORY_HANDLE mem_h );
+void request_outgoing_packet( uint8_t* ret_code, MEMORY_HANDLE mem_h );
+uint8_t request_wait_request_ret_val();
+void request_time_val( uint8_t point_id, sa_time_val* tv );
+
+#endif // USE_TIME_MASTER_REGISTER
+
+#endif // USE_TIME_MASTER
 
 #endif // __HAL_COMMLAYER_TO_TIME_MASTER_H__
