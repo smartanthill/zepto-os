@@ -54,7 +54,10 @@ int air_main_loop()
 
 int main( int argc, char *argv[] )
 {
-    if ( !air_main_init() )
+	ZEPTO_DEBUG_PRINTF_1( "AIR started\n" );
+	ZEPTO_DEBUG_PRINTF_1( "===========\n\n" );
+
+	if ( !air_main_init() )
 	{
 		ZEPTO_DEBUG_PRINTF_1( "Failed to initialize\n" );
 		return 0;

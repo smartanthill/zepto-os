@@ -34,14 +34,25 @@ Copyright (C) 2015 OLogN Technologies AG
 #define TIME_RECORD_REGISTER_OUTGOING_PACKET 1
 #define TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32 2
 #define TIME_RECORD_REGISTER_TIME_VALUE 3
+#define TIME_RECORD_REGISTER_WAIT_RET_VALUE 4
 
+// TIME ID calls
 void get_time_id( time_id_type* time_id );
+inline uint32_t time_id_to_uint32_time( time_id_type timestamp )
+{
+	uint32_t ret = (uint32_t)( (timestamp >> 8) / 1000 );
+	return ret;
+}
 
-
+// LOGGING calls
 bool init_access_for_logging( const char* path = NULL );
 bool init_access_for_replay( const char* path = NULL );
+
 bool add_in_out_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size );
 bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint32_t rand_val );
+bool add_time_record( time_id_type timestamp, int dev_id, uint32_t time_returned );
+bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val );
+
 /*
 class LogFile
 {

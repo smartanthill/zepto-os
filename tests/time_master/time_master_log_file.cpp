@@ -151,6 +151,16 @@ public:
 		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: %08x", timestamp, dev_id, TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32, 4, rand_val );
 		return add_record( formatting_buffer, sz );
 	}
+	bool add_time_record( time_id_type timestamp, int dev_id, uint32_t time_returned )
+	{
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: %08x", timestamp, dev_id, TIME_RECORD_REGISTER_TIME_VALUE, 4, time_returned );
+		return add_record( formatting_buffer, sz );
+	}
+	bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
+	{
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: %02x", timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 4, ret_val );
+		return add_record( formatting_buffer, sz );
+	}
 };
 
 static LogFile logfile;
@@ -161,7 +171,7 @@ bool init_access_for_logging( const char* path )
 }
 bool init_access_for_replay( const char* path )
 {
-	return init_access_for_replay( path );
+	return logfile.init_access_for_replay( path );
 }
 bool add_in_out_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size )
 {
@@ -170,4 +180,12 @@ bool add_in_out_packet_record( time_id_type timestamp, int dev_id, int type, uns
 bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint32_t rand_val )
 {
 	return logfile.add_rand_value_request_32_record( timestamp, dev_id, rand_val );
+}
+bool add_time_record( time_id_type timestamp, int dev_id, uint32_t time_returned )
+{
+	return logfile.add_time_record( timestamp, dev_id, time_returned );
+}
+bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
+{
+	return logfile.add_waitingfor_ret_record( timestamp, dev_id, ret_val );
 }
