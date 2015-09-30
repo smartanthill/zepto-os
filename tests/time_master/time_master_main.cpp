@@ -114,7 +114,7 @@ bool process_packet( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out
 			packet_out[0] = (uint8_t)dev_id;
 			packet_out[1] = (uint8_t)(dev_id>>8);
 			packet_out[2] = type;
-			packet_out[3] = 0;
+			packet_out[3] = 1;
 			packet_out[4] = 0;
 			*packet_out_sz = 6;
 			packet_out[5] = ret_val;
