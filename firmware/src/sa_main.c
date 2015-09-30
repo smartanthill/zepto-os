@@ -183,7 +183,7 @@ int sa_main_loop()
 	// test setup values
 	// TODO: all code related to simulation and test generation MUST be moved out here ASAP!
 	bool wait_for_incoming_chain_with_timer = 0;
-	uint16_t wake_time_to_start_new_chain = 0;
+//	uint16_t wake_time_to_start_new_chain = 0;
 //	uint8_t wait_to_continue_processing = 0;
 //	uint16_t wake_time_continue_processing = 0;
 	// END OF test setup values
@@ -213,7 +213,7 @@ wait_for_comm_event:
 			// [[QUICK CHECK FOR UNITS POTENTIALLY WAITING FOR TIMEOUT start]]
 			// we ask each potential unit; if it reports activity, let it continue; otherwise, ask a next one
 			// IMPORTANT: once an order of units is selected and tested, do not change it without extreme necessity
-			sa_get_time( &(currt) );
+			SA_GET_TIME( &(currt) );
 
 			// 1.1. test GDP-ctr
 			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
@@ -349,7 +349,7 @@ wait_for_comm_event:
 				{
 //					ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
 #if 0
-					sa_get_time( &(currt) );
+					SA_GET_TIME( &(currt) );
 					gdp_context = SAGDP_CONTEXT_UNKNOWN;
 					ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 					if ( ret_code == SAGDP_RET_OK )
@@ -402,7 +402,7 @@ wait_for_comm_event:
 			if ( 1 ) //TODO: temporary solution
 			{
 				ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
-				sa_get_time( &(currt) );
+				SA_GET_TIME( &(currt) );
 				gdp_context = SAGDP_CONTEXT_UNKNOWN;
 				ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 				if ( ret_code == SAGDP_RET_OK )
@@ -557,7 +557,7 @@ siotmp_rec:
 			{
 				bool use_ctr = true;
 				ZEPTO_DEBUG_PRINTF_1( "NONCE_LAST_SENT has been reset; the last message (if any) will be resent\n" );
-				sa_get_time( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
+				SA_GET_TIME( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
 				ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 				if ( ret_code == SAGDP_RET_TO_LOWER_NONE )
 				{
@@ -598,7 +598,7 @@ siotmp_rec:
 		}
 
 		// 3. pass to SAGDP a new packet
-		sa_get_time( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
+		SA_GET_TIME( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
 #ifdef ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		{
 			parser_obj po;
@@ -652,7 +652,7 @@ siotmp_rec:
 					ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
 					ZEPTO_DEBUG_ASSERT( ret_code == SACCP_RET_PASS_LOWER_CONTROL );
 					zepto_response_to_request( working_handle.packet_h );
-					// sa_get_time( &(currt) ); // TODO: check whether above processing of CTR packets is a potentially long operation and time should be re-requested
+					// SA_GET_TIME( &(currt) ); // TODO: check whether above processing of CTR packets is a potentially long operation and time should be re-requested
 					ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 					if ( ret_code == SAGDP_RET_NEED_NONCE )
 					{
@@ -820,7 +820,7 @@ siotmp_rec:
 		// 5. SAGDP
 alt_entry:
 //		uint8_t timer_val;
-		sa_get_time( &(currt) );
+		SA_GET_TIME( &(currt) );
 #ifdef ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		{
 			parser_obj po;
@@ -875,7 +875,7 @@ alt_entry:
 //				bool start_now = tester_get_rand_val() % 3;
 //				bool start_now = true;
 //				wake_time_to_start_new_chain = start_now ? getTime() : getTime() + tester_get_rand_val() % 8;
-				wake_time_to_start_new_chain = getTime();
+//				wake_time_to_start_new_chain = getTime();
 				wait_for_incoming_chain_with_timer = true;
 				zepto_response_to_request( working_handle.packet_h );
 				goto saspsend;

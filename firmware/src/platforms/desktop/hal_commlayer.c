@@ -326,9 +326,16 @@ uint8_t internal_send_packet( MEMORY_HANDLE mem_h, int _sock, struct sockaddr* _
 	buff[0] = (uint8_t)sz;
 	buff[1] = sz >> 8;
 	int bytes_sent = sendto(_sock, (char*)buff, sz+2, 0, _sa_other, sizeof (struct sockaddr) );
-	// do full cleanup
-	memory_object_response_to_request( mem_h );
-	memory_object_response_to_request( mem_h );
+
+	// restore data behind handle
+	zepto_response_to_request( mem_h );
+	parser_obj po, po1;
+	zepto_parser_init( &po, mem_h );
+	zepto_parse_skip_block( &po, 2 );
+	zepto_parser_init_by_parser( &po1, &po );
+	zepto_parse_skip_block( &po1, zepto_parsing_remaining_bytes( &po ) );
+	zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
+	zepto_response_to_request( mem_h );
 
 
 	if (bytes_sent < 0)
@@ -352,23 +359,50 @@ uint8_t internal_send_packet( MEMORY_HANDLE mem_h, int _sock, struct sockaddr* _
 #ifdef MESH_TEST
 uint8_t hal_send_packet( MEMORY_HANDLE mem_h, uint8_t bus_id, uint8_t intrabus_id )
 {
+	uint8_t ret_code;
 #ifdef SA_RETRANSMITTER
 	if ( bus_id == 0 )
-		return internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+		ret_code = internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
 	else
 	{
 		ZEPTO_DEBUG_ASSERT( bus_id == 1 );
-		return internal_send_packet( mem_h, sock2, (struct sockaddr *)(&sa_other2) );
+		ret_code = internal_send_packet( mem_h, sock2, (struct sockaddr *)(&sa_other2) );
 	}
 #else
 	ZEPTO_DEBUG_ASSERT( bus_id == 0 );
-	return internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+	ret_code = internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
 #endif
+	// do full cleanup
+	memory_object_response_to_request( mem_h );
+	memory_object_response_to_request( mem_h );
+
+	return ret_code;
 }
 #else
 uint8_t send_message( MEMORY_HANDLE mem_h )
 {
-	return internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+	uint8_t ret_code;
+
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#if !defined USE_TIME_MASTER_REGISTER
+	request_outgoing_packet( &ret_code, mem_h );
+	return ret_code;
+#endif // USE_TIME_MASTER_REGISTER
+#endif // USE_TIME_MASTER
+
+	ret_code = internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+
+#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+#ifdef USE_TIME_MASTER_REGISTER
+	register_outgoing_packet( ret_code, mem_h );
+#endif // USE_TIME_MASTER_REGISTER
+#endif // USE_TIME_MASTER
+
+	// do full cleanup
+	memory_object_response_to_request( mem_h );
+	memory_object_response_to_request( mem_h );
+
+	return ret_code;
 }
 #endif
 

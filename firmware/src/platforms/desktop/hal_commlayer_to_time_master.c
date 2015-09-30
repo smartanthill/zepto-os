@@ -146,16 +146,11 @@ uint8_t internal_send_packet_to_time_master( CONST uint8_t* data_buff, uint16_t 
 	ZEPTO_DEBUG_PRINTF_1( "send_message() called...\n" );
 
 	ZEPTO_DEBUG_ASSERT( data_buff != NULL );
-	uint8_t base_buff[7];
+	uint8_t base_buff[MAX_PACKET_SIZE + 5];
 	base_buff[0] = (uint8_t)(data_sz+5);
 	base_buff[1] = (data_sz+5) >> 8;
-	base_buff[2] = (uint8_t)DEVICE_SELF_ID;
-	base_buff[3] = DEVICE_SELF_ID >> 8;
-	base_buff[4] = type;
-	base_buff[5] = (uint8_t)data_sz;
-	base_buff[6] = data_sz >> 8;
 
-	int bytes_sent = sendto(_sock, (char*)base_buff, 7, 0, _sa_other, sizeof (struct sockaddr) );
+	int bytes_sent = sendto(_sock, (char*)base_buff, 2, 0, _sa_other, sizeof (struct sockaddr) );
 
 	if (bytes_sent < 0)
 	{
@@ -168,9 +163,17 @@ uint8_t internal_send_packet_to_time_master( CONST uint8_t* data_buff, uint16_t 
 		return COMMLAYER_RET_FAILED;
 	}
 
-	bytes_sent = sendto(_sock, (char*)data_buff, data_sz, 0, _sa_other, sizeof (struct sockaddr) );
+	ZEPTO_DEBUG_ASSERT( data_sz <= MAX_PACKET_SIZE );
+	base_buff[0] = (uint8_t)DEVICE_SELF_ID;
+	base_buff[1] = DEVICE_SELF_ID >> 8;
+	base_buff[2] = type;
+	base_buff[3] = (uint8_t)data_sz;
+	base_buff[4] = data_sz >> 8;
+	ZEPTO_MEMCPY( base_buff + 5, data_buff, data_sz );
 
-	if (bytes_sent < 0)
+	bytes_sent = sendto(_sock, (char*)base_buff, 5 + data_sz, 0, _sa_other, sizeof (struct sockaddr) );
+
+	if (bytes_sent < 0) 
 	{
 #ifdef _MSC_VER
 		int error = WSAGetLastError();
@@ -319,12 +322,10 @@ void communication_terminate_with_time_master()
 
 #ifdef USE_TIME_MASTER_REGISTER
 
-void register_packet_with_time_master( uint8_t ret_code, MEMORY_HANDLE mem_h, bool incoming )
+void register_packet_with_time_master( uint8_t ret_code, uint8_t* packet_buff, uint16_t packet_sz, bool incoming )
 {
 	uint8_t ret;
 	uint8_t type_out = incoming ? TIME_RECORD_REGISTER_INCOMING_PACKET : TIME_RECORD_REGISTER_OUTGOING_PACKET;
-	uint16_t packet_sz = memory_object_get_request_size( mem_h );
-	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
 	ZEPTO_DEBUG_ASSERT( packet_buff != NULL );
 	ZEPTO_DEBUG_ASSERT( packet_sz <= MAX_PACKET_SIZE );
 	uint8_t buff[MAX_PACKET_SIZE+1];
@@ -345,12 +346,16 @@ void register_packet_with_time_master( uint8_t ret_code, MEMORY_HANDLE mem_h, bo
 
 void register_incoming_packet( uint8_t ret_code, MEMORY_HANDLE mem_h )
 {
-	register_packet_with_time_master( ret_code, mem_h, true );
+	uint16_t packet_sz = memory_object_get_response_size( mem_h );
+	uint8_t* packet_buff = memory_object_get_response_ptr( mem_h );
+	register_packet_with_time_master( ret_code, packet_buff, packet_sz, true );
 }
 
 void register_outgoing_packet( uint8_t ret_code, MEMORY_HANDLE mem_h )
 {
-	register_packet_with_time_master( ret_code, mem_h, false );
+	uint16_t packet_sz = memory_object_get_request_size( mem_h );
+	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
+	register_packet_with_time_master( ret_code, packet_buff, packet_sz, false );
 }
 
 void register_wait_request_ret_val( uint8_t ret_val )
@@ -388,13 +393,13 @@ void register_time_val( uint8_t point_id, const sa_time_val* in, sa_time_val* ou
 	ret = internal_send_packet_to_time_master( buff_out, packet_sz, type_out, sock_with_time_master, (struct sockaddr *)(&sa_other_time_master) );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
-	uint8_t buff_base[5 + sizeof(sa_time_val)];
+	uint8_t buff_base[5 + sizeof(sa_time_val) + 1];
 	uint16_t packet_data_sz;
 	uint8_t type;
 	ret = internal_get_packet_bytes_from_time_master( &type, buff_base, &packet_data_sz, 5 + sizeof(sa_time_val)+1, sock_with_time_master, (struct sockaddr *)(&sa_other_time_master) );
 	ZEPTO_DEBUG_ASSERT( ret == HAL_GET_PACKET_BYTES_DONE );
 	ZEPTO_DEBUG_ASSERT( type == type_out );
-	ZEPTO_DEBUG_ASSERT( packet_data_sz == sizeof(sa_time_val) );
+	ZEPTO_DEBUG_ASSERT( packet_data_sz == sizeof(sa_time_val) + 1 );
 
 	ZEPTO_DEBUG_ASSERT( buff_base[0] == point_id );
 	out->low_t = buff_base[2];
@@ -421,7 +426,7 @@ void request_packet_from_time_master( uint8_t* ret_code, MEMORY_HANDLE mem_h, bo
 	ZEPTO_DEBUG_ASSERT( packet_data_sz > 1 );
 
 	zepto_parser_free_memory( mem_h );
-	zepto_write_block( mem_h, buff_base+1, packet_data_sz );
+	zepto_write_block( mem_h, buff_base+1, packet_data_sz - 1 );
 	*ret_code = buff_base[0];
 }
 
@@ -458,10 +463,10 @@ void request_time_val( uint8_t point_id, sa_time_val* tv )
 	uint8_t buff_base[5 + sizeof(sa_time_val) + 1];
 	uint16_t packet_data_sz;
 	uint8_t type;
-	ret = internal_get_packet_bytes_from_time_master( &type, buff_base, &packet_data_sz, 5 + sizeof(sa_time_val), sock_with_time_master, (struct sockaddr *)(&sa_other_time_master) );
+	ret = internal_get_packet_bytes_from_time_master( &type, buff_base, &packet_data_sz, 5 + sizeof(sa_time_val) + 1, sock_with_time_master, (struct sockaddr *)(&sa_other_time_master) );
 	ZEPTO_DEBUG_ASSERT( ret == HAL_GET_PACKET_BYTES_DONE );
 	ZEPTO_DEBUG_ASSERT( type == type_out );
-	ZEPTO_DEBUG_ASSERT( packet_data_sz == sizeof(sa_time_val) );
+	ZEPTO_DEBUG_ASSERT( packet_data_sz == sizeof(sa_time_val) + 1 );
 
 	ZEPTO_DEBUG_ASSERT( point_id == buff_base[0] );
 	tv->low_t = buff_base[2];

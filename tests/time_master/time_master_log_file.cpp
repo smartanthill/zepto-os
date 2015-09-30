@@ -140,7 +140,7 @@ public:
 		ZEPTO_DEBUG_ASSERT( type == TIME_RECORD_REGISTER_INCOMING_PACKET || type == TIME_RECORD_REGISTER_OUTGOING_PACKET );
 		int sz;
 		int i;
-		sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: ", timestamp, dev_id, type, size );
+		sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: ", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, type, size );
 		for ( i=0; i<size; i++ )
 			sz += sprintf( formatting_buffer + sz, "%02x ", data[i] );
 		sz += sprintf( formatting_buffer + sz, "\n" );
@@ -148,17 +148,17 @@ public:
 	}
 	bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint32_t rand_val )
 	{
-		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: %08x", timestamp, dev_id, TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32, 4, rand_val );
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x %02x %02x %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32, 4, (uint8_t)rand_val, (uint8_t)(rand_val>>8), (uint8_t)(rand_val>>16), (uint8_t)(rand_val>>24) );
 		return add_record( formatting_buffer, sz );
 	}
-	bool add_time_record( time_id_type timestamp, int dev_id, uint32_t time_returned )
+	bool add_time_record( time_id_type timestamp, int dev_id, int point_id, uint32_t time_returned )
 	{
-		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: %08x", timestamp, dev_id, TIME_RECORD_REGISTER_TIME_VALUE, 4, time_returned );
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x, %02x %02x %02x %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_TIME_VALUE, 5, point_id, (uint8_t)time_returned, (uint8_t)(time_returned>>8), (uint8_t)(time_returned>>16), (uint8_t)(time_returned>>24) );
 		return add_record( formatting_buffer, sz );
 	}
 	bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
 	{
-		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %d, sz: %d, data: %02x", timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 4, ret_val );
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 4, ret_val );
 		return add_record( formatting_buffer, sz );
 	}
 };
@@ -181,9 +181,9 @@ bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint3
 {
 	return logfile.add_rand_value_request_32_record( timestamp, dev_id, rand_val );
 }
-bool add_time_record( time_id_type timestamp, int dev_id, uint32_t time_returned )
+bool add_time_record( time_id_type timestamp, int dev_id, int point_id, uint32_t time_returned )
 {
-	return logfile.add_time_record( timestamp, dev_id, time_returned );
+	return logfile.add_time_record( timestamp, dev_id, point_id, time_returned );
 }
 bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
 {

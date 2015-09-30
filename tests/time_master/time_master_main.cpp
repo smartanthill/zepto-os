@@ -67,6 +67,7 @@ bool process_packet( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out
 		case TIME_RECORD_REGISTER_INCOMING_PACKET:
 		case TIME_RECORD_REGISTER_OUTGOING_PACKET:
 		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding packet record\n" );
 			add_in_out_packet_record( time_id, dev_id, type, data_buff, data_sz );
 			packet_out[0] = (uint8_t)dev_id;
 			packet_out[1] = (uint8_t)(dev_id>>8);
@@ -79,6 +80,7 @@ bool process_packet( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out
 		}
 		case TIME_RECORD_REGISTER_TIME_VALUE:
 		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding time record\n" );
 			uint8_t point_id = data_buff[0];
 			uint32_t time_ret;
 			if ( 1 ) // TODO: add an option when we return "our own" time
@@ -91,23 +93,24 @@ bool process_packet( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out
 			else
 			{
 			}
-			add_time_record( time_id, dev_id, time_ret );
+			add_time_record( time_id, dev_id, point_id, time_ret );
 			packet_out[0] = (uint8_t)dev_id;
 			packet_out[1] = (uint8_t)(dev_id>>8);
 			packet_out[2] = type;
-			packet_out[3] = 4;
+			packet_out[3] = 5;
 			packet_out[4] = 0;
 			*packet_out_sz = 10;
-			packet_out[0] = point_id;
-			packet_out[1] = (uint8_t)time_ret;
-			packet_out[2] = (uint8_t)(time_ret>>8);
-			packet_out[3] = (uint8_t)(time_ret>>16);
-			packet_out[4] = (uint8_t)(time_ret>>24);
+			packet_out[5] = point_id;
+			packet_out[6] = (uint8_t)time_ret;
+			packet_out[7] = (uint8_t)(time_ret>>8);
+			packet_out[8] = (uint8_t)(time_ret>>16);
+			packet_out[9] = (uint8_t)(time_ret>>24);
 			return true;
 			break;
 		}
 		case TIME_RECORD_REGISTER_WAIT_RET_VALUE:
 		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding wait_ret record\n" );;
 			uint8_t ret_val = data_buff[0];
 			ZEPTO_DEBUG_ASSERT( data_sz == 1 );
 			add_waitingfor_ret_record( time_id, dev_id, ret_val );
