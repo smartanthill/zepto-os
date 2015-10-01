@@ -35,6 +35,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32 2
 #define TIME_RECORD_REGISTER_TIME_VALUE 3
 #define TIME_RECORD_REGISTER_WAIT_RET_VALUE 4
+#define TIME_RECORD_REGISTER_EEPROM_INI_VALUE 5
 
 // TIME ID calls
 void get_time_id( time_id_type* time_id );
@@ -44,6 +45,14 @@ inline uint32_t time_id_to_uint32_time( time_id_type timestamp )
 	return ret;
 }
 
+typedef struct _read_record_head
+{
+	time_id_type time_id;
+	int device_id;
+	int record_type;
+	int data_sz;
+} READ_RECORD_HEAD;
+
 // LOGGING calls
 bool init_access_for_logging( const char* path = NULL );
 bool init_access_for_replay( const char* path = NULL );
@@ -52,6 +61,9 @@ bool add_in_out_packet_record( time_id_type timestamp, int dev_id, int type, uns
 bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint32_t rand_val );
 bool add_time_record( time_id_type timestamp, int dev_id, int point_id, uint32_t time_returned );
 bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val );
+bool add_eeprom_ini_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size );
+
+bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size );
 
 /*
 class LogFile
@@ -73,4 +85,18 @@ public:
 	bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint32_t rand_val );
 };
 */
+
+typedef struct _REPLAY_REQUEST
+{
+	int conn_id;
+	int device_id;
+	int record_type;
+	int data_sz;
+	uint8_t* data;
+} REPLAY_REQUEST;
+
+bool add_request( int conn_id, int device_id, int record_type, int data_sz, uint8_t* data );
+REPLAY_REQUEST* get_request_of_device( int device_id );
+bool remove_request_of_device( int device_id );
+
 #endif

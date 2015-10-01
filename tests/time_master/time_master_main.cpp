@@ -30,16 +30,160 @@ Copyright (C) 2015 OLogN Technologies AG
 using namespace std;
 
 
-bool time_main_init()
+bool time_main_init( bool for_recording )
 {
 	if ( ! communication_initialize() )
 		return false;
-	if ( !init_access_for_logging() )
-		return false;
+	if ( for_recording )
+	{
+		if ( !init_access_for_logging() )
+			return false;
+	}
+	else
+	{
+		if ( !init_access_for_replay() )
+			return false;
+	}
 	return true;
 }
 
-bool process_packet( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out, int* packet_out_sz )
+bool process_packet_for_recording( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out, int* packet_out_sz )
+{
+	if ( packet_sz < 5 )
+	{
+		ZEPTO_DEBUG_PRINTF_2( "potentialy incomplete request received (size = %d); dropped\n", packet_sz );
+		return false;
+	}
+
+	time_id_type time_id;
+	get_time_id( &time_id );
+
+	int dev_id = packet_in[1];
+	dev_id = (dev_id << 8 ) | packet_in[0];
+	int type = packet_in[2];
+	int data_sz = packet_in[4];
+	data_sz = (data_sz << 8 ) | packet_in[3];
+	if ( data_sz < packet_sz - 5 )
+		ZEPTO_DEBUG_PRINTF_4( "potentialy inconsistent request received: packet size = %d, data size declared = %d (expected: %d)\n", packet_sz, data_sz, packet_sz - 5 );
+	else if ( data_sz > packet_sz - 5 )
+		ZEPTO_DEBUG_PRINTF_4( "potentialy incomplete request received: packet size = %d, data size declared = %d (expected: %d)\n", packet_sz, data_sz, packet_sz - 5 );
+
+	uint8_t* data_buff = packet_in + 5;
+
+	switch ( type )
+	{
+		case TIME_RECORD_REGISTER_INCOMING_PACKET:
+		case TIME_RECORD_REGISTER_OUTGOING_PACKET:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding packet record\n" );
+			add_in_out_packet_record( time_id, dev_id, type, data_buff, data_sz );
+			packet_out[0] = (uint8_t)dev_id;
+			packet_out[1] = (uint8_t)(dev_id>>8);
+			packet_out[2] = type;
+			packet_out[3] = 0;
+			packet_out[4] = 0;
+			*packet_out_sz = 5;
+			return true;
+			break;
+		}
+		case TIME_RECORD_REGISTER_TIME_VALUE:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding time record\n" );
+			uint8_t point_id = data_buff[0];
+			uint32_t time_ret;
+			if ( 1 ) // TODO: add an option when we return "our own" time
+			{
+				time_ret = data_buff[4];
+				time_ret = (time_ret<<8)+data_buff[3];
+				time_ret = (time_ret<<8)+data_buff[2];
+				time_ret = (time_ret<<8)+data_buff[1];
+			}
+			else
+			{
+			}
+			add_time_record( time_id, dev_id, point_id, time_ret );
+			packet_out[0] = (uint8_t)dev_id;
+			packet_out[1] = (uint8_t)(dev_id>>8);
+			packet_out[2] = type;
+			packet_out[3] = 5;
+			packet_out[4] = 0;
+			*packet_out_sz = 10;
+			packet_out[5] = point_id;
+			packet_out[6] = (uint8_t)time_ret;
+			packet_out[7] = (uint8_t)(time_ret>>8);
+			packet_out[8] = (uint8_t)(time_ret>>16);
+			packet_out[9] = (uint8_t)(time_ret>>24);
+			return true;
+			break;
+		}
+		case TIME_RECORD_REGISTER_WAIT_RET_VALUE:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding wait_ret record\n" );;
+			uint8_t ret_val = data_buff[0];
+			ZEPTO_DEBUG_ASSERT( data_sz == 1 );
+			add_waitingfor_ret_record( time_id, dev_id, ret_val );
+			packet_out[0] = (uint8_t)dev_id;
+			packet_out[1] = (uint8_t)(dev_id>>8);
+			packet_out[2] = type;
+			packet_out[3] = 1;
+			packet_out[4] = 0;
+			*packet_out_sz = 6;
+			packet_out[5] = ret_val;
+			return true;
+			break;
+		}
+		case TIME_RECORD_REGISTER_EEPROM_INI_VALUE:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding eeprom ini record\n" );
+			add_eeprom_ini_packet_record( time_id, dev_id, type, data_buff, data_sz );
+			packet_out[0] = (uint8_t)dev_id;
+			packet_out[1] = (uint8_t)(dev_id>>8);
+			packet_out[2] = type;
+			packet_out[3] = 0;
+			packet_out[4] = 0;
+			*packet_out_sz = 5;
+			return true;
+			break;
+		}
+		case TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32:
+		default:
+		{
+			ZEPTO_DEBUG_PRINTF_2( "potentialy incomplete request received (size = %d); dropped\n", packet_sz );
+			return false;
+			break;
+		}
+	}
+}
+
+int time_main_loop_for_recording()
+{
+	uint8_t packet_buff[1024];
+	uint8_t packet_out_buff[1024];
+	uint16_t items[64];
+	uint8_t item_cnt;
+	int packet_sz;
+	uint8_t ret_code;
+	uint8_t j;
+	for (;;)
+	{
+		ret_code = wait_for_packet( items, &item_cnt, 64 );
+		if ( ret_code == COMMLAYER_RET_TIMEOUT )
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Waiting for incoming packets...\n" );
+			continue;
+		}
+		ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );
+		for ( j=0; j<item_cnt; j++ )
+		{
+			get_packet( packet_buff, 1024, &packet_sz, items[j] );
+			if ( process_packet_for_recording( packet_buff, packet_sz, packet_out_buff, &packet_sz ) )
+				send_packet( packet_out_buff, packet_sz, items[j] );
+		}
+	}
+	return 0;
+}
+
+bool process_packet_for_replaying( const READ_RECORD_HEAD* record, const uint8_t* record_data, uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out, int* packet_out_sz )
 {
 	if ( packet_sz < 5 )
 	{
@@ -134,17 +278,73 @@ bool process_packet( uint8_t* packet_in, uint16_t packet_sz, uint8_t* packet_out
 	}
 }
 
-int time_main_loop()
+bool quick_read_device_id_from_packet( const uint8_t* packet, int packet_sz, int* device_id )
+{
+	if ( packet_sz < 5 )
+	{
+		ZEPTO_DEBUG_PRINTF_2( "potentialy incomplete request received (size = %d); dropped\n", packet_sz );
+		return false;
+	}
+
+	time_id_type time_id;
+	get_time_id( &time_id );
+
+	*device_id = packet[1];
+	*device_id = (*device_id << 8 ) | packet[0];
+	int type = packet[2];
+	int data_sz = packet[4];
+	data_sz = (data_sz << 8 ) | packet[3];
+	if ( data_sz < packet_sz - 5 )
+	{
+		ZEPTO_DEBUG_PRINTF_4( "potentialy inconsistent request received: packet size = %d, data size declared = %d (expected: %d)\n", packet_sz, data_sz, packet_sz - 5 );
+		return false;
+	}
+	else if ( data_sz > packet_sz - 5 )
+	{
+		ZEPTO_DEBUG_PRINTF_4( "potentialy incomplete request received: packet size = %d, data size declared = %d (expected: %d)\n", packet_sz, data_sz, packet_sz - 5 );
+		return false;
+	}
+	return true;
+}
+
+bool process_request_for_replay()
+{
+	return true;
+}
+
+int time_main_loop_for_replaying()
 {
 	uint8_t packet_buff[1024];
 	uint8_t packet_out_buff[1024];
+	READ_RECORD_HEAD record;
+	uint8_t record_stored_data[1024];
+
+	REPLAY_REQUEST* request;
+
 	uint16_t items[64];
 	uint8_t item_cnt;
 	int packet_sz;
 	uint8_t ret_code;
 	uint8_t j;
+	int packet_ordinal = 0;
 	for (;;)
 	{
+		for (;;)
+		{
+			if (!read_next_record( &record, record_stored_data, 1024 ))
+			{
+				ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
+				return 0;
+			}
+			packet_ordinal ++;
+
+			request = get_request_of_device( record.device_id );
+
+			if ( !process_request_for_replay() )
+				break;
+		}
+
+
 		ret_code = wait_for_packet( items, &item_cnt, 64 );
 		if ( ret_code == COMMLAYER_RET_TIMEOUT )
 		{
@@ -155,8 +355,16 @@ int time_main_loop()
 		for ( j=0; j<item_cnt; j++ )
 		{
 			get_packet( packet_buff, 1024, &packet_sz, items[j] );
-			if ( process_packet( packet_buff, packet_sz, packet_out_buff, &packet_sz ) )
+			if ( process_packet_for_replaying( &record, record_stored_data, packet_buff, packet_sz, packet_out_buff, &packet_sz ) )
+			{
 				send_packet( packet_out_buff, packet_sz, items[j] );
+				if (!read_next_record( &record, record_stored_data, 1024 ))
+				{
+					ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
+					return 0;
+				}
+				packet_ordinal ++;
+			}
 		}
 	}
 	return 0;
@@ -175,10 +383,13 @@ int main( int argc, char *argv[] )
 	ZEPTO_DEBUG_PRINTF_1( "TIME MASTER started\n" );
 	ZEPTO_DEBUG_PRINTF_1( "===================\n\n" );
 
-    if ( !time_main_init() )
+	bool for_recording = false; // TODO: from command line or alike
+
+    if ( !time_main_init( for_recording ) )
 	{
 		ZEPTO_DEBUG_PRINTF_1( "Failed to initialize\n" );
 		return 0;
 	}
-    return time_main_loop();
+
+    return for_recording ? time_main_loop_for_recording() : time_main_loop_for_replaying();
 }
