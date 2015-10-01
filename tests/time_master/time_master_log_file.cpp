@@ -261,7 +261,10 @@ public:
 			{
 				while ( start[0] == ' ' || start[0] == '\t' ) start++;
 				prev_start = start;
-				data[i] = strtoul( start, &start, 16 );
+				unsigned int val = strtoul( start, &start, 16 );
+				if ( val > 255 ) // bad format
+					return false;
+				data[i] = (uint8_t)val;
 				if ( prev_start == start ) // nothing numerical
 					return false;
 			}
@@ -318,7 +321,7 @@ private:
 	replay_requests r_requests;
 
 public:
-	bool add_request( int conn_id, int device_id, int record_type, int data_sz, uint8_t* data )
+	bool add_request( int conn_id, int device_id, int record_type, int data_sz, const uint8_t* data )
 	{
 		REPLAY_REQUEST request;
 		request.conn_id = conn_id;
@@ -330,7 +333,7 @@ public:
 		else
 			request.data = NULL;
 
-		int i;
+		unsigned int i;
 		for ( i=0; i<r_requests.size(); i++ )
 			if ( r_requests[i].device_id == device_id || r_requests[i].conn_id == conn_id )
 				return false;
@@ -341,7 +344,7 @@ public:
 
 	REPLAY_REQUEST* get_request_of_device( int device_id )
 	{
-		int i;
+		unsigned int i;
 		for ( i=0; i<r_requests.size(); i++ )
 			if ( r_requests[i].device_id == device_id )
 				return &(r_requests[i]);
@@ -350,7 +353,7 @@ public:
 
 	bool remove_request_of_device( int device_id )
 	{
-		int i;
+		unsigned int i;
 		for ( i=0; i<r_requests.size(); i++ )
 			if ( r_requests[i].device_id == device_id )
 				r_requests.erase( r_requests.begin() + i );
@@ -360,7 +363,7 @@ public:
 
 static ReplayRequestCollection replay_requests_coll;
 
-bool add_request( int conn_id, int device_id, int record_type, int data_sz, uint8_t* data )
+bool add_request( int conn_id, int device_id, int record_type, int data_sz, const uint8_t* data )
 {
 	return replay_requests_coll.add_request( conn_id, device_id, record_type, data_sz, data );
 }

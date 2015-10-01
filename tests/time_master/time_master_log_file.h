@@ -95,7 +95,7 @@ typedef struct _REPLAY_REQUEST
 	uint8_t* data;
 } REPLAY_REQUEST;
 
-bool add_request( int conn_id, int device_id, int record_type, int data_sz, uint8_t* data );
+bool add_request( int conn_id, int device_id, int record_type, int data_sz, const uint8_t* data );
 REPLAY_REQUEST* get_request_of_device( int device_id );
 bool remove_request_of_device( int device_id );
 
