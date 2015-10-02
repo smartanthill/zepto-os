@@ -235,6 +235,7 @@ bool prepare_packet_for_replay_base( READ_RECORD_HEAD* record, const uint8_t* re
 		packet_out[5] = 0;
 		*packet_out_sz = 6;
 //		ZEPTO_DEBUG_ASSERT( 0 == "device replay request has unexpected type" );
+		ZEPTO_DEBUG_PRINTF_3( "Bad request detected [1] (type expected: %d, type received: %d)\n",  record->record_type, type );
 		return false;
 	}
 
@@ -253,14 +254,17 @@ bool prepare_packet_for_replay_base( READ_RECORD_HEAD* record, const uint8_t* re
 	}
 	else
 	{
-		bool comparison_ok = record->data_sz == request_data_sz && memcmp( record_data, request_data, record->data_sz ) == 0;
+		bool comparison_ok = record->data_sz == request_data_sz && memcmp( record_data + 1, request_data + 1, record->data_sz - 1 ) == 0;
+		if ( !comparison_ok )
+			ZEPTO_DEBUG_PRINTF_3( "\"Packet sent\" comparison failed [2] (size expected: %d, size received: %d)\n", record->data_sz, request_data_sz );
 		packet_out[0] = (uint8_t)device_id;
 		packet_out[1] = (uint8_t)(device_id>>8);
 		packet_out[2] = type;
 		packet_out[3] = comparison_ok ? 1 : 0; // depends on comparison
-		packet_out[4] = 0;
+		packet_out[4] = 1;
 		packet_out[5] = 0;
-		*packet_out_sz = 6;
+		*packet_out_sz = 7;
+		packet_out[6] = record_data[0];
 //		ZEPTO_DEBUG_ASSERT( 0 == "device replay request has unexpected type" );
 		return comparison_ok;
 	}
@@ -268,12 +272,20 @@ bool prepare_packet_for_replay_base( READ_RECORD_HEAD* record, const uint8_t* re
 
 bool prepare_packet_for_replay( READ_RECORD_HEAD* record, const uint8_t* record_data, const uint8_t* packet_in, int packet_in_sz, uint8_t* packet_out, int* packet_out_sz )
 {
-	return true;
+	ZEPTO_DEBUG_ASSERT ( packet_in_sz >= 5 );
+
+	int device_id = packet_in[1];
+	device_id = (device_id << 8 ) | packet_in[0];
+	int type = packet_in[2];
+	int data_sz = packet_in[4];
+	data_sz = (data_sz << 8 ) | packet_in[3];
+	ZEPTO_DEBUG_ASSERT( data_sz == packet_in_sz - 5 );
+	return prepare_packet_for_replay_base( record, record_data, device_id, type, packet_in + 5, data_sz, packet_out, packet_out_sz );
 }
 
 bool prepare_packet_for_replay( READ_RECORD_HEAD* record, const uint8_t* record_data, REPLAY_REQUEST* request, uint8_t* packet_out, int* packet_out_sz )
 {
-	return true;
+	return prepare_packet_for_replay_base( record, record_data, request->device_id, request->record_type, request->data, request->data_sz, packet_out, packet_out_sz );
 }
 
 int time_main_loop_for_replaying()
@@ -305,6 +317,8 @@ int time_main_loop_for_replaying()
 		for (;;)
 		{
 			request = get_request_of_device( record.device_id );
+			if ( request == NULL )
+				break;
 
 			if ( !prepare_packet_for_replay( &record, record_stored_data, request, packet_out_buff, &packet_out_sz ) )
 				break;
@@ -379,6 +393,22 @@ int main( int argc, char *argv[] )
 		ZEPTO_DEBUG_PRINTF_1( "Failed to initialize\n" );
 		return 0;
 	}
+
+#if 0
+	int packet_ordinal = 0;
+	READ_RECORD_HEAD record;
+	uint8_t record_stored_data[1024];
+	for (;;)
+	{
+		// get first record
+		if (!read_next_record( &record, record_stored_data, 1024 ))
+		{
+			ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
+			return 0;
+		}
+		packet_ordinal ++;
+	}
+#endif // 0
 
     return for_recording ? time_main_loop_for_recording() : time_main_loop_for_replaying();
 }

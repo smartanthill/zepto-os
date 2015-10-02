@@ -151,7 +151,8 @@ void sa_get_time( sa_time_val* t, void* file, uint16_t line )
 {
 	uint8_t point_id = get_call_point_index( file, line );
 #if !defined USE_TIME_MASTER_REGISTER
-	return request_time_val( point_id );
+	request_time_val( point_id, t );
+	return;
 #endif // USE_TIME_MASTER_REGISTER
 
 	_sa_get_time( t );

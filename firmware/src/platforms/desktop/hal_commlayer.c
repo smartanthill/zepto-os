@@ -560,8 +560,15 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 bool communication_initialize()
 {
 #ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
+	if ( !communication_preinitialize() )
+		return false;
 	if ( !communication_initialize_with_time_master() )
 		return false;
+#ifdef USE_TIME_MASTER_REGISTER
+	return _communication_initialize();
+#else
+	return true;
+#endif // USE_TIME_MASTER_REGISTER
 #endif // USE_TIME_MASTER
 
 #if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
@@ -704,7 +711,7 @@ uint8_t hal_wait_for( waiting_for* wf )
 {
 #ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
 #if !defined USE_TIME_MASTER_REGISTER
-	return request_wait_request_ret_val( ret_val );
+	return request_wait_request_ret_val();
 #endif // USE_TIME_MASTER_REGISTER
 #endif // USE_TIME_MASTER
 

@@ -163,8 +163,8 @@ private:
 		do
 		{
 			res = fread( data + record_size, 1, 128, flog );
-			for ( i=record_size; i<record_size+res; i++ )
-				if ( data[i] == '\n' )
+			for ( i=0; i<res; i++ )
+				if ( data[record_size + i] == '\n' )
 				{
 					end_found = true;
 					record_size += i;
@@ -172,6 +172,10 @@ private:
 					fseek( flog, jump_back, SEEK_CUR );
 					break;
 				}
+			if ( end_found )
+				break;
+			if ( res == 0 )
+				break;
 			record_size += res;
 			if ( record_size + 128 > max_size )
 				return false; // something went wrong
@@ -228,12 +232,12 @@ public:
 	}
 	bool add_time_record( time_id_type timestamp, int dev_id, int point_id, uint32_t time_returned )
 	{
-		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x, %02x %02x %02x %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_TIME_VALUE, 5, point_id, (uint8_t)time_returned, (uint8_t)(time_returned>>8), (uint8_t)(time_returned>>16), (uint8_t)(time_returned>>24) );
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x %02x %02x %02x %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_TIME_VALUE, 5, point_id, (uint8_t)time_returned, (uint8_t)(time_returned>>8), (uint8_t)(time_returned>>16), (uint8_t)(time_returned>>24) );
 		return add_record( formatting_buffer, sz );
 	}
 	bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
 	{
-		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 4, ret_val );
+		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 1, ret_val );
 		return add_record( formatting_buffer, sz );
 	}
 
@@ -246,8 +250,9 @@ public:
 		ZEPTO_DEBUG_ASSERT( input_sz < MAX_FORMATTING_BUFFER_SIZE );
 
 		formatting_buffer[input_sz] = 0;
+		ZEPTO_DEBUG_PRINTF_2( "Record read: \"%s\"\n\n", formatting_buffer );
 
-		int header_size = fill_record_header( record, (char*)data );
+		int header_size = fill_record_header( record, (char*)formatting_buffer );
 		if ( header_size == 0 )
 			return false;
 
