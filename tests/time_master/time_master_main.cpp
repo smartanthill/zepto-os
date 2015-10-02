@@ -254,7 +254,7 @@ bool prepare_packet_for_replay_base( READ_RECORD_HEAD* record, const uint8_t* re
 	}
 	else
 	{
-		bool comparison_ok = record->data_sz == request_data_sz && memcmp( record_data + 1, request_data + 1, record->data_sz - 1 ) == 0;
+		bool comparison_ok = record->data_sz == request_data_sz && memcmp( record_data, request_data, record->data_sz ) == 0;
 		if ( !comparison_ok )
 			ZEPTO_DEBUG_PRINTF_3( "\"Packet sent\" comparison failed [2] (size expected: %d, size received: %d)\n", record->data_sz, request_data_sz );
 		packet_out[0] = (uint8_t)device_id;

@@ -39,25 +39,13 @@ typedef sa_time_struct sa_time_val;
 extern "C" {
 #endif
 
-#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
-void sa_get_time( sa_time_val* t, void* file, uint16_t line );
-#else // USE_TIME_MASTER
 void sa_get_time( sa_time_val* t ); // PLATFORM-SPECIFIC IMPLEMENTATION
-#endif // USE_TIME_MASTER
 //uint32_t getTime();
 //void sa_time_delay_ms(uint32_t ms);
 
 #ifdef __cplusplus
 }
 #endif
-
-#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
-//#define SA_GET_TIME( time_val_ptr, file, line ) sa_get_time( time_val_ptr, file, line )
-#define SA_GET_TIME( time_val_ptr ) sa_get_time( time_val_ptr, __FILE__, (uint16_t)(__LINE__) )
-#else // USE_TIME_MASTER
-//#define SA_GET_TIME( time_val_ptr, file, line ) sa_get_time( time_val_ptr )
-#define SA_GET_TIME( time_val_ptr ) sa_get_time( time_val_ptr )
-#endif // USE_TIME_MASTER
 
 
 // operations (to be added upon necessity)

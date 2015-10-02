@@ -20,6 +20,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #else // (defined VERY_DEBUG) && (defined VERY_DEBUG_SIMPLE_MAIN_LOOP)
 
 #include "sa_main.h"
+#include "zepto_os/debugging.h"
 
 // TODO: actual key loading, etc
 //uint8_t AES_ENCRYPTION_KEY[16];
@@ -144,7 +145,7 @@ bool sa_main_init()
 	zepto_vm_init();
 
 	ZEPTO_DEBUG_PRINTF_1("\nAwaiting client connection... \n" );
-	if (!communication_initialize())
+	if (!HAL_COMMUNICATION_INITIALIZE())
 		return false;
 
 	ZEPTO_DEBUG_PRINTF_1("Client connected.\n");
@@ -213,7 +214,7 @@ wait_for_comm_event:
 			// [[QUICK CHECK FOR UNITS POTENTIALLY WAITING FOR TIMEOUT start]]
 			// we ask each potential unit; if it reports activity, let it continue; otherwise, ask a next one
 			// IMPORTANT: once an order of units is selected and tested, do not change it without extreme necessity
-			SA_GET_TIME( &(currt) );
+			HAL_GET_TIME( &(currt), TIME_REQUEST_POINT__LOOP_TOP );
 
 			// 1.1. test GDP-ctr
 			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
@@ -274,7 +275,7 @@ wait_for_comm_event:
 			// [[QUICK CHECK FOR UNITS POTENTIALLY WAITING FOR TIMEOUT end]]
 
 
-			ret_code = hal_wait_for( &wait_for );
+			ret_code = HAL_WAIT_FOR( &wait_for );
 			SA_TIME_SET_INFINITE_TIME( wait_for.wait_time );
 
 			switch ( ret_code )
@@ -317,6 +318,11 @@ wait_for_comm_event:
 					goto wait_for_comm_event;
 #else							
 					// regular processing will be done below in the next block
+					HAL_GET_PACKET_BYTES( packet_getting_handle.packet_h );
+					zepto_response_to_request( packet_getting_handle.packet_h );
+					SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
+					goto siotmp_rec;
+#if 0
 					ret_code = hal_get_packet_bytes( packet_getting_handle.packet_h );
 					switch ( ret_code )
 					{
@@ -343,13 +349,14 @@ wait_for_comm_event:
 							break;
 						}
 					}
+#endif // 0
 #endif
 				}
 				case WAIT_RESULTED_IN_TIMEOUT:
 				{
 //					ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
 #if 0
-					SA_GET_TIME( &(currt) );
+					HAL_GET_TIME( &(currt) );
 					gdp_context = SAGDP_CONTEXT_UNKNOWN;
 					ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 					if ( ret_code == SAGDP_RET_OK )
@@ -402,7 +409,7 @@ wait_for_comm_event:
 			if ( 1 ) //TODO: temporary solution
 			{
 				ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
-				SA_GET_TIME( &(currt) );
+				HAL_GET_TIME( &(currt) );
 				gdp_context = SAGDP_CONTEXT_UNKNOWN;
 				ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
 				if ( ret_code == SAGDP_RET_OK )
@@ -557,7 +564,7 @@ siotmp_rec:
 			{
 				bool use_ctr = true;
 				ZEPTO_DEBUG_PRINTF_1( "NONCE_LAST_SENT has been reset; the last message (if any) will be resent\n" );
-				SA_GET_TIME( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
+				HAL_GET_TIME( &(currt), TIME_REQUEST_POINT__SASP_RET_TO_HIGHER_LAST_SEND_FAILED ); // motivation: requested after a potentially long operation in sasp handler
 				ret_code = handler_sagdp_receive_request_resend_lsp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 				if ( ret_code == SAGDP_RET_TO_LOWER_NONE )
 				{
@@ -598,7 +605,7 @@ siotmp_rec:
 		}
 
 		// 3. pass to SAGDP a new packet
-		SA_GET_TIME( &(currt) ); // motivation: requested after a potentially long operation in sasp handler
+		HAL_GET_TIME( &(currt), TIME_REQUEST_POINT__AFTER_SASP ); // motivation: requested after a potentially long operation in sasp handler
 #ifdef ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		{
 			parser_obj po;
@@ -652,7 +659,7 @@ siotmp_rec:
 					ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
 					ZEPTO_DEBUG_ASSERT( ret_code == SACCP_RET_PASS_LOWER_CONTROL );
 					zepto_response_to_request( working_handle.packet_h );
-					// SA_GET_TIME( &(currt) ); // TODO: check whether above processing of CTR packets is a potentially long operation and time should be re-requested
+					// HAL_GET_TIME( &(currt) ); // TODO: check whether above processing of CTR packets is a potentially long operation and time should be re-requested
 					ret_code = handler_sagdp_receive_hlp( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr );
 					if ( ret_code == SAGDP_RET_NEED_NONCE )
 					{
@@ -820,7 +827,7 @@ siotmp_rec:
 		// 5. SAGDP
 alt_entry:
 //		uint8_t timer_val;
-		SA_GET_TIME( &(currt) );
+		HAL_GET_TIME( &(currt), TIME_REQUEST_POINT__AFTER_SACCP );
 #ifdef ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		{
 			parser_obj po;
@@ -1012,12 +1019,8 @@ hal_send:
 #endif
 #else
 //			ZEPTO_DEBUG_ASSERT( link_id == 0 ); // TODO: link_id must be a part of send_packet() call; we are now just in the middle of development...
-			ret_code = send_message( working_handle.packet_h );
+			HAL_SEND_PACKET( working_handle.packet_h );
 #endif
-			if (ret_code != COMMLAYER_RET_OK )
-			{
-				return -1;
-			}
 			zepto_parser_free_memory( working_handle.packet_h );
 			INCREMENT_COUNTER( 90, "MAIN LOOP, packet sent" );
 			ZEPTO_DEBUG_PRINTF_1("\nMessage replied to client\n");

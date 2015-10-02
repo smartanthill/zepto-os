@@ -18,39 +18,12 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <hal_time_provider.h>
 #include <simpleiot_hal/hal_commlayer.h>
 
-#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
-#include "hal_commlayer_to_time_master.h"
-typedef struct _GETTIME_CALL_POINT { void* file; uint16_t line;  } GETTIME_CALL_POINT;
-#define GETTIME_CALL_POINT_MAX 4
-static GETTIME_CALL_POINT gettime_call_points[GETTIME_CALL_POINT_MAX];
-static uint8_t callpoints_assigned = 0;
-uint8_t get_call_point_index( void* file, uint16_t line )
-{
-	uint8_t i;
-	for ( i=0;i<callpoints_assigned; i++)
-		if ( gettime_call_points[i].file == file && gettime_call_points[i].line == line )
-			return i;
-	if ( callpoints_assigned < GETTIME_CALL_POINT_MAX )
-	{
-		gettime_call_points[callpoints_assigned].file = file;
-		gettime_call_points[callpoints_assigned].line = line;
-		return callpoints_assigned++;
-	}
-	ZEPTO_DEBUG_ASSERT( 0 == "Too many get_time call points detected" );
-	return 0xFF;
-}
-#endif // USE_TIME_MASTER
-
 
 #ifdef _MSC_VER
 
 #include <Windows.h>
 
-#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
-void _sa_get_time( sa_time_val* t )
-#else
 void sa_get_time( sa_time_val* t )
-#endif
 {
 	unsigned int sys_t = GetTickCount();
 	t->high_t = sys_t >> 16;
@@ -109,11 +82,7 @@ uint32_t getTick() {
 }
 
 
-#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
-void _sa_get_time( sa_time_val* t )
-#else
 void sa_get_time( sa_time_val* t )
-#endif
 {
 	unsigned int sys_t = getTick();
 	t->high_t = sys_t >> 16;
@@ -145,20 +114,3 @@ uint32_t getTime()
 }
 
 #endif
-
-#ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
-void sa_get_time( sa_time_val* t, void* file, uint16_t line )
-{
-	uint8_t point_id = get_call_point_index( file, line );
-#if !defined USE_TIME_MASTER_REGISTER
-	request_time_val( point_id, t );
-	return;
-#endif // USE_TIME_MASTER_REGISTER
-
-	_sa_get_time( t );
-
-#ifdef USE_TIME_MASTER_REGISTER
-	register_time_val( point_id, t, t );
-#endif // USE_TIME_MASTER_REGISTER
-}
-#endif // USE_TIME_MASTER
