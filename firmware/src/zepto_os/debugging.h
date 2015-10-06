@@ -37,6 +37,13 @@ void debug_hal_send_message( MEMORY_HANDLE mem_h );
 void  debug_hal_get_time( sa_time_val* tv, uint8_t call_point, const char* file, uint16_t line );
 uint8_t debug_hal_wait_for( waiting_for* wf );
 
+#ifdef USE_TIME_MASTER_REGISTER
+void register_eeprom_state();
+#define DEBUG_ON_EEPROM_INIT() register_eeprom_state()
+#else
+void request_eeprom_state();
+#define DEBUG_ON_EEPROM_INIT() request_eeprom_state()
+#endif
 #define HAL_COMMUNICATION_INITIALIZE debug_communication_initialize
 #define HAL_GET_PACKET_BYTES( packet_handle ) debug_hal_get_packet_bytes( packet_handle )
 #define HAL_SEND_PACKET( packet_handle ) debug_hal_send_message( packet_handle )
@@ -45,6 +52,7 @@ uint8_t debug_hal_wait_for( waiting_for* wf );
 
 #else // USE_TIME_MASTER
 
+#define DEBUG_ON_EEPROM_INIT()
 #define HAL_COMMUNICATION_INITIALIZE communication_initialize
 #define HAL_GET_PACKET_BYTES( packet_handle ) hal_get_packet_bytes( packet_handle )
 #define HAL_SEND_PACKET( packet_handle ) send_message( packet_handle )

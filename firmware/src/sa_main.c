@@ -91,8 +91,13 @@ bool sa_main_init()
 	StackPaint();
 #endif // TEST_RAM_CONSUMPTION
 	zepto_mem_man_init_memory_management();
+
+	if (!HAL_COMMUNICATION_INITIALIZE())
+		return false;
+
 	if (!init_eeprom_access()) // hardware failure
 		return false;
+
 	ret_code = eeprom_check_reincarnation( rid );
 	switch ( ret_code )
 	{
@@ -126,6 +131,8 @@ bool sa_main_init()
 		}
 	}
 
+	DEBUG_ON_EEPROM_INIT();
+
 #ifdef ENABLE_COUNTER_SYSTEM
 	INIT_COUNTER_SYSTEM
 #endif // ENABLE_COUNTER_SYSTEM
@@ -145,9 +152,6 @@ bool sa_main_init()
 	zepto_vm_init();
 
 	ZEPTO_DEBUG_PRINTF_1("\nAwaiting client connection... \n" );
-	if (!HAL_COMMUNICATION_INITIALIZE())
-		return false;
-
 	ZEPTO_DEBUG_PRINTF_1("Client connected.\n");
 
     return true;

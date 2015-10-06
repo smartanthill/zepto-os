@@ -301,3 +301,50 @@ void eeprom_read( uint8_t id, uint8_t* data)
 
 	ZEPTO_DEBUG_ASSERT( 0 == "eeprom slot is corrupted" );
 }
+
+uint16_t eeprom_serialize( uint8_t* buff )
+{
+	uint8_t* buff_start = buff;
+	ZEPTO_DEBUG_ASSERT ( buff != NULL );
+
+	// reincarnation data
+	buff[0] = DATA_REINCARNATION_ID_SIZE;
+	buff++;
+	hal_eeprom_read( buff, DATA_REINCARNATION_ID_SIZE, 0 );
+	buff += DATA_REINCARNATION_ID_SIZE;
+	// EEPROM_SLOT_DATA_SASP_NONCE_LW_ID
+	buff[0] = EEPROM_SLOT_DATA_SASP_NONCE_LW_ID;
+	buff[1] = DATA_SASP_NONCE_LW_SIZE;
+	buff += 2;
+	eeprom_read( EEPROM_SLOT_DATA_SASP_NONCE_LW_ID, buff);
+	buff += DATA_SASP_NONCE_LW_SIZE;
+	// EEPROM_SLOT_DATA_SASP_NONCE_LS_ID
+	buff[0] = EEPROM_SLOT_DATA_SASP_NONCE_LS_ID;
+	buff[1] = DATA_SASP_NONCE_LS_SIZE;
+	buff += 2;
+	eeprom_read( EEPROM_SLOT_DATA_SASP_NONCE_LS_ID, buff);
+	buff += DATA_SASP_NONCE_LS_SIZE;
+
+	return buff - buff_start;
+}
+
+void eeprom_deserialize( uint8_t* buff )
+{
+	ZEPTO_DEBUG_ASSERT( buff[0] == DATA_REINCARNATION_ID_SIZE );
+	buff++;
+	hal_eeprom_write( buff, DATA_REINCARNATION_ID_SIZE, 0 );
+	buff += DATA_REINCARNATION_ID_SIZE;
+	// EEPROM_SLOT_DATA_SASP_NONCE_LW_ID
+	ZEPTO_DEBUG_ASSERT( buff[0] == EEPROM_SLOT_DATA_SASP_NONCE_LW_ID );
+	ZEPTO_DEBUG_ASSERT( buff[1] == DATA_SASP_NONCE_LW_SIZE );
+	buff += 2;
+	eeprom_write( EEPROM_SLOT_DATA_SASP_NONCE_LW_ID, buff);
+	buff += DATA_SASP_NONCE_LW_SIZE;
+	// EEPROM_SLOT_DATA_SASP_NONCE_LS_ID
+	ZEPTO_DEBUG_ASSERT( buff[0] == EEPROM_SLOT_DATA_SASP_NONCE_LS_ID );
+	ZEPTO_DEBUG_ASSERT( buff[1] == DATA_SASP_NONCE_LS_SIZE );
+	buff += 2;
+	eeprom_write( EEPROM_SLOT_DATA_SASP_NONCE_LS_ID, buff);
+	buff += DATA_SASP_NONCE_LS_SIZE;
+}
+

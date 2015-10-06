@@ -16,6 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 #include <simpleiot/siot_common.h>
+#include <simpleiot_hal/siot_eeprom.h>
 #include <zepto_mem_mngmt_hal_spec.h>
 #include <simpleiot_hal/hal_waiting.h>
 #include <simpleiot_hal/siot_mem_mngmt.h>
@@ -40,6 +41,7 @@ extern uint16_t DEVICE_SELF_ID;
 #define TIME_RECORD_REGISTER_RAND_VAL_REQUEST_32 2
 #define TIME_RECORD_REGISTER_TIME_VALUE 3
 #define TIME_RECORD_REGISTER_WAIT_RET_VALUE 4
+#define TIME_RECORD_REGISTER_EEPROM_STATE 5
 
 #define OUTGOING_DEBUG_PACKET_HEADER_SIZE 5
 #ifdef USE_TIME_MASTER_REGISTER
@@ -142,7 +144,7 @@ void register_wait_request_ret_val( uint8_t ret_val )
 	uint8_t type_out = TIME_RECORD_REGISTER_WAIT_RET_VALUE;
 	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE+1];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, &ret_val, 1 ); // , NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, &ret_val, 1 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -167,7 +169,7 @@ void register_time_val( uint8_t point_id, const sa_time_val* in, sa_time_val* ou
 	uint8_t type_out = TIME_RECORD_REGISTER_TIME_VALUE;
 	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE + sizeof(sa_time_val) + 1];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, data_buff, sizeof(sa_time_val) + 1 ); // , NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, data_buff, sizeof(sa_time_val) + 1 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -185,6 +187,25 @@ void register_time_val( uint8_t point_id, const sa_time_val* in, sa_time_val* ou
 	out->high_t = (out->high_t<<8) | data_in[3];
 }
 
+void register_eeprom_state()
+{
+	uint8_t ret;
+	uint8_t type_out = TIME_RECORD_REGISTER_EEPROM_STATE;
+	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE + EEPROM_SERIALIZED_SIZE ];
+	uint8_t eeprom_buff[EEPROM_SERIALIZED_SIZE ];
+	eeprom_serialize( eeprom_buff );
+
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, eeprom_buff, EEPROM_SERIALIZED_SIZE );
+	ret = send_debug_packet( buff, debug_packet_sz );
+	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
+
+	uint16_t packet_data_sz;
+	ret = get_debug_packet( buff, &packet_data_sz, OUTGOING_DEBUG_PACKET_HEADER_SIZE+MAX_PACKET_SIZE+1 );
+	ZEPTO_DEBUG_ASSERT( ret == HAL_GET_PACKET_BYTES_DONE );
+	uint8_t data_offset = preanalyze_debug_packet( buff, packet_data_sz, &packet_data_sz, type_out );
+	ZEPTO_DEBUG_ASSERT( packet_data_sz == 0 );
+}
+
 
 #else // USE_TIME_MASTER_REGISTER
 
@@ -194,7 +215,7 @@ void request_incoming_packet( MEMORY_HANDLE mem_h )
 	uint8_t type_out = TIME_RECORD_REGISTER_INCOMING_PACKET;
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 ); // , NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -220,7 +241,7 @@ void request_outgoing_packet( MEMORY_HANDLE mem_h )
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE + 1 ];
 
 	uint8_t fake_ret_placeholder = 1;
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz ); // , NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -237,7 +258,7 @@ uint8_t request_wait_request_ret_val()
 	uint8_t type_out = TIME_RECORD_REGISTER_WAIT_RET_VALUE;
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 ); // , NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -257,7 +278,7 @@ void request_time_val( uint8_t point_id, sa_time_val* tv )
 
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 ); // , NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -273,6 +294,27 @@ void request_time_val( uint8_t point_id, sa_time_val* tv )
 	tv->low_t = (tv->low_t<<8) | data_in[1];
 	tv->high_t = data_in[4];
 	tv->high_t = (tv->high_t<<8) | data_in[3];
+}
+
+void request_eeprom_state()
+{
+	uint8_t ret;
+	uint8_t type_out = TIME_RECORD_REGISTER_EEPROM_STATE;
+
+	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + EEPROM_SERIALIZED_SIZE ];
+
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
+	ret = send_debug_packet( buff, debug_packet_sz );
+	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
+
+	uint16_t packet_data_sz;
+	ret = get_debug_packet( buff, &packet_data_sz, OUTGOING_DEBUG_PACKET_HEADER_SIZE+MAX_PACKET_SIZE+1 );
+	ZEPTO_DEBUG_ASSERT( ret == HAL_GET_PACKET_BYTES_DONE );
+	uint8_t data_offset = preanalyze_debug_packet( buff, packet_data_sz, &packet_data_sz, type_out );
+
+	ZEPTO_DEBUG_ASSERT( packet_data_sz == EEPROM_SERIALIZED_SIZE );
+	uint8_t* data_in = buff + data_offset;
+	eeprom_deserialize( data_in );
 }
 
 #endif // USE_TIME_MASTER_REGISTER

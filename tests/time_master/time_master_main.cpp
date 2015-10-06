@@ -132,7 +132,7 @@ bool process_packet_for_recording( uint8_t* packet_in, uint16_t packet_sz, uint8
 			return true;
 			break;
 		}
-		case TIME_RECORD_REGISTER_EEPROM_INI_VALUE:
+		case TIME_RECORD_REGISTER_EEPROM_STATE:
 		{
 			ZEPTO_DEBUG_PRINTF_1( "Adding eeprom ini record\n" );
 			add_eeprom_ini_packet_record( time_id, dev_id, type, data_buff, data_sz );
