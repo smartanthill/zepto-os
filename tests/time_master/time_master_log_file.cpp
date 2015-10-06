@@ -334,7 +334,10 @@ public:
 		request.record_type = record_type;
 		request.data_sz = data_sz;
 		if (data_sz)
+		{
 			request.data = new uint8_t [data_sz];
+			memcpy( request.data, data, data_sz );
+		}
 		else
 			request.data = NULL;
 
@@ -361,7 +364,11 @@ public:
 		unsigned int i;
 		for ( i=0; i<r_requests.size(); i++ )
 			if ( r_requests[i].device_id == device_id )
+			{
+				if ( r_requests[i].data != NULL )
+					delete [] r_requests[i].data;
 				r_requests.erase( r_requests.begin() + i );
+			}
 		return NULL;
 	}
 };

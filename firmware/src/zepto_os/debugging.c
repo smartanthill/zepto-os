@@ -233,8 +233,8 @@ void request_incoming_packet( MEMORY_HANDLE mem_h )
 
 void request_outgoing_packet( MEMORY_HANDLE mem_h )
 {
-//	uint16_t packet_sz = memory_object_get_request_size( mem_h );
-//	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
+	uint16_t packet_sz = memory_object_get_request_size( mem_h );
+	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
 
 	uint8_t ret;
 	uint8_t type_out = TIME_RECORD_REGISTER_OUTGOING_PACKET;

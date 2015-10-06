@@ -289,7 +289,7 @@ bool prepare_packet_for_replay( READ_RECORD_HEAD* record, const uint8_t* record_
 	return prepare_packet_for_replay_base( record, record_data, request->device_id, request->record_type, request->data, request->data_sz, packet_out, packet_out_sz );
 }
 
-int time_main_loop_for_replaying()
+int time_main_loop_for_replaying( bool filter, int for_device_id )
 {
 	uint8_t packet_buff[1024];
 	uint8_t packet_out_buff[1024];
@@ -305,13 +305,17 @@ int time_main_loop_for_replaying()
 	uint8_t j;
 	int packet_ordinal = 0;
 
-	// get first record
-	if (!read_next_record( &record, record_stored_data, 1024 ))
+	// get first record (any or for a particular device)
+	do
 	{
-		ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
-		return 0;
+		if (!read_next_record( &record, record_stored_data, 1024 ))
+		{
+			ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
+			return 0;
+		}
+		packet_ordinal ++;
 	}
-	packet_ordinal ++;
+	while ( filter && record.device_id != for_device_id );
 
 	for (;;)
 	{
@@ -327,12 +331,16 @@ int time_main_loop_for_replaying()
 			send_packet( packet_out_buff, packet_out_sz, request->conn_id );
 			remove_request_of_device( record.device_id );
 
-			if (!read_next_record( &record, record_stored_data, 1024 ))
+			do
 			{
-				ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
-				return 0;
+				if (!read_next_record( &record, record_stored_data, 1024 ))
+				{
+					ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
+					return 0;
+				}
+				packet_ordinal ++;
 			}
-			packet_ordinal ++;
+			while ( filter && record.device_id != for_device_id );
 		}
 
 
@@ -356,12 +364,16 @@ int time_main_loop_for_replaying()
 			{
 				prepare_packet_for_replay( &record, record_stored_data, packet_buff, packet_sz, packet_out_buff, &packet_out_sz );
 				send_packet( packet_out_buff, packet_out_sz, items[j] );
-				if (!read_next_record( &record, record_stored_data, 1024 ))
+				do
 				{
-					ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
-					return 0;
+					if (!read_next_record( &record, record_stored_data, 1024 ))
+					{
+						ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
+						return 0;
+					}
+					packet_ordinal ++;
 				}
-				packet_ordinal ++;
+				while ( filter && record.device_id != for_device_id );
 			}
 			else
 			{
@@ -411,5 +423,15 @@ int main( int argc, char *argv[] )
 	}
 #endif // 0
 
-    return for_recording ? time_main_loop_for_recording() : time_main_loop_for_replaying();
+	if ( for_recording )
+	{
+		return time_main_loop_for_recording();
+	}
+	else
+	{
+		bool filtered = false;
+		int devid = 0;
+		return time_main_loop_for_replaying( filtered, devid );
+	}
+
 }
