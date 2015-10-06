@@ -36,6 +36,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define TIME_RECORD_REGISTER_TIME_VALUE 3
 #define TIME_RECORD_REGISTER_WAIT_RET_VALUE 4
 #define TIME_RECORD_REGISTER_EEPROM_STATE 5
+#define TIME_RECORD_REGISTER_INCOMING_PACKET_AT_COMM_STACK 6
 
 // TIME ID calls
 void get_time_id( time_id_type* time_id );

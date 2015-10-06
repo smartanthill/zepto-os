@@ -74,6 +74,7 @@ bool process_packet_for_recording( uint8_t* packet_in, uint16_t packet_sz, uint8
 	{
 		case TIME_RECORD_REGISTER_INCOMING_PACKET:
 		case TIME_RECORD_REGISTER_OUTGOING_PACKET:
+		case TIME_RECORD_REGISTER_INCOMING_PACKET_AT_COMM_STACK:
 		{
 			ZEPTO_DEBUG_PRINTF_1( "Adding packet record\n" );
 			add_in_out_packet_record( time_id, dev_id, type, data_buff, data_sz );

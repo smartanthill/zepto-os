@@ -216,7 +216,7 @@ public:
 	bool add_abstract_data_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size )
 	{
 		ZEPTO_DEBUG_ASSERT( size < ( MAX_FORMATTING_BUFFER_SIZE >> 2 ) );
-		ZEPTO_DEBUG_ASSERT( type == TIME_RECORD_REGISTER_INCOMING_PACKET || type == TIME_RECORD_REGISTER_OUTGOING_PACKET || type == TIME_RECORD_REGISTER_EEPROM_STATE );
+		ZEPTO_DEBUG_ASSERT( type == TIME_RECORD_REGISTER_INCOMING_PACKET || type == TIME_RECORD_REGISTER_OUTGOING_PACKET || type == TIME_RECORD_REGISTER_EEPROM_STATE || TIME_RECORD_REGISTER_INCOMING_PACKET_AT_COMM_STACK );
 		int sz;
 		int i;
 		sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: ", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, type, size );

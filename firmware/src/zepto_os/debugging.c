@@ -112,7 +112,7 @@ void register_packet_with_time_master( uint8_t* packet_buff, uint16_t packet_sz,
 	uint8_t type_out = incoming ? TIME_RECORD_REGISTER_INCOMING_PACKET : TIME_RECORD_REGISTER_OUTGOING_PACKET;
 	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz );//, 0 , NULL );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -233,14 +233,13 @@ void request_incoming_packet( MEMORY_HANDLE mem_h )
 
 void request_outgoing_packet( MEMORY_HANDLE mem_h )
 {
-	uint16_t packet_sz = memory_object_get_request_size( mem_h );
-	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
+//	uint16_t packet_sz = memory_object_get_request_size( mem_h );
+//	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
 
 	uint8_t ret;
 	uint8_t type_out = TIME_RECORD_REGISTER_OUTGOING_PACKET;
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE + 1 ];
 
-	uint8_t fake_ret_placeholder = 1;
 	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );

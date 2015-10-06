@@ -22,11 +22,11 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot_hal/hal_commlayer.h>
 #include <simpleiot_hal/hal_waiting.h>
 #include <stdio.h>
-
+/*
 extern uint16_t DEVICE_SELF_ID;
 
 #define MAX_PACKET_SIZE 80
-
+*/
 
 #include <stdio.h>
 #include <errno.h>
