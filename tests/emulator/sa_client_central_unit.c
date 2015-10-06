@@ -83,6 +83,10 @@ int main_loop()
 		for ( int k=0;k<30; k++)
 			ZEPTO_DEBUG_PRINTF_3( "%c [0x%x]\n", bu[k], bu[k] );
 		return 0;*/
+	//	goto send_command;
+		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
+		zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
+	}
 #else
 		uint8_t buff_base[] = {0x2, 0x0, 0x8, 0x1, 0x1, 0x2, 0x0, 0x1, '-', '-', '>' };
 		uint8_t buff[128];
@@ -93,10 +97,6 @@ int main_loop()
 		// should appear on the other side: Packet received: [8 bytes]  [1][0x0001][0x0001][0x0002][0x0000][0x0001]-->
 		// should come back: 02 01 01 02 01 02 2d 2d 2d 2d 3e
 #endif
-	//	goto send_command;
-		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
-		zepto_parser_free_memory( MEMORY_HANDLE_MAIN_LOOP_1 );
-	}
 
 	// MAIN LOOP
 	for (;;)

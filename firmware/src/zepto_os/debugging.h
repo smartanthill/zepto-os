@@ -48,7 +48,7 @@ uint8_t debug_hal_wait_for( waiting_for* wf );
 #define HAL_COMMUNICATION_INITIALIZE communication_initialize
 #define HAL_GET_PACKET_BYTES( packet_handle ) hal_get_packet_bytes( packet_handle )
 #define HAL_SEND_PACKET( packet_handle ) send_message( packet_handle )
-#define HAL_GET_TIME( time_val_ptr )  sa_get_time( time_val_ptr )
+#define HAL_GET_TIME( time_val_ptr, REQUEST_POINT )  sa_get_time( time_val_ptr )
 #define HAL_WAIT_FOR( wait_for_ptr ) hal_wait_for( wait_for_ptr )
 
 #endif // USE_TIME_MASTER
