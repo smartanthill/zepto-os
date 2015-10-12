@@ -18,10 +18,22 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "air_common.h"
 #include "air_commlayer.h"
 
+typedef struct _COMM_PARTICIPANT
+{
+	int dev_id;
+	int cnt_to;
+	int cnt_from;
+} COMM_PARTICIPANT;
+
 
 bool air_main_init()
 {
 	return communication_initialize();
+}
+
+void do_whatever_with_packet_to_be_sent( uint8_t* packet_buff, int packet_sz, int src, int destination )
+{
+	send_packet( packet_buff, packet_sz, destination );
 }
 
 int air_main_loop()
@@ -46,7 +58,7 @@ int air_main_loop()
 			get_packet( packet_buff, 1024, &packet_sz, items[j] );
 			for ( i=0; i<dev_count; i++)
 				if ( i != items[j] )
-					send_packet( packet_buff, packet_sz, i );
+					do_whatever_with_packet_to_be_sent( packet_buff, packet_sz, items[j], i );
 		}
 	}
 	return 0;

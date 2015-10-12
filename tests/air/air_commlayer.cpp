@@ -427,6 +427,14 @@ uint8_t start_listening()
 
 	  ZEPTO_DEBUG_PRINTF_2( "connection accepted with port:%d\n", sock_with_cl_accepted );
 
+	  for ( int i=0; i<dev_count; i++ )
+		  if ( ! devices[ dev_count ].connected )
+		  {
+			  devices[ i ].sock_with_cl_accepted = sock_with_cl_accepted;
+			  devices[ i ].connected = true;
+			  return COMMLAYER_RET_OK;
+		  }
+
 	  devices[ dev_count ].sock_with_cl_accepted = sock_with_cl_accepted;
 	  devices[ dev_count ].connected = true;
 	  dev_count++;
@@ -463,5 +471,13 @@ uint8_t get_packet( uint8_t* buff, int max_sz, int* size, uint16_t src )
 {
 	ZEPTO_DEBUG_ASSERT( src < MEX_DEV_CNT );
 	DEVICE_CONNNECTION* conn = devices + src;
-	return try_get_packet_using_context( buff, max_sz, size, conn );
+	uint8_t ret_code = try_get_packet_using_context( buff, max_sz, size, conn );
+	if ( ret_code != COMMLAYER_RET_OK )
+	{
+		ZEPTO_DEBUG_PRINTF_2( "Connection on port %d will be closed\n", conn->sock_with_cl_accepted );
+		CLOSE_SOCKET( conn->sock_with_cl_accepted );
+		conn->sock_with_cl_accepted = 0;
+		conn->connected = false;
+	}
+	return ret_code;
 }
