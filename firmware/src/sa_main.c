@@ -479,7 +479,7 @@ wait_for_comm_event:
 		// 2.0. Pass to siot/mesh
 siotmp_rec:
 #if SIOT_MESH_IMPLEMENTATION_WORKS
-		ret_code = handler_siot_mesh_receive_packet( working_handle.packet_h, MEMORY_HANDLE_MESH_ACK, &(working_handle.mesh_val), 0, 0 ); // TODO: define properly two last arguments
+		ret_code = handler_siot_mesh_receive_packet( &currt, &wait_for, working_handle.packet_h, MEMORY_HANDLE_MESH_ACK, &(working_handle.mesh_val), 0, 0 ); // TODO: define properly two last arguments
 		zepto_response_to_request( working_handle.packet_h );
 
 		switch ( ret_code )
