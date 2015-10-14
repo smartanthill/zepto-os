@@ -25,28 +25,40 @@ typedef struct _COMM_PARTICIPANT
 	int cnt_from;
 } COMM_PARTICIPANT;
 
+#define COMM_PARTICIPANTS_MAX_COUNT 64
+
+COMM_PARTICIPANT participants[COMM_PARTICIPANTS_MAX_COUNT];
+
 
 bool air_main_init()
 {
 	return communication_initialize();
+	ZEPTO_MEMSET( participants, 0, sizeof(participants) );
+	int i;
+	for ( i=0; i<COMM_PARTICIPANTS_MAX_COUNT; i++ )
+		participants[i].dev_id = i;
 }
 
 void do_whatever_with_packet_to_be_sent( uint8_t* packet_buff, int packet_sz, int src, int destination )
 {
-	send_packet( packet_buff, packet_sz, destination );
+	ZEPTO_DEBUG_ASSERT( destination < COMM_PARTICIPANTS_MAX_COUNT );
+	(participants[src].cnt_from )++;
+	(participants[destination].cnt_to )++;
+//	if ( participants[destination].cnt_to < 30 || participants[destination].cnt_to > 40 )
+		send_packet( packet_buff, packet_sz, destination );
 }
 
 int air_main_loop()
 {
 	uint8_t packet_buff[1024];
-	uint16_t items[64];
+	uint16_t items[COMM_PARTICIPANTS_MAX_COUNT];
 	uint8_t item_cnt;
 	int packet_sz;
 	uint8_t ret_code;
 	uint8_t i, j;
 	for (;;)
 	{
-		ret_code = wait_for_packet( items, &item_cnt, 64 );
+		ret_code = wait_for_packet( items, &item_cnt, COMM_PARTICIPANTS_MAX_COUNT );
 		if ( ret_code == COMMLAYER_RET_TIMEOUT )
 		{
 			ZEPTO_DEBUG_PRINTF_1( "Waiting for incoming packets...\n" );
