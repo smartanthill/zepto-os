@@ -20,8 +20,9 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot/siot_gd_protocol.h> // for packet flags
 #include <simpleiot/siot_cc_protocol_constants.h>
 
-#include "test_generator.h"
-#include <stdio.h> // for sprintf() in fake implementation
+//#include <stdio.h> // for sprintf() in fake implementation
+#include <stdlib.h> // for get_rand_val()
+uint16_t tester_get_rand_val(){	return (uint16_t)( rand() );}
 
 //DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[10];
 

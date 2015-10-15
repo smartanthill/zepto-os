@@ -19,9 +19,11 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot/siot_common.h>
 #include "cu_commlayer.h"
 #include "sa_test_control_prog.h"
-#include "test_generator.h"
 #include <simpleiot_hal/siot_mem_mngmt.h>
 #include "saccp_protocol_client_side_cu.h"
+#ifdef SA_ACTIVE_AIR_DEBUG
+#include "test_generator.h"
+#endif // SA_ACTIVE_AIR_DEBUG
 
 #include <stdio.h>
 
@@ -36,7 +38,9 @@ int main_loop()
 	ZEPTO_DEBUG_PRINTF_1("starting CLIENT...\n");
 	ZEPTO_DEBUG_PRINTF_1("==================\n\n");
 
+#ifdef SA_ACTIVE_AIR_DEBUG
 	tester_initTestSystem();
+#endif // SA_ACTIVE_AIR_DEBUG
 
 
 	uint8_t ret_code;
