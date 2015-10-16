@@ -263,8 +263,9 @@ uint8_t try_get_packet_size_within_master_loop( uint8_t* buff, DEVICE_CONNNECTIO
 
 }
 
-uint8_t try_get_packet_using_context( uint8_t* buff, int max_sz, int*size, DEVICE_CONNNECTION* conn )
+uint8_t try_get_packet_using_context( uint8_t* buff, int max_sz, int*size, int src )
 {
+	DEVICE_CONNNECTION* conn = devices + src;
 	buffer_in_with_cl_pos = 0;
 	uint8_t ret;
 
@@ -288,7 +289,7 @@ uint8_t try_get_packet_using_context( uint8_t* buff, int max_sz, int*size, DEVIC
 
 #ifdef SA_DEBUG
 	uint16_t i;
-	ZEPTO_DEBUG_PRINTF_1( "PACKET RECEIVED FROM DEVICE: " );
+	ZEPTO_DEBUG_PRINTF_2( "PACKET RECEIVED FROM DEVICE %d: ", src );
 	for ( i=0; i<sz; i++ )
 		ZEPTO_DEBUG_PRINTF_2( "%02x ", buff[i] );
 	ZEPTO_DEBUG_PRINTF_1( "\n" );
@@ -297,11 +298,12 @@ uint8_t try_get_packet_using_context( uint8_t* buff, int max_sz, int*size, DEVIC
 	return COMMLAYER_RET_OK;
 }
 
-uint8_t send_packet_using_context( const uint8_t* buff, int sz, DEVICE_CONNNECTION* conn )
+uint8_t send_packet_using_context( const uint8_t* buff, int sz, int target )
 {
-#if 0//defSA_DEBUG
+	DEVICE_CONNNECTION* conn = devices + target;
+#ifdef SA_DEBUG
 	uint16_t i;
-	ZEPTO_DEBUG_PRINTF_1( "packet being sent: " );
+	ZEPTO_DEBUG_PRINTF_2( "packet being sent to target %d: ", target );
 	for ( i=0; i<sz; i++ )
 		ZEPTO_DEBUG_PRINTF_2( "%02x ", buff[i] );
 	ZEPTO_DEBUG_PRINTF_1( "\n" );
@@ -463,15 +465,14 @@ uint8_t send_packet( const uint8_t* buff, int size, uint16_t target )
 		target = target;
 	}
 	ZEPTO_DEBUG_ASSERT( target < MEX_DEV_CNT );
-	DEVICE_CONNNECTION* conn = devices + target;
-	return send_packet_using_context( buff, size, conn );
+	return send_packet_using_context( buff, size, target );
 }
 
 uint8_t get_packet( uint8_t* buff, int max_sz, int* size, uint16_t src )
 {
 	ZEPTO_DEBUG_ASSERT( src < MEX_DEV_CNT );
 	DEVICE_CONNNECTION* conn = devices + src;
-	uint8_t ret_code = try_get_packet_using_context( buff, max_sz, size, conn );
+	uint8_t ret_code = try_get_packet_using_context( buff, max_sz, size, src );
 	if ( ret_code != COMMLAYER_RET_OK )
 	{
 		CLOSE_SOCKET( conn->sock_with_cl_accepted );

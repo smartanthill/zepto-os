@@ -17,15 +17,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include "air_common.h"
 #include "air_commlayer.h"
-
-typedef struct _COMM_PARTICIPANT
-{
-	int dev_id;
-	int cnt_to;
-	int cnt_from;
-} COMM_PARTICIPANT;
-
-#define COMM_PARTICIPANTS_MAX_COUNT 64
+#include "test_generation_support.h"
 
 COMM_PARTICIPANT participants[COMM_PARTICIPANTS_MAX_COUNT];
 
@@ -39,13 +31,95 @@ bool air_main_init()
 		participants[i].dev_id = i;
 }
 
-void do_whatever_with_packet_to_be_sent( uint8_t* packet_buff, int packet_sz, int src, int destination )
+void testing_scenario_at_destination_drop_none( const uint8_t* packet_buff, int packet_sz, int src, int destination )
+{
+	send_packet( packet_buff, packet_sz, destination );
+}
+
+void testing_scenario_at_destination_drop_at_random( const uint8_t* packet_buff, int packet_sz, int src, int destination )
+{
+	bool allow = (tester_get_rand_val() & 1) != 0;
+	if ( allow )
+		send_packet( packet_buff, packet_sz, destination );
+	else
+		ZEPTO_DEBUG_PRINTF_3( "---- Packet has not reached device %d (src: %d) \n", destination, src );
+}
+
+void testing_scenario_at_destination_drop_for_random_period( const uint8_t* packet_buff, int packet_sz, int src, int destination )
+{
+	const int transm_period_max_length = 128;
+	const int drop_period_max_length = 12;
+	COMM_PARTICIPANT& dev = participants[destination];
+	if ( dev.dest_val1 )
+	{
+		(dev.dest_val1)--;
+		if ( dev.dest_val1 == 0 )
+		{
+			dev.dest_val2 = tester_get_rand_val() % transm_period_max_length + 1;
+		}
+		ZEPTO_DEBUG_PRINTF_3( "---- Packet has not reached device %d (src: %d) \n", destination, src );
+	}
+	else
+	{
+		send_packet( packet_buff, packet_sz, destination );
+		if ( dev.dest_val2 )
+			(dev.dest_val2) --;
+		else
+			dev.dest_val1 = tester_get_rand_val() % drop_period_max_length + 1;
+	}
+}
+
+
+bool testing_scenario_at_src_drop_none( int src )
+{
+	return true;
+}
+
+bool testing_scenario_at_src_drop_at_random( int src )
+{
+	bool allow = (tester_get_rand_val() & 1) != 0;
+	return allow;
+}
+
+bool testing_scenario_at_src_drop_for_random_period( int src )
+{
+	const int transm_period_max_length = 128;
+	const int drop_period_max_length = 12;
+	COMM_PARTICIPANT& dev = participants[src];
+	if ( dev.src_val1 )
+	{
+		(dev.src_val1)--;
+		if ( dev.src_val1 == 0 )
+			dev.src_val2 = tester_get_rand_val() % transm_period_max_length + 1;
+		return false;
+	}
+	else
+	{
+		if ( dev.src_val2 )
+			(dev.src_val2) --;
+		else
+			dev.src_val1 = tester_get_rand_val() % drop_period_max_length + 1;
+		return true;
+	}
+}
+
+
+void do_whatever_with_packet_to_be_sent( const uint8_t* packet_buff, int packet_sz, int src, int destination )
 {
 	ZEPTO_DEBUG_ASSERT( destination < COMM_PARTICIPANTS_MAX_COUNT );
-	(participants[src].cnt_from )++;
 	(participants[destination].cnt_to )++;
-//	if ( participants[destination].cnt_to < 30 || participants[destination].cnt_to > 40 )
-		send_packet( packet_buff, packet_sz, destination );
+
+//	testing_scenario_at_destination_drop_none( packet_buff, packet_sz, src, destination );
+//	testing_scenario_at_destination_drop_at_random( packet_buff, packet_sz, src, destination );
+	testing_scenario_at_destination_drop_for_random_period( packet_buff, packet_sz, src, destination );
+}
+
+bool allow_to_pass_packet( int src )
+{
+	(participants[src].cnt_from )++;
+//	return testing_scenario_at_src_drop_none( src );
+//	return testing_scenario_at_src_drop_at_random( src );
+	return testing_scenario_at_src_drop_for_random_period( src );
 }
 
 int air_main_loop()
@@ -68,6 +142,13 @@ int air_main_loop()
 		for ( j=0; j<item_cnt; j++ )
 		{
 			get_packet( packet_buff, 1024, &packet_sz, items[j] );
+			add_new_packet( packet_buff, packet_sz );
+			if ( !allow_to_pass_packet( items[j] ) )
+			{
+				ZEPTO_DEBUG_PRINTF_2( "---- Packet originating from device %d lost on the way \n", items[j] );
+				continue;
+			}
+			(participants[items[j]].cnt_from )++;
 			for ( i=0; i<dev_count; i++)
 				if ( i != items[j] )
 					do_whatever_with_packet_to_be_sent( packet_buff, packet_sz, items[j], i );

@@ -131,7 +131,7 @@ uint16_t zepto_mem_man_ever_reached = 0;
 
 void zepto_mem_man_print_mem_stats()
 {
-	uint8_t i;
+/*	uint8_t i;
 	uint16_t total_mem = 0;
 	ZEPTO_DEBUG_PRINTF_1( "Memory stats:\n" );
 	for ( i=0; i<MEMORY_HANDLE_MAX; i++ )
@@ -139,7 +139,7 @@ void zepto_mem_man_print_mem_stats()
 		ZEPTO_DEBUG_PRINTF_6( "[%d] @[+%d (0x%02x)]:\t%d\t%d\n", i, i, (uint16_t)(memory_objects[i].ptr - BASE_MEM_BLOCK), memory_objects[i].rq_size, memory_objects[i].rsp_size );
 		total_mem += memory_objects[i].rq_size + memory_objects[i].rsp_size;
 	}
-	ZEPTO_DEBUG_PRINTF_3( "Size actually used: %d bytes (%d bytes max)\n\n", total_mem, zepto_mem_man_ever_reached );
+	ZEPTO_DEBUG_PRINTF_3( "Size actually used: %d bytes (%d bytes max)\n\n", total_mem, zepto_mem_man_ever_reached );*/
 }
 
 void zepto_mem_man_update_ever_reached()

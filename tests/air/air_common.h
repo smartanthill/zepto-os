@@ -44,7 +44,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #pragma warning (disable: 4996) // "The POSIX name for this item is deprecated. Instead, use the ISO C++ conformant name <...>"
 #else
 #endif
-
+/*
 #define SA_LITTLE_ENDIAN 0
 #define SA_BIG_ENDIAN 1
 #define SA_USED_ENDIANNES SA_LITTLE_ENDIAN
@@ -59,7 +59,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #ifndef false
 #define false 0
 #endif
-
+*/
 #ifndef INLINE
 #define INLINE static inline
 #endif
