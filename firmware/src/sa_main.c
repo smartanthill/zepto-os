@@ -145,7 +145,9 @@ bool sa_main_init()
 	TIME_MILLISECONDS16_TO_TIMEVAL( 1000, wait_for.wait_time ); //+++TODO: actual processing throughout the code
 
 //    ZEPTO_MEMSET( AES_ENCRYPTION_KEY, 0xab, 16 );
+#if SIOT_MESH_IMPLEMENTATION_WORKS
 	siot_mesh_init_tables(); // TODO: this call reflects current development stage and may or may not survive in the future
+#endif // SIOT_MESH_IMPLEMENTATION_WORKS
 	sasp_restore_from_backup();
 	sagdp_init( &sagdp_context_app );
 	sagdp_init( &sagdp_context_ctr );
@@ -189,7 +191,9 @@ int sa_main_loop()
 
 	// test setup values
 	// TODO: all code related to simulation and test generation MUST be moved out here ASAP!
+#if 0
 	bool wait_for_incoming_chain_with_timer = 0;
+#endif
 //	uint16_t wake_time_to_start_new_chain = 0;
 //	uint8_t wait_to_continue_processing = 0;
 //	uint16_t wake_time_continue_processing = 0;
@@ -222,6 +226,7 @@ wait_for_comm_event:
 			// IMPORTANT: once an order of units is selected and tested, do not change it without extreme necessity
 			HAL_GET_TIME( &(currt), TIME_REQUEST_POINT__LOOP_TOP );
 
+#if SIOT_MESH_IMPLEMENTATION_WORKS
 			// 0. Test MESH
 			ret_code = handler_siot_mesh_timer( &currt, &wait_for, working_handle.packet_h, &link_id );
 			switch ( ret_code )
@@ -234,6 +239,7 @@ wait_for_comm_event:
 					break;
 				}
 			}
+#endif // SIOT_MESH_IMPLEMENTATION_WORKS
 
 			// 1.1. test GDP-ctr
 			ret_code = handler_sagdp_timer( &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h, MEMORY_HANDLE_SAGDP_LSM_CTR, MEMORY_HANDLE_SAGDP_LSM_CTR_SAOUDP_ADDR, &sagdp_context_ctr, &(working_handle.resend_cnt) );
@@ -820,8 +826,9 @@ siotmp_rec:
 		}
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		ret_code = handler_saccp_receive( working_handle.packet_h, /*sasp_nonce_type chain_id*/NULL, &currt, &ret_wf );
-
+#if 0
 		wait_for_incoming_chain_with_timer = false;
+#endif
 
 		switch ( ret_code )
 		{
@@ -913,7 +920,9 @@ alt_entry:
 //				bool start_now = true;
 //				wake_time_to_start_new_chain = start_now ? getTime() : getTime() + tester_get_rand_val() % 8;
 //				wake_time_to_start_new_chain = getTime();
+#if 0
 				wait_for_incoming_chain_with_timer = true;
+#endif
 				zepto_response_to_request( working_handle.packet_h );
 				goto saspsend;
 				break;

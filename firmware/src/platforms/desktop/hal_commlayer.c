@@ -662,9 +662,12 @@ uint8_t hal_wait_for( waiting_for* wf )
 	uint8_t ret_code;
 	ZEPTO_DEBUG_ASSERT( wf->wait_legs == 0 ); // not implemented
 	ZEPTO_DEBUG_ASSERT( wf->wait_i2c == 0 ); // not implemented
+//	ZEPTO_DEBUG_PRINTF_3( ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> wait requested: time = %08x (%d) ms <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", timeout, timeout );
+//	int now = GetTickCount();
 	if ( wf->wait_packet )
 	{
 		ret_code = internal_wait_for_communication_event( timeout );
+//		ZEPTO_DEBUG_PRINTF_2( ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> actual wait time = %d ms <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", GetTickCount() - now );
 		switch ( ret_code )
 		{
 			case COMMLAYER_RET_FROM_DEV: ret_code = WAIT_RESULTED_IN_PACKET; break;
@@ -676,6 +679,7 @@ uint8_t hal_wait_for( waiting_for* wf )
 	else
 	{
 		ret_code = internal_wait_for_timeout( timeout );
+//		ZEPTO_DEBUG_PRINTF_2( ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> actual wait time = %d ms <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", GetTickCount() - now );
 		switch ( ret_code )
 		{
 			case COMMLAYER_RET_TIMEOUT: ret_code = WAIT_RESULTED_IN_TIMEOUT; break;
