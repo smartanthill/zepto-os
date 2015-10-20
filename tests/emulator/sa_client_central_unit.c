@@ -65,7 +65,7 @@ int main_loop()
 
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
 
-#define MAX_INSTANCES_SUPPORTED 5
+#define MAX_INSTANCES_SUPPORTED 1 
 
 
 	DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[ MAX_INSTANCES_SUPPORTED ];
