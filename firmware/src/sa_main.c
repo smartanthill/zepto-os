@@ -145,7 +145,7 @@ bool sa_main_init()
 	TIME_MILLISECONDS16_TO_TIMEVAL( 1000, wait_for.wait_time ); //+++TODO: actual processing throughout the code
 
 //    ZEPTO_MEMSET( AES_ENCRYPTION_KEY, 0xab, 16 );
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 	siot_mesh_init_tables(); // TODO: this call reflects current development stage and may or may not survive in the future
 #endif // SIOT_MESH_IMPLEMENTATION_WORKS
 	sasp_restore_from_backup();
@@ -226,7 +226,7 @@ wait_for_comm_event:
 			// IMPORTANT: once an order of units is selected and tested, do not change it without extreme necessity
 			HAL_GET_TIME( &(currt), TIME_REQUEST_POINT__LOOP_TOP );
 
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 			// 0. Test MESH
 			ret_code = handler_siot_mesh_timer( &currt, &wait_for, working_handle.packet_h, &link_id );
 			switch ( ret_code )
@@ -484,7 +484,7 @@ wait_for_comm_event:
 
 		// 2.0. Pass to siot/mesh
 siotmp_rec:
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 		ret_code = handler_siot_mesh_receive_packet( &currt, &wait_for, working_handle.packet_h, MEMORY_HANDLE_MESH_ACK, &(working_handle.mesh_val), 0, 0 ); // TODO: define properly two last arguments
 		zepto_response_to_request( working_handle.packet_h );
 
@@ -578,7 +578,7 @@ siotmp_rec:
 			case SASP_RET_IGNORE_PACKET_LAST_REPEATED:
 			{
 				ZEPTO_DEBUG_PRINTF_1( "BAD PACKET RECEIVED\n" );
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
 #endif
 				goto start_over;
@@ -736,7 +736,7 @@ siotmp_rec:
 				}
 				case SAGDP_RET_OK:
 				{
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 					handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
 #endif
 					goto start_over;
@@ -793,7 +793,7 @@ siotmp_rec:
 			}
 			case SAGDP_RET_OK:
 			{
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
 #endif
 				goto start_over;
@@ -1027,7 +1027,7 @@ saoudp_send:
 			}
 		}
 
-#if SIOT_MESH_IMPLEMENTATION_WORKS
+#if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 		ret_code = handler_siot_mesh_send_packet( &currt, &wait_for, working_handle.packet_h, working_handle.mesh_val, working_handle.resend_cnt, 0, &link_id ); // we can send it only to root, if we're slave TODO: think regarding second argument
 		zepto_response_to_request( working_handle.packet_h );
 
