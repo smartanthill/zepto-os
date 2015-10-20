@@ -29,12 +29,14 @@ void sa_get_time( sa_time_val* t )
 	t->high_t = sys_t >> 16;
 	t->low_t = (unsigned short)sys_t;
 }
-/*
+
+// TODO: get rid of it
 uint32_t getTime()
 {
+	ZEPTO_DEBUG_ASSERT( 0 == "SHOULD NOT BE USED ON DESKTOP PLATFORM" );
 	return (uint32_t)( GetTickCount() / 200 );
 }
-*/
+
 void mcu_sleep( uint16_t sec, uint8_t transmitter_state_on_exit )
 {
 	if ( transmitter_state_on_exit == 0 )
@@ -110,6 +112,7 @@ void just_sleep( sa_time_val* timeval )
 // TODO: get rid of it
 uint32_t getTime()
 {
+	ZEPTO_DEBUG_ASSERT( 0 == "SHOULD NOT BE USED ON DESKTOP PLATFORM" );
 	return (uint32_t)( getTick() / 200 );
 }
 

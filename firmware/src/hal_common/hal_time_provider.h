@@ -40,8 +40,8 @@ extern "C" {
 #endif
 
 void sa_get_time( sa_time_val* t ); // PLATFORM-SPECIFIC IMPLEMENTATION
-//uint32_t getTime();
-//void sa_time_delay_ms(uint32_t ms);
+uint32_t getTime(); // TODO: get rid of it (or move to HAL internals where applicable)
+void sa_time_delay_ms(uint32_t ms); // TODO: move to HAL internals where applicable
 
 #ifdef __cplusplus
 }
@@ -54,7 +54,6 @@ void sa_get_time( sa_time_val* t ); // PLATFORM-SPECIFIC IMPLEMENTATION
 #define SA_TIME_INCREMENT_BY_TICKS( x, y ) {(x).low_t += (y).low_t; (x).high_t += (y).high_t; (x).high_t += (x).low_t < (y).low_t ? 1 : 0;}
 #define SA_TIME_SUBTRACT_TICKS_OR_ZERO( x, y ) {if ( sa_hal_time_val_is_less( &(x), (y) ) ) {(x).low_t = 0; (x).high_t = 0;} else {(x).low_t -= (y).low_t; (x).high_t -= (y).high_t; (x).high_t -= (x).low_t < (y).low_t ? 1 : 0;} }
 #define SA_TIME_MUL_TICKS_BY_2( x ) {uint16_t tmp = ((x).low_t) >> 15; (x).low_t <<= 1; (x).high_t = ((x).high_t << 1) | tmp;}
-//#define SA_TIME_MUL_TICKS_BY_1_AND_A_HALF( x ) {uint16_t lo = (x).low_t, hi = (x).high_t; uint16_t tmp = ((x).high_t) & 1; (x).low_t >>= 15; (x).low_t |= tmp << 15; (x).high_t = ((x).high_t << 1) | tmp; (x).low_t += lo; (x).high_t += hi; (x).high_t += (x).low_t < lo ? 1 : 0;}
 #define SA_TIME_MUL_TICKS_BY_1_AND_A_HALF( x ) {uint16_t lo = (x).low_t, hi = (x).high_t; (x).low_t >>= 1; (x).low_t |= ( ((x).high_t & 1 ) << 15 ); (x).high_t >>= 1; (x).low_t += lo; (x).high_t += hi; (x).high_t += (x).low_t < lo ? 1 : 0;}
 #define SA_TIME_SET_INFINITE_TIME( x ) {(x).low_t = 0Xffff; (x).high_t = 0xffff;}
 
