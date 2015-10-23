@@ -2285,3 +2285,59 @@ void release_memory_handle( MEMORY_HANDLE mem_h )
 	memory_object_release( mem_h );
 }
 #endif // MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// special r/w functions for operations with locally generated data
+
+bool zepto_memman_read_locally_generated_data_by_offset( MEMORY_HANDLE mem_h, uint16_t offset, uint16_t size, uint8_t* buff )
+{
+	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );
+	ZEPTO_DEBUG_ASSERT( obj->ptr != NULL );
+	if ( obj->rq_size + obj->rsp_size < offset + size ) return false;
+	ZEPTO_MEMCPY( buff, obj->ptr + offset, size );
+	return true;
+}
+
+bool zepto_memman_write_locally_generated_data_by_offset( MEMORY_HANDLE mem_h, uint16_t offset, uint16_t size, const uint8_t* buff )
+{
+	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );
+	ZEPTO_DEBUG_ASSERT( obj->ptr != NULL );
+	if ( obj->rq_size + obj->rsp_size < offset + size ) return false;
+	ZEPTO_MEMCPY( obj->ptr + offset, buff, size );
+	return true;
+}
+
+void zepto_memman_append_locally_generated_data( MEMORY_HANDLE mem_h, uint16_t size, const uint8_t* buff )
+{
+	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );
+	ZEPTO_DEBUG_ASSERT( obj->ptr != NULL );
+	uint8_t* buff_to = memory_object_append( mem_h, size );
+	ZEPTO_MEMCPY( buff_to, buff, size );
+}
+
+bool zepto_memman_trim_locally_generated_data_at_right( MEMORY_HANDLE mem_h, uint16_t size )
+{
+	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );
+	ZEPTO_DEBUG_ASSERT( obj->ptr != NULL );
+	uint8_t* buff = memory_object_append( mem_h, size );
+	uint16_t ini_sz = obj->rq_size + obj->rsp_size;
+	memory_block_trim_at_right( obj->ptr, ini_sz, ini_sz - size );
+	if ( obj->rsp_size >= size )
+		obj->rsp_size -= size;
+	else
+	{
+		obj->rsp_size = 0;
+		obj->rq_size -= ( size - obj->rsp_size );
+	}
+}
+
+uint16_t zepto_memman_get_currently_allocated_size_for_locally_generated_data( MEMORY_HANDLE mem_h )
+{
+	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );
+	return obj->rq_size + obj->rsp_size;
+}
