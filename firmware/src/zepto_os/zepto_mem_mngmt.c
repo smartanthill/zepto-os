@@ -2318,7 +2318,7 @@ void zepto_memman_append_locally_generated_data( MEMORY_HANDLE mem_h, uint16_t s
 	ZEPTO_MEMCPY( buff_to, buff, size );
 }
 
-bool zepto_memman_trim_locally_generated_data_at_right( MEMORY_HANDLE mem_h, uint16_t size )
+void zepto_memman_trim_locally_generated_data_at_right( MEMORY_HANDLE mem_h, uint16_t size )
 {
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
 	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );

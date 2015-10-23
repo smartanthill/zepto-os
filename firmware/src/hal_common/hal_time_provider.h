@@ -86,28 +86,37 @@ INLINE void sa_hal_time_val_copy_from_if_src_less( sa_time_val* t1, const sa_tim
 
 INLINE bool sa_hal_time_val_get_remaining_time( const sa_time_val* now, const sa_time_val* expected, sa_time_val* remaining )
 {
-	if ( expected->high_t < now->high_t ) return false; // already happpened
+	// updates 'remaining' if 'expected' is greater than 'now' (not yet happened), and a new value is less than that currently in 'remaining'
+	if ( expected->high_t < now->high_t ) return false; // already happpened; do not change 'remaining'
 	if ( expected->high_t == now->high_t )
 	{
-		if ( expected->low_t <= now->low_t ) return false; // already happpened
+		if ( expected->low_t <= now->low_t ) return false; // already happpened; do not change 'remaining'
 		else
 		{
 			remaining->high_t = 0;
-			remaining->low_t = expected->low_t - now->low_t;
+			if ( remaining->low_t > expected->low_t - now->low_t )
+				remaining->low_t = expected->low_t - now->low_t;
 			return true;
 		}
 	}
 	else
 	{
+		sa_time_val diff;
 		if ( expected->low_t < now->low_t )
 		{
-			remaining->low_t = expected->low_t - now->low_t;
-			remaining->high_t = expected->high_t - now->high_t - 1;
+			diff.low_t = expected->low_t - now->low_t;
+			diff.high_t = expected->high_t - now->high_t - 1;
 		}
 		else
 		{
-			remaining->low_t = expected->low_t - now->low_t;
-			remaining->high_t = expected->high_t - now->high_t;
+			diff.low_t = expected->low_t - now->low_t;
+			diff.high_t = expected->high_t - now->high_t;
+		}
+
+		if ( remaining->high_t > diff.high_t || ( remaining->high_t == diff.high_t && remaining->low_t > diff.low_t ) )
+		{
+			remaining->high_t = diff.high_t;
+			remaining->low_t = diff.low_t;
 		}
 		return true;
 	}
