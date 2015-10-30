@@ -613,7 +613,11 @@ void zepto_mem_man_move_all_left( REQUEST_REPLY_HANDLE h_left, REQUEST_REPLY_HAN
 {
 	ZEPTO_DEBUG_ASSERT( h_right !=  MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( h_left !=  MEMORY_HANDLE_INVALID );
-	ZEPTO_DEBUG_ASSERT( memory_objects[h_left].ptr <= memory_objects[h_right].ptr );
+#ifdef SA_DEBUG
+	request_reply_mem_obj* LEFT_OBJ = MEMORY_OBJECT_PTR( h_left );
+	request_reply_mem_obj* RIGHT_OBJ = MEMORY_OBJECT_PTR( h_right );
+	ZEPTO_DEBUG_ASSERT( LEFT_OBJ->ptr <= RIGHT_OBJ->ptr );
+#endif
 	REQUEST_REPLY_HANDLE h_iter;
 	for ( h_iter = h_left; h_iter < h_right; h_iter++ )
 	{
