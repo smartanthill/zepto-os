@@ -63,14 +63,14 @@ INLINE void sa_hal_time_val_copy_from( sa_time_val* t1, const sa_time_val* t2 )
 	t1->low_t = t2->low_t;
 }
 
-INLINE bool sa_hal_time_val_is_less( sa_time_val* t1, sa_time_val* t2 )
+INLINE bool sa_hal_time_val_is_less( const sa_time_val* t1,const  sa_time_val* t2 )
 {
 	if ( t1->high_t < t2->high_t ) return true;
 	if ( t1->high_t > t2->high_t ) return false;
 	return t1->low_t < t2->low_t;
 }
 
-INLINE bool sa_hal_time_val_is_less_eq( sa_time_val* t1, sa_time_val* t2 )
+INLINE bool sa_hal_time_val_is_less_eq( const sa_time_val* t1, const sa_time_val* t2 )
 {
 	if ( t1->high_t < t2->high_t ) return true;
 	if ( t1->high_t > t2->high_t ) return false;

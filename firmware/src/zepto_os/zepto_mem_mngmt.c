@@ -50,7 +50,7 @@ typedef struct _request_reply_mem_obj_acquirable
 #define BASE_MEM_BLOCK_SIZE	0x1000
 #else // USED_AS_MASTER
 #ifdef USED_AS_RETRANSMITTER
-#define BASE_MEM_BLOCK_SIZE	0x800
+#define BASE_MEM_BLOCK_SIZE	0x400
 #else // USED_AS_RETRANSMITTER
 #define BASE_MEM_BLOCK_SIZE	0x180
 #endif // USED_AS_RETRANSMITTER
@@ -184,7 +184,7 @@ void zepto_mem_man_print_mem_stats()
 	}
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 	ZEPTO_DEBUG_ASSERT( memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rq_size == 0 );
-	ZEPTO_DEBUG_PRINTF_2( "+++ %d (max) acquired handles +++\n", memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rq_size / sizeof( request_reply_mem_obj ) );
+	ZEPTO_DEBUG_PRINTF_2( "+++ %d (max) acquired handles +++\n", (memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rq_size + memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rsp_size) / sizeof( request_reply_mem_obj ) );
 	uint16_t j;
 	for ( j=0; j<memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rsp_size; j+=sizeof( request_reply_mem_obj ) )
 	{
@@ -1492,6 +1492,12 @@ REQUEST_REPLY_HANDLE memory_object_acquire()
 				ZEPTO_DEBUG_ASSERT( obj->ptr == NULL );
 				return MEMORY_HANDLE_INVALID;
 			}
+			// if prev_obj has been dyn allocated, its position mignt be changed after this move
+			if ( prev_obj != memory_objects + MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE )
+			{
+				base_buff = memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr;
+			}
+			prev_obj = (request_reply_mem_obj*)(base_buff) + prev - MEMORY_HANDLE_ACQUIRABLE_START;
 #ifdef SA_DEBUG
 			ZEPTO_DEBUG_ASSERT( prev_obj_resp_size + 1 == prev_obj->rsp_size ); // we just check our expectations of memory_object_append() which moves somehow and increases rsp_size respectively
 #endif
@@ -1797,10 +1803,11 @@ void zepto_append_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, M
 
 void zepto_copy_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEMORY_HANDLE target_mem_h )
 {
+zepto_mem_man_check_sanity();
 	ZEPTO_DEBUG_ASSERT( mem_h != target_mem_h );
-	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	ASSERT_MEMORY_HANDLE_VALID( mem_h );
 //	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
-	ASSERT_MEMORY_HANDLE_VALID( target_mem_h )
+	ASSERT_MEMORY_HANDLE_VALID( target_mem_h );
 //	ZEPTO_DEBUG_ASSERT( target_mem_h != MEMORY_HANDLE_INVALID );
 	// cleanup
 	zepto_response_to_request( target_mem_h );
@@ -2155,7 +2162,7 @@ void zepto_parser_encode_and_append_uint( MEMORY_HANDLE mem_h, const uint8_t* nu
 
 	ZEPTO_DEBUG_ASSERT( out_buff_end - out_buff >= 0 && out_buff_end - out_buff < 0x100 ); // at least within 8 bits
 	uint8_t sz = (uint8_t)(out_buff_end - out_buff);
-	ZEPTO_DEBUG_PRINTF_3( "zepto_parser_encode_and_append_uint(..., ..., %d) resulted in %d bytes\n", num_sz_max, sz );
+//	ZEPTO_DEBUG_PRINTF_3( "zepto_parser_encode_and_append_uint(..., ..., %d) resulted in %d bytes\n", num_sz_max, sz );
 	uint8_t* buff = memory_object_append( mem_h, sz );
 	ZEPTO_MEMCPY( buff, out_buff, sz );
 }
@@ -2324,12 +2331,12 @@ void zepto_memman_append_locally_generated_data( MEMORY_HANDLE mem_h, uint16_t s
 
 void zepto_memman_trim_locally_generated_data_at_right( MEMORY_HANDLE mem_h, uint16_t size )
 {
-	ASSERT_MEMORY_HANDLE_VALID( mem_h )
+	ASSERT_MEMORY_HANDLE_VALID( mem_h );
 	request_reply_mem_obj* obj = MEMORY_OBJECT_PTR( mem_h );
 	ZEPTO_DEBUG_ASSERT( obj->ptr != NULL );
-	uint8_t* buff = memory_object_append( mem_h, size );
+	uint8_t* buff = obj->ptr;
 	uint16_t ini_sz = obj->rq_size + obj->rsp_size;
-	memory_block_trim_at_right( obj->ptr, ini_sz, ini_sz - size );
+	memory_block_trim_at_right( obj->ptr, ini_sz, size );
 	if ( obj->rsp_size >= size )
 		obj->rsp_size -= size;
 	else
