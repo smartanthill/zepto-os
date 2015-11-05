@@ -25,11 +25,14 @@ Copyright (C) 2015 OLogN Technologies AG
 #define COMMLAYER_RET_OK 1
 #define COMMLAYER_RET_PENDING 2
 #define COMMLAYER_RET_REENTER_LISTEN 3
+#define COMMLAYER_RET_ZERO_PACKET 4
+//#define COMMLAYER_RET_REENTER_SERVICE 4
 
 #define HAL_GET_PACKET_BYTES_IN_PROGRESS 0
 #define HAL_GET_PACKET_BYTES_FAILED 1
 #define HAL_GET_PACKET_BYTES_DONE 2
 #define COMMLAYER_RET_TIMEOUT 12
+#define HAL_GET_PACKET_SERVICE 13
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,9 +43,11 @@ extern int dev_count;
 bool communication_initialize();
 void communication_terminate();
 
-uint8_t get_packet( uint8_t* buff, int max_sz, int* size, uint16_t src );
+uint8_t get_packet( TEST_DATA* test_data, uint8_t* buff, int max_sz, int* size, uint16_t src );
 uint8_t send_packet( const uint8_t* buff, int size, uint16_t target );
 uint8_t wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items );
+
+void get_position( DEVICE_POSITION* pos, uint16_t src );
 
 #ifdef __cplusplus
 }

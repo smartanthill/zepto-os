@@ -72,7 +72,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 INLINE void zepto_memset( void* dest, uint8_t val, uint16_t cnt )
 {
-	uint8_t i;
+	uint16_t i;
 	for ( i=0; i<cnt; i++ )
 		((uint8_t*)dest)[i] = val;
 }
@@ -150,6 +150,20 @@ INLINE void zepto_memmov( void* dest, const void* src, uint16_t cnt )
 #define ZEPTO_DEBUG_ASSERT( x )
 #define ZEPTO_RUNTIME_CHECK( x )  //TODO: define
 #endif
+
+
+
+typedef struct _DEVICE_POSITION
+{
+	float x;
+	float y;
+	float z;
+} DEVICE_POSITION;
+
+typedef struct _TEST_DATA
+{
+	DEVICE_POSITION pos;
+} TEST_DATA;
 
 
 #endif // __AIR_COMMON_H__

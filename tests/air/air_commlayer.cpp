@@ -63,9 +63,10 @@ typedef struct _DEVICE_CONNNECTION
 #else
 	int sock_with_cl_accepted;
 #endif
-//	struct sockaddr_in sa_self_with_cl;
 	struct sockaddr_in sa_other_with_cl;
 	bool connected;
+	// test-related data
+	DEVICE_POSITION pos;
 } DEVICE_CONNNECTION;
 
 int sock_with_cl = -1;
@@ -77,9 +78,9 @@ uint16_t self_port_num = 7654;
 uint16_t buffer_in_with_cl_pos;
 
 #define MAX_PACKET_SIZE 0x1000
-#define MEX_DEV_CNT	 10
+#define MAX_DEV_CNT	 10
 
-DEVICE_CONNNECTION devices[ MEX_DEV_CNT ];
+DEVICE_CONNNECTION devices[ MAX_DEV_CNT ];
 int dev_count = 0;
 
 
@@ -87,7 +88,7 @@ int dev_count = 0;
 
 bool communication_preinitialize()
 {
-	ZEPTO_MEMSET( devices, 0, MEX_DEV_CNT * sizeof( DEVICE_CONNNECTION ) );
+	ZEPTO_MEMSET( devices, 0, MAX_DEV_CNT * sizeof( DEVICE_CONNNECTION ) );
 
 #if defined _MSC_VER || defined __MINGW32__
 	// do Windows magic
@@ -365,7 +366,7 @@ uint8_t wait_for_packet_internal( uint16_t* src, uint8_t* cnt, uint8_t max_items
 	int i;
 	int max_sock = sock_with_cl;
 	FD_SET(sock_with_cl, &rfds);
-	for ( i=0; i<MEX_DEV_CNT; i++ )
+	for ( i=0; i<MAX_DEV_CNT; i++ )
 	{
 		if ( devices[i].connected )
 		{
@@ -402,7 +403,7 @@ uint8_t wait_for_packet_internal( uint16_t* src, uint8_t* cnt, uint8_t max_items
 		if ( FD_ISSET( sock_with_cl, &rfds) )
 			return COMMLAYER_RET_REENTER_LISTEN;
 		*cnt = 0;
-		for ( i=0; i<MEX_DEV_CNT; i++ )
+		for ( i=0; i<MAX_DEV_CNT; i++ )
 			if ( FD_ISSET( devices[i].sock_with_cl_accepted, &rfds) && *cnt < max_items )
 				src[ (*cnt)++ ] = i;
 		if (*cnt)
@@ -464,13 +465,13 @@ uint8_t send_packet( const uint8_t* buff, int size, uint16_t target )
 	{
 		target = target;
 	}
-	ZEPTO_DEBUG_ASSERT( target < MEX_DEV_CNT );
+	ZEPTO_DEBUG_ASSERT( target < MAX_DEV_CNT );
 	return send_packet_using_context( buff, size, target );
 }
 
-uint8_t get_packet( uint8_t* buff, int max_sz, int* size, uint16_t src )
+uint8_t get_packet( TEST_DATA* test_data, uint8_t* buff, int max_sz, int* size, uint16_t src )
 {
-	ZEPTO_DEBUG_ASSERT( src < MEX_DEV_CNT );
+	ZEPTO_DEBUG_ASSERT( src < MAX_DEV_CNT );
 	DEVICE_CONNNECTION* conn = devices + src;
 	uint8_t ret_code = try_get_packet_using_context( buff, max_sz, size, src );
 	if ( ret_code != COMMLAYER_RET_OK )
@@ -479,6 +480,40 @@ uint8_t get_packet( uint8_t* buff, int max_sz, int* size, uint16_t src )
 		ZEPTO_DEBUG_PRINTF_2( "Connection closed on port %d\n", conn->sock_with_cl_accepted );
 		conn->sock_with_cl_accepted = 0;
 		conn->connected = false;
+		return ret_code;
 	}
-	return ret_code;
+	// pre-analyze packet
+	if ( size != 0 )
+	{
+		if( buff[0] == 1 )
+		{
+			buff++;
+			conn->pos.x = ((float*)buff)[0];
+			conn->pos.y = ((float*)buff)[1];
+			conn->pos.z = ((float*)buff)[2];
+			return HAL_GET_PACKET_SERVICE;
+		}
+		else
+		{
+			(*size)--;
+			memmove( buff, buff + 1, *size );
+			test_data->pos.x = conn->pos.x;
+			test_data->pos.y = conn->pos.y;
+			test_data->pos.z = conn->pos.z;
+			return COMMLAYER_RET_OK;
+		}
+	}
+	else
+	{
+		return COMMLAYER_RET_ZERO_PACKET;
+	}
+}
+
+void get_position( DEVICE_POSITION* pos, uint16_t src )
+{
+	ZEPTO_DEBUG_ASSERT( src < MAX_DEV_CNT );
+	DEVICE_CONNNECTION* conn = devices + src;
+	pos->x = conn->pos.x;
+	pos->y = conn->pos.y;
+	pos->z = conn->pos.z;
 }

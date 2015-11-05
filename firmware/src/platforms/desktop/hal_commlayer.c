@@ -317,17 +317,18 @@ uint8_t internal_send_packet( MEMORY_HANDLE mem_h, int _sock, struct sockaddr* _
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
 	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-	uint8_t* buff = memory_object_prepend( mem_h, 2 );
+	uint8_t* buff = memory_object_prepend( mem_h, 3 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	buff[0] = (uint8_t)sz;
-	buff[1] = sz >> 8;
-	int bytes_sent = sendto(_sock, (char*)buff, sz+2, 0, _sa_other, sizeof (struct sockaddr) );
+	buff[0] = (uint8_t)(sz+1);
+	buff[1] = (sz+1) >> 8;
+	buff[2] = 0; // "regular" packet within testing system. NOTE: since AIR is used, it won't be received by an ultimate recipient
+	int bytes_sent = sendto(_sock, (char*)buff, sz+3, 0, _sa_other, sizeof (struct sockaddr) );
 
 	// restore data behind handle
 	zepto_response_to_request( mem_h );
 	parser_obj po, po1;
 	zepto_parser_init( &po, mem_h );
-	zepto_parse_skip_block( &po, 2 );
+	zepto_parse_skip_block( &po, 3 );
 	zepto_parser_init_by_parser( &po1, &po );
 	zepto_parse_skip_block( &po1, zepto_parsing_remaining_bytes( &po ) );
 	zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
@@ -519,14 +520,57 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 
 
 
+typedef struct _DEVICE_POSITION
+{
+	float x;
+	float y;
+	float z;
+} DEVICE_POSITION;
+
+typedef struct _TEST_DATA
+{
+	DEVICE_POSITION pos;
+} TEST_DATA;
+
+#if !defined USED_AS_MASTER
+#ifdef USED_AS_RETRANSMITTER
+TEST_DATA test_data = { 1.0, 0, 0};
+#else
+TEST_DATA test_data = { 2.0, 0, 0};
+#endif
+#endif
+
+
+void report_coordinates()
+{
+	uint8_t buff[ 3 + sizeof(TEST_DATA) ];
+	uint16_t sz = sizeof(TEST_DATA);
+	buff[0] = (uint8_t)(sz+1);
+	buff[1] = (sz+1) >> 8;
+	buff[2] = 1; // "service" packet within testing system
+	uint16_t pos = 3;
+	ZEPTO_MEMCPY( buff + pos, &(test_data.pos.x), sizeof(test_data.pos.x) ); // NOTE: we assume here local use and we do not care (so far) about endianness
+	pos += sizeof(test_data.pos.x);
+	ZEPTO_MEMCPY( buff + pos, &(test_data.pos.y), sizeof(test_data.pos.y) );
+	pos += sizeof(test_data.pos.x);
+	ZEPTO_MEMCPY( buff + pos, &(test_data.pos.z), sizeof(test_data.pos.z) );
+	pos += sizeof(test_data.pos.x);
+	int bytes_sent = sendto( sock, (char*)buff, sz+3, 0, (struct sockaddr *)(&sa_other), sizeof (struct sockaddr) );
+}
 
 bool communication_initialize()
 {
+	bool ret;
 #if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
-	return communication_preinitialize() && _communication_initialize() && _communication_initialize_2();
+	ret = communication_preinitialize() && _communication_initialize() && _communication_initialize_2();
 #else
-	return communication_preinitialize() && _communication_initialize();
+	ret = communication_preinitialize() && _communication_initialize();
 #endif
+	if ( ret )
+	{
+		report_coordinates();
+	}
+	return ret;
 }
 
 void communication_terminate()

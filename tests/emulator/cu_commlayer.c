@@ -153,11 +153,12 @@ uint8_t send_message_to_slave( MEMORY_HANDLE mem_h )
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
 	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-	uint8_t* buff = memory_object_prepend( mem_h, 2 );
+	uint8_t* buff = memory_object_prepend( mem_h, 3 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	buff[0] = (uint8_t)sz;
-	buff[1] = sz >> 8;
-	int bytes_sent = sendto(sock, (char*)buff, sz+2, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
+	buff[0] = (uint8_t)(sz+1);
+	buff[1] = (sz+1) >> 8;
+	buff[2] = 0; // "regular" packet within testing system. NOTE: since AIR is used, it won't be received by an ultimate recipient
+	int bytes_sent = sendto(sock, (char*)buff, sz+3, 0, (struct sockaddr*)&sa_other, sizeof sa_other);
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
 	memory_object_response_to_request( mem_h );

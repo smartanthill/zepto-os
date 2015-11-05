@@ -104,22 +104,34 @@ bool testing_scenario_at_src_drop_for_random_period( int src )
 }
 
 
-void do_whatever_with_packet_to_be_sent( const uint8_t* packet_buff, int packet_sz, int src, int destination )
+
+#include <math.h>
+
+float calc_dist( DEVICE_POSITION* pos1, DEVICE_POSITION* pos2 )
+{
+	return sqrt( ( pos1->x - pos2->x ) * ( pos1->x - pos2->x ) + ( pos1->y - pos2->y ) * ( pos1->y - pos2->y ) + ( pos1->z - pos2->z ) * ( pos1->z - pos2->z ) );
+}
+
+void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* packet_buff, int packet_sz, int src, int destination )
 {
 	ZEPTO_DEBUG_ASSERT( destination < COMM_PARTICIPANTS_MAX_COUNT );
 	(participants[destination].cnt_to )++;
+	DEVICE_POSITION pos;
+	get_position( &pos, destination );
+	float dist = calc_dist( &pos, &(test_data->pos) );
+	if ( dist > 1.5 )
+		return;
 
 //	testing_scenario_at_destination_drop_none( packet_buff, packet_sz, src, destination );
 //	testing_scenario_at_destination_drop_at_random( packet_buff, packet_sz, src, destination );
 	testing_scenario_at_destination_drop_for_random_period( packet_buff, packet_sz, src, destination );
 }
-
 bool allow_to_pass_packet( int src )
 {
 	(participants[src].cnt_from )++;
-//	return testing_scenario_at_src_drop_none( src );
+	return testing_scenario_at_src_drop_none( src );
 //	return testing_scenario_at_src_drop_at_random( src );
-	return testing_scenario_at_src_drop_for_random_period( src );
+//	return testing_scenario_at_src_drop_for_random_period( src );
 }
 
 int air_main_loop()
@@ -130,6 +142,7 @@ int air_main_loop()
 	int packet_sz;
 	uint8_t ret_code;
 	uint8_t i, j;
+	TEST_DATA test_data;
 	for (;;)
 	{
 		ret_code = wait_for_packet( items, &item_cnt, COMM_PARTICIPANTS_MAX_COUNT );
@@ -141,17 +154,19 @@ int air_main_loop()
 		ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );
 		for ( j=0; j<item_cnt; j++ )
 		{
-			get_packet( packet_buff, 1024, &packet_sz, items[j] );
-			add_new_packet( packet_buff, packet_sz );
-			if ( !allow_to_pass_packet( items[j] ) )
+			if ( get_packet( &test_data, packet_buff, 1024, &packet_sz, items[j] ) == COMMLAYER_RET_OK )
 			{
-				ZEPTO_DEBUG_PRINTF_2( "---- Packet originating from device %d lost on the way \n", items[j] );
-				continue;
+				add_new_packet( packet_buff, packet_sz );
+				if ( !allow_to_pass_packet( items[j] ) )
+				{
+					ZEPTO_DEBUG_PRINTF_2( "---- Packet originating from device %d lost on the way \n", items[j] );
+					continue;
+				}
+				(participants[items[j]].cnt_from )++;
+				for ( i=0; i<dev_count; i++)
+					if ( i != items[j] )
+						do_whatever_with_packet_to_be_sent( &test_data, packet_buff, packet_sz, items[j], i );
 			}
-			(participants[items[j]].cnt_from )++;
-			for ( i=0; i<dev_count; i++)
-				if ( i != items[j] )
-					do_whatever_with_packet_to_be_sent( packet_buff, packet_sz, items[j], i );
 		}
 	}
 	return 0;
