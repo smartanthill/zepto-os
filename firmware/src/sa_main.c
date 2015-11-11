@@ -208,7 +208,10 @@ int sa_main_loop()
 	PACKET_ASSOCIATED_DATA working_handle = {MEMORY_HANDLE_MAIN_LOOP_2, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR, MEMORY_HANDLE_INVALID, 0 };
 	PACKET_ASSOCIATED_DATA packet_getting_handle = {MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR, MEMORY_HANDLE_INVALID, 0 };
 
-	uint16_t link_id;
+	uint16_t bus_id;
+	uint8_t signal_level = 0; // TODO: source?
+	uint8_t error_count = 0; // TODO: source?
+
 
 	for (;;)
 	{
@@ -228,7 +231,7 @@ wait_for_comm_event:
 
 #if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
 			// 0. Test MESH
-			ret_code = handler_siot_mesh_timer( &currt, &wait_for, working_handle.packet_h, &link_id );
+			ret_code = handler_siot_mesh_timer( &currt, &wait_for, working_handle.packet_h, &bus_id );
 			switch ( ret_code )
 			{
 				case SIOT_MESH_RET_PASS_TO_SEND:
@@ -485,7 +488,11 @@ wait_for_comm_event:
 		// 2.0. Pass to siot/mesh
 siotmp_rec:
 #if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
-		ret_code = handler_siot_mesh_receive_packet( &currt, &wait_for, working_handle.packet_h, MEMORY_HANDLE_MESH_ACK, &(working_handle.mesh_val), 0, 0 ); // TODO: define properly two last arguments
+#ifdef USED_AS_RETRANSMITTER
+		ret_code = handler_siot_mesh_receive_packet( &currt, &wait_for, working_handle.packet_h, MEMORY_HANDLE_MESH_ACK, &(working_handle.mesh_val), signal_level, error_count, &bus_id );
+#else // USED_AS_RETRANSMITTER
+		ret_code = handler_siot_mesh_receive_packet( &currt, &wait_for, working_handle.packet_h, MEMORY_HANDLE_MESH_ACK, &(working_handle.mesh_val), signal_level, error_count );
+#endif // USED_AS_RETRANSMITTER
 		zepto_response_to_request( working_handle.packet_h );
 
 		switch ( ret_code )
@@ -1028,7 +1035,7 @@ saoudp_send:
 		}
 
 #if 1 //SIOT_MESH_IMPLEMENTATION_WORKS
-		ret_code = handler_siot_mesh_send_packet( &currt, &wait_for, working_handle.packet_h, working_handle.mesh_val, working_handle.resend_cnt, 0, &link_id ); // we can send it only to root, if we're slave TODO: think regarding second argument
+		ret_code = handler_siot_mesh_send_packet( &currt, &wait_for, working_handle.packet_h, working_handle.mesh_val, working_handle.resend_cnt, 0, &bus_id ); // we can send it only to root, if we're slave TODO: think regarding second argument
 		zepto_response_to_request( working_handle.packet_h );
 
 		switch ( ret_code )
@@ -1056,7 +1063,7 @@ hal_send:
 			ret_code = hal_send_packet( working_handle.packet_h, 0, 0 );
 #endif
 #else
-//			ZEPTO_DEBUG_ASSERT( link_id == 0 ); // TODO: link_id must be a part of send_packet() call; we are now just in the middle of development...
+//			ZEPTO_DEBUG_ASSERT( bus_id == 0 ); // TODO: bus_id must be a part of send_packet() call; we are now just in the middle of development...
 			HAL_SEND_PACKET( working_handle.packet_h );
 #endif
 			zepto_parser_free_memory( working_handle.packet_h );
