@@ -1,4 +1,5 @@
-# Zepto OS
+Zepto OS
+========
 
 .. image:: https://travis-ci.org/smartanthill/smartanthill2_0-embedded.svg
     :target: https://travis-ci.org/smartanthill/smartanthill2_0-embedded
