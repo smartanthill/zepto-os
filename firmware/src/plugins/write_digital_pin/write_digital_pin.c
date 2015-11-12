@@ -28,8 +28,8 @@ uint8_t write_digital_pin_plugin_handler_init( const void* plugin_config, void* 
 uint8_t write_digital_pin_plugin_exec_init( const void* plugin_config, void* plugin_state )
 {
     write_digital_pin_plugin_config* pc = (write_digital_pin_plugin_config*)plugin_config;
-    hapi_gpio_init(pc->pin);
-    hapi_gpio_set_mode(pc->pin, HAPI_GPIO_TYPE_OUTPUT);
+    hapi_gpio_init(pc->pin_num);
+    hapi_gpio_set_mode(pc->pin_num, HAPI_GPIO_TYPE_OUTPUT);
     return PLUGIN_OK;
 }
 
@@ -37,7 +37,7 @@ uint8_t write_digital_pin_plugin_handler( const void* plugin_config, void* plugi
 {
     write_digital_pin_plugin_config* pc = (write_digital_pin_plugin_config*)plugin_config;
     uint8_t level = zepto_parse_uint8( command );
-    hapi_gpio_write(pc->pin, level);
+    hapi_gpio_write(pc->pin_num, level);
     zepto_write_uint8(reply, level);
     return PLUGIN_OK;
 }
