@@ -1,5 +1,4 @@
-SmartAnthill 2.0 Embedded System
-================================
+# Zepto OS
 
 .. image:: https://travis-ci.org/smartanthill/smartanthill2_0-embedded.svg
     :target: https://travis-ci.org/smartanthill/smartanthill2_0-embedded
