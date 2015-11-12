@@ -56,6 +56,7 @@ void sa_time_delay_ms(uint32_t ms); // TODO: move to HAL internals where applica
 #define SA_TIME_MUL_TICKS_BY_2( x ) {uint16_t tmp = ((x).low_t) >> 15; (x).low_t <<= 1; (x).high_t = ((x).high_t << 1) | tmp;}
 #define SA_TIME_MUL_TICKS_BY_1_AND_A_HALF( x ) {uint16_t lo = (x).low_t, hi = (x).high_t; (x).low_t >>= 1; (x).low_t |= ( ((x).high_t & 1 ) << 15 ); (x).high_t >>= 1; (x).low_t += lo; (x).high_t += hi; (x).high_t += (x).low_t < lo ? 1 : 0;}
 #define SA_TIME_SET_INFINITE_TIME( x ) {(x).low_t = 0Xffff; (x).high_t = 0xffff;}
+#define SA_TIME_SET_ZERO_TIME( x ) {(x).low_t = 0; (x).high_t = 0;}
 
 INLINE void sa_hal_time_val_copy_from( sa_time_val* t1, const sa_time_val* t2 )
 {

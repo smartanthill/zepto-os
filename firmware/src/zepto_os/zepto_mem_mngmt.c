@@ -163,6 +163,12 @@ uint16_t zepto_mem_man_parse_encoded_uint16_no_size_checks_backward( uint8_t* bu
 	return ret;
 }
 
+#ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
+#define MEMORY_OBJECT_PTR( i ) ( i < MEMORY_HANDLE_MAX ? memory_objects + i  : (request_reply_mem_obj*)( memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr ) + i - MEMORY_HANDLE_MAX )
+#else
+#define MEMORY_OBJECT_PTR( i ) (memory_objects + i )
+#endif
+
 
 #ifdef _DEBUG
 uint16_t zepto_mem_man_ever_reached = 0;
@@ -226,12 +232,6 @@ void zepto_mem_man_update_ever_reached()
 #endif
 	if ( zepto_mem_man_ever_reached < total_mem ) zepto_mem_man_ever_reached = total_mem;
 }
-
-#ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
-#define MEMORY_OBJECT_PTR( i ) ( i < MEMORY_HANDLE_MAX ? memory_objects + i  : (request_reply_mem_obj*)( memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr ) + i - MEMORY_HANDLE_MAX )
-#else
-#define MEMORY_OBJECT_PTR( i ) (memory_objects + i )
-#endif
 
 void zepto_mem_man_check_sanity()
 {
