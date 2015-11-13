@@ -44,6 +44,7 @@ void hapi_gpio_init (hapi_gpio_t* pin);
 void hapi_gpio_set_mode (hapi_gpio_t* pin, hapi_gpio_mode mode);
 uint8_t hapi_gpio_read (hapi_gpio_t* pin);
 void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value);
+uint16_t hapi_gpio_analog_read (hapi_gpio_t* pin);
 
 #ifdef __cplusplus
 }
