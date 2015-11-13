@@ -1,0 +1,64 @@
+<!--
+Copyright (C) 2015 OLogN Technologies AG
+
+    This program is free software; you can redistribute it and/or modify
+    it under the terms of the GNU General Public License version 2 as
+    published by the Free Software Foundation.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License along
+    with this program; if not, write to the Free Software Foundation, Inc.,
+    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+-->
+
+<smartanthill.transport id="xbee" name="XBee" version="1.0">
+
+  <description>Communication over XBee modules</description>
+
+  <configuration>
+
+    <peripheral>
+      <pin type="uart[rx]" name="rx" title="XBee RX pin" />
+      <pin type="uart[tx]" name="tx" title="XBee TX pin" />
+    </peripheral>
+
+    <options>
+      <option type="uint[2]" name="baudrate" default="9600" min="9600" max="115200" title="Data rate in bits per second (baud) for serial data transmission">
+        <values>
+          <item value="9600" title="9600" />
+          <item value="14400" title="14400" />
+          <item value="19200" title="19200" />
+          <item value="28800" title="28800" />
+          <item value="38400" title="38400" />
+          <item value="57600" title="57600" />
+          <item value="115200" title="115200" />
+        </values>
+      </option>
+      <option type="uint[1]" name="channel" default="15" min="15" max="26" title="Channel number">
+        <values>
+          <item value="15" title="15" />
+          <item value="20" title="20" />
+          <item value="25" title="25" />
+          <item value="26" title="26" />
+        </values>
+      </option>
+      <option type="uint[2]" name="pan_id" default="65535" min="0" max="65535" title="Personal Area Network identifier">
+      </option>
+      <option type="uint[1]" name="power_level" default="4" min="0" max="4" title="Transmitter output power">
+        <values>
+          <item value="0" title="Lowest" />
+          <item value="1" title="Low" />
+          <item value="2" title="Medium" />
+          <item value="3" title="High" />
+          <item value="4" title="Highest" />
+        </values>
+      </option>
+    </options>
+
+  </configuration>
+
+</smartanthill.transport>
