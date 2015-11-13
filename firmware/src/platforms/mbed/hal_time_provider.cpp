@@ -56,6 +56,11 @@ void sa_time_delay_ms(uint32_t ms)
     wait_ms(ms);
 }
 
+void sa_time_delay_us(uint32_t us);
+{
+    wait_us(us);
+}
+
 void update_value ()
 {
     timer_value++;
@@ -65,4 +70,3 @@ void _sa_mbed_time_start_timer()
 {
     ticker.attach (update_value, 0.001);
 }
-
