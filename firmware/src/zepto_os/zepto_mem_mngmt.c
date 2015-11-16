@@ -174,7 +174,7 @@ uint16_t zepto_mem_man_parse_encoded_uint16_no_size_checks_backward( uint8_t* bu
 uint16_t zepto_mem_man_ever_reached = 0;
 
 void zepto_mem_man_print_mem_stats()
-{
+{return;
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 #ifdef SA_DEBUG
 	if ( skip_sanity_check ) return;
@@ -627,26 +627,43 @@ void zepto_mem_man_move_all_left( REQUEST_REPLY_HANDLE h_left, REQUEST_REPLY_HAN
 
 uint16_t zepto_mem_man_get_total_freeable_space_at_right( REQUEST_REPLY_HANDLE mem_h, REQUEST_REPLY_HANDLE* h_very_right, uint16_t desired_size )
 {
+#ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
+	REQUEST_REPLY_HANDLE h_iter;
+	uint16_t free_at_right = 0;
+	if ( mem_h < MEMORY_HANDLE_MAX )
+	{
+		h_iter = mem_h;
+		while ( free_at_right < desired_size && h_iter < MEMORY_HANDLE_MAX )
+		{
+			*h_very_right = h_iter;
+			free_at_right += zepto_mem_man_get_freeable_size_at_right( h_iter );
+			h_iter++;
+		}
+		if ( free_at_right >= desired_size )
+			return free_at_right;
+		h_iter = 0;
+	}
+	else
+		h_iter = mem_h - MEMORY_HANDLE_ACQUIRABLE_START;
+	request_reply_mem_obj* obj = ((request_reply_mem_obj*)( memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr )) + h_iter;
+	uint8_t* end = memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr + memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rq_size + memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rsp_size;
+	while ( free_at_right < desired_size && (uint8_t*)obj < end )
+	{
+		if ( obj->ptr )
+		{
+			*h_very_right = MEMORY_HANDLE_ACQUIRABLE_START + h_iter;
+			free_at_right += zepto_mem_man_get_freeable_size_at_right( MEMORY_HANDLE_ACQUIRABLE_START + h_iter );
+		}
+		obj++;
+		h_iter++;
+	}
+#else
 	REQUEST_REPLY_HANDLE h_iter = mem_h;
 	uint16_t free_at_right = 0;
 	while ( free_at_right < desired_size && h_iter < MEMORY_HANDLE_MAX )
 	{
 		*h_very_right = h_iter;
 		free_at_right += zepto_mem_man_get_freeable_size_at_right( h_iter );
-		h_iter++;
-	}
-#ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
-	h_iter = MEMORY_HANDLE_ACQUIRABLE_START;
-	request_reply_mem_obj* obj = (request_reply_mem_obj*)( memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr );
-	uint8_t* end = memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr + memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rq_size + memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].rsp_size;
-	while ( free_at_right < desired_size && (uint8_t*)obj < end )
-	{
-		if ( obj->ptr )
-		{
-			*h_very_right = h_iter;
-			free_at_right += zepto_mem_man_get_freeable_size_at_right( h_iter );
-		}
-		obj++;
 		h_iter++;
 	}
 #endif // MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
@@ -672,7 +689,9 @@ uint16_t zepto_mem_man_get_total_freeable_space_at_left( REQUEST_REPLY_HANDLE me
 			h_iter--;
 			obj--;
 		}
-		while ( h_iter >= MEMORY_HANDLE_ACQUIRABLE_START );
+		while ( h_iter >= MEMORY_HANDLE_ACQUIRABLE_START && free_at_left < desired_size );
+		if ( free_at_left >= desired_size )
+			return free_at_left;
 		h_iter = MEMORY_HANDLE_MAX - 1;
 	}
 #endif
