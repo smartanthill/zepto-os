@@ -119,12 +119,17 @@ void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* pa
 	DEVICE_POSITION pos;
 	get_position( &pos, destination );
 	float dist = calc_dist( &pos, &(test_data->pos) );
+	ZEPTO_DEBUG_PRINTF_4( "Scheduling packet from %d to %d (distance = %f)... ", src, destination, dist );
 	if ( dist > 1.5 )
+	{
+		ZEPTO_DEBUG_PRINTF_1( "too far, dropped\n" );
 		return;
+	}
+	ZEPTO_DEBUG_PRINTF_1( "will be passed\n" );
 
-//	testing_scenario_at_destination_drop_none( packet_buff, packet_sz, src, destination );
+	testing_scenario_at_destination_drop_none( packet_buff, packet_sz, src, destination );
 //	testing_scenario_at_destination_drop_at_random( packet_buff, packet_sz, src, destination );
-	testing_scenario_at_destination_drop_for_random_period( packet_buff, packet_sz, src, destination );
+//	testing_scenario_at_destination_drop_for_random_period( packet_buff, packet_sz, src, destination );
 }
 bool allow_to_pass_packet( int src )
 {
