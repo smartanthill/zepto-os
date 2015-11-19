@@ -81,6 +81,7 @@ private:
 	FILE* flog;
 	bool for_logging;
 	char formatting_buffer[MAX_FORMATTING_BUFFER_SIZE];
+	unsigned int curr_rec;
 
 	int fill_record_header( READ_RECORD_HEAD* record, char* data )
 	{
@@ -148,7 +149,7 @@ private:
 		return true;
 	}
 
-	bool read_next_record( char* data, int* size, int max_size )
+	bool read_next_record_internal( char* data, int* size, int max_size )
 	{
 		if ( flog == NULL )
 		{
@@ -190,6 +191,7 @@ public:
 	LogFile()
 	{
 		flog = NULL;
+		curr_rec = 0;
 	}
 	bool init_access_for_logging( const char* path = NULL )
 	{
@@ -211,6 +213,7 @@ public:
 		if ( path == NULL ) path = "default_log.dat";
 		flog = fopen( path, "rb" );
 		for_logging = false;
+		curr_rec = 0;
 		return flog != NULL;
 	}
 	bool add_abstract_data_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size )
@@ -241,16 +244,20 @@ public:
 		return add_record( formatting_buffer, sz );
 	}
 
-	bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size )
+	bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size, unsigned int stop_pos = (unsigned int)(-1) )
 	{
 		int input_sz;
-		if ( !read_next_record( formatting_buffer, &input_sz, MAX_FORMATTING_BUFFER_SIZE ) )
+		if ( !read_next_record_internal( formatting_buffer, &input_sz, MAX_FORMATTING_BUFFER_SIZE ) )
 			return false;
 
 		ZEPTO_DEBUG_ASSERT( input_sz < MAX_FORMATTING_BUFFER_SIZE );
 
+		if ( curr_rec == stop_pos )
+			getchar();
+
 		formatting_buffer[input_sz] = 0;
-		ZEPTO_DEBUG_PRINTF_2( "Record read: \"%s\"\n\n", formatting_buffer );
+		ZEPTO_DEBUG_PRINTF_3( "Record read %d: \"%s\"\n\n", curr_rec, formatting_buffer );
+		curr_rec++;
 
 		int header_size = fill_record_header( record, (char*)formatting_buffer );
 		if ( header_size == 0 )
@@ -308,6 +315,10 @@ bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_
 bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size )
 {
 	return logfile.read_next_record( record, data, data_max_size );
+}
+bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size, unsigned int stop_pos )
+{
+	return logfile.read_next_record( record, data, data_max_size, stop_pos );
 }
 bool add_eeprom_ini_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size )
 {

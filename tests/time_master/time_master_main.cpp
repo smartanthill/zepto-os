@@ -289,7 +289,7 @@ bool prepare_packet_for_replay( READ_RECORD_HEAD* record, const uint8_t* record_
 	return prepare_packet_for_replay_base( record, record_data, request->device_id, request->record_type, request->data, request->data_sz, packet_out, packet_out_sz );
 }
 
-int time_main_loop_for_replaying( bool filter, int for_device_id )
+int time_main_loop_for_replaying( bool filter, int for_device_id, unsigned int stop_pos )
 {
 	uint8_t packet_buff[1024];
 	uint8_t packet_out_buff[1024];
@@ -308,7 +308,7 @@ int time_main_loop_for_replaying( bool filter, int for_device_id )
 	// get first record (any or for a particular device)
 	do
 	{
-		if (!read_next_record( &record, record_stored_data, 1024 ))
+		if (!read_next_record( &record, record_stored_data, 1024, stop_pos ))
 		{
 			ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
 			return 0;
@@ -333,7 +333,7 @@ int time_main_loop_for_replaying( bool filter, int for_device_id )
 
 			do
 			{
-				if (!read_next_record( &record, record_stored_data, 1024 ))
+				if (!read_next_record( &record, record_stored_data, 1024, stop_pos ))
 				{
 					ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
 					return 0;
@@ -366,7 +366,7 @@ int time_main_loop_for_replaying( bool filter, int for_device_id )
 				send_packet( packet_out_buff, packet_out_sz, items[j] );
 				do
 				{
-					if (!read_next_record( &record, record_stored_data, 1024 ))
+					if (!read_next_record( &record, record_stored_data, 1024, stop_pos ))
 					{
 						ZEPTO_DEBUG_PRINTF_2( "Reading packet %d failed. Exiting...\n", packet_ordinal );
 						return 0;
@@ -398,8 +398,8 @@ int main( int argc, char *argv[] )
 	ZEPTO_DEBUG_PRINTF_1( "TIME MASTER started\n" );
 	ZEPTO_DEBUG_PRINTF_1( "===================\n\n" );
 
-//	bool for_recording = true; // TODO: from command line or alike
-	bool for_recording = false; // TODO: from command line or alike
+	bool for_recording = true; // TODO: from command line or alike
+//	bool for_recording = false; // TODO: from command line or alike
 
     if ( !time_main_init( for_recording ) )
 	{
@@ -430,8 +430,11 @@ int main( int argc, char *argv[] )
 	else
 	{
 		bool filtered = false;
+//		bool filtered = true;
 		int devid = 0;
-		return time_main_loop_for_replaying( filtered, devid );
+		unsigned int stop_pos = (unsigned int)(-1);
+//		unsigned int stop_pos = 46;
+		return time_main_loop_for_replaying( filtered, devid, stop_pos );
 	}
 
 }

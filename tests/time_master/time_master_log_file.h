@@ -65,6 +65,7 @@ bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_
 bool add_eeprom_ini_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size );
 
 bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size );
+bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size, unsigned int stop_pos );
 
 /*
 class LogFile
