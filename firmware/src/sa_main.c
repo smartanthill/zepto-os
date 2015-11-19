@@ -137,8 +137,13 @@ bool sa_main_init()
 	INIT_COUNTER_SYSTEM
 #endif // ENABLE_COUNTER_SYSTEM
 
-	ZEPTO_DEBUG_PRINTF_1("STARTING SERVER...\n");
-	ZEPTO_DEBUG_PRINTF_1("==================\n\n");
+#ifdef USED_AS_RETRANSMITTER
+	ZEPTO_DEBUG_PRINTF_1("STARTING RETRANSMITTER...\n");
+	ZEPTO_DEBUG_PRINTF_1("=========================\n\n");
+#else
+	ZEPTO_DEBUG_PRINTF_1("STARTING TERMINAL...\n");
+	ZEPTO_DEBUG_PRINTF_1("====================\n\n");
+#endif
 
 	ZEPTO_MEMSET( &wait_for, 0, sizeof( waiting_for ) );
 	wait_for.wait_packet = 1;
