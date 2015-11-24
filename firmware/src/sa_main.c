@@ -1054,7 +1054,7 @@ saoudp_send:
 
 		switch ( ret_code )
 		{
-			case SIOT_MESH_RET_OK:
+			case SIOT_MESH_RET_PASS_TO_SEND:
 			{
 				// regular processing will be done below in the next block
 				break;

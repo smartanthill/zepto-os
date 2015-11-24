@@ -35,22 +35,44 @@ Copyright (C) 2015 OLogN Technologies AG
 #define HAL_GET_PACKET_SERVICE 13
 
 #ifdef __cplusplus
-extern "C" {
+/*extern "C" {*/
 #endif
 
 extern int dev_count;
 
+
+
 bool communication_initialize();
 void communication_terminate();
 
-uint8_t get_packet( TEST_DATA* test_data, uint8_t* buff, int max_sz, int* size, uint16_t src );
-uint8_t send_packet( const uint8_t* buff, int size, uint16_t target );
-uint8_t wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items );
+uint8_t commlayer_get_packet( TEST_DATA* test_data, uint8_t* buff, int max_sz, int* size, uint16_t src );
+uint8_t commlayer_send_packet( const uint8_t* buff, int size, uint16_t target );
+uint8_t commlayer_wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items );
+
+#ifdef USE_TIME_MASTER
+bool debug_communication_initialize();
+uint8_t debug_wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items );
+uint8_t debug_wait_for_packet_internal( uint16_t* src, uint8_t* cnt, uint8_t max_items );
+uint8_t debug_send_packet( const uint8_t* buff, int size, uint16_t target );
+uint8_t debug_try_get_packet_using_context( uint8_t* buff, int max_sz, int* size, uint16_t src );
+
+#define COMMUNICATION_INITIALIZE() debug_communication_initialize()
+#define COMMUNICATION_TERMINATE() communication_terminate()
+#define WAIT_FOR_PACKET( src, cnt, max_items ) commlayer_wait_for_packet( src, cnt, max_items )
+#define GET_PACKET( test_data, buff, max_sz, size,  src ) commlayer_get_packet( test_data, buff, max_sz, size,  src )
+#define SEND_PACKET( buff, size, target ) debug_send_packet( buff, size, target )
+#else
+#define COMMUNICATION_INITIALIZE() communication_initialize()
+#define COMMUNICATION_TERMINATE() communication_terminate()
+#define GET_PACKET( test_data, buff, max_sz, size,  src ) commlayer_get_packet( test_data, buff, max_sz, size,  src )
+#define SEND_PACKET( buff, size, target ) commlayer_send_packet( buff, size, target )
+#define WAIT_FOR_PACKET( src, cnt, max_items ) commlayer_wait_for_packet( src, cnt, max_items )
+#endif
 
 void get_position( DEVICE_POSITION* pos, uint16_t src );
 
 #ifdef __cplusplus
-}
+//}
 #endif
 
 

@@ -384,6 +384,7 @@ uint8_t wait_for_packet_internal( uint16_t* src, uint8_t* cnt, uint8_t max_items
     retval = select(fd_cnt, &rfds, NULL, NULL, &tv);
     /* Don't rely on the value of tv now! */
 
+	*cnt = 0;
     if (retval == -1)
 	{
 #if defined _MSC_VER || defined __MINGW32__
@@ -402,7 +403,6 @@ uint8_t wait_for_packet_internal( uint16_t* src, uint8_t* cnt, uint8_t max_items
 	{
 		if ( FD_ISSET( sock_with_cl, &rfds) )
 			return COMMLAYER_RET_REENTER_LISTEN;
-		*cnt = 0;
 		for ( i=0; i<MAX_DEV_CNT; i++ )
 			if ( FD_ISSET( devices[i].sock_with_cl_accepted, &rfds) && *cnt < max_items )
 				src[ (*cnt)++ ] = i;
@@ -445,35 +445,62 @@ uint8_t start_listening()
 	  return COMMLAYER_RET_OK;
 }
 
+uint8_t debug_start_listening()
+{
+	int sock_with_cl_accepted = accept(sock_with_cl, NULL, NULL);
 
-uint8_t wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items )
+	  for ( int i=0; i<dev_count; i++ )
+		  if ( ! devices[ i ].connected )
+		  {
+			  devices[ i ].sock_with_cl_accepted = sock_with_cl_accepted;
+			  devices[ i ].connected = true;
+			  return COMMLAYER_RET_OK;
+		  }
+
+	  devices[ dev_count ].sock_with_cl_accepted = sock_with_cl_accepted;
+	  devices[ dev_count ].connected = true;
+	  dev_count++;
+
+	  return COMMLAYER_RET_OK;
+}
+
+
+uint8_t commlayer_wait_for_packet( uint16_t* src, uint8_t* cnt, uint8_t max_items )
 {
 	uint8_t ret_code;
 	for(;;)
 	{
+#ifdef USE_TIME_MASTER
+		ret_code = debug_wait_for_packet_internal( src, cnt, max_items );
+#else // USE_TIME_MASTER
 		ret_code = wait_for_packet_internal( src, cnt, max_items );
+#endif
 		if ( ret_code == COMMLAYER_RET_OK )
 			return ret_code;
 		if ( ret_code == COMMLAYER_RET_REENTER_LISTEN )
+#ifdef USE_TIME_MASTER
+			debug_start_listening();
+#else // USE_TIME_MASTER
 			start_listening();
+#endif
 	}
 }
 
-uint8_t send_packet( const uint8_t* buff, int size, uint16_t target )
+uint8_t commlayer_send_packet( const uint8_t* buff, int size, uint16_t target )
 {
-	if ( target != 0 )
-	{
-		target = target;
-	}
 	ZEPTO_DEBUG_ASSERT( target < MAX_DEV_CNT );
 	return send_packet_using_context( buff, size, target );
 }
 
-uint8_t get_packet( TEST_DATA* test_data, uint8_t* buff, int max_sz, int* size, uint16_t src )
+uint8_t commlayer_get_packet( TEST_DATA* test_data, uint8_t* buff, int max_sz, int* size, uint16_t src )
 {
 	ZEPTO_DEBUG_ASSERT( src < MAX_DEV_CNT );
 	DEVICE_CONNNECTION* conn = devices + src;
+#ifdef USE_TIME_MASTER
+	uint8_t ret_code = debug_try_get_packet_using_context( buff, max_sz, size, src );
+#else // USE_TIME_MASTER
 	uint8_t ret_code = try_get_packet_using_context( buff, max_sz, size, src );
+#endif
 	if ( ret_code != COMMLAYER_RET_OK )
 	{
 		CLOSE_SOCKET( conn->sock_with_cl_accepted );

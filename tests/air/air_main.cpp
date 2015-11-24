@@ -24,7 +24,7 @@ COMM_PARTICIPANT participants[COMM_PARTICIPANTS_MAX_COUNT];
 
 bool air_main_init()
 {
-	return communication_initialize();
+	return COMMUNICATION_INITIALIZE();
 	ZEPTO_MEMSET( participants, 0, sizeof(participants) );
 	int i;
 	for ( i=0; i<COMM_PARTICIPANTS_MAX_COUNT; i++ )
@@ -33,14 +33,14 @@ bool air_main_init()
 
 void testing_scenario_at_destination_drop_none( const uint8_t* packet_buff, int packet_sz, int src, int destination )
 {
-	send_packet( packet_buff, packet_sz, destination );
+	SEND_PACKET( packet_buff, packet_sz, destination );
 }
 
 void testing_scenario_at_destination_drop_at_random( const uint8_t* packet_buff, int packet_sz, int src, int destination )
 {
 	bool allow = (tester_get_rand_val() & 1) != 0;
 	if ( allow )
-		send_packet( packet_buff, packet_sz, destination );
+		SEND_PACKET( packet_buff, packet_sz, destination );
 	else
 		ZEPTO_DEBUG_PRINTF_3( "---- Packet has not reached device %d (src: %d) \n", destination, src );
 }
@@ -61,7 +61,7 @@ void testing_scenario_at_destination_drop_for_random_period( const uint8_t* pack
 	}
 	else
 	{
-		send_packet( packet_buff, packet_sz, destination );
+		SEND_PACKET( packet_buff, packet_sz, destination );
 		if ( dev.dest_val2 )
 			(dev.dest_val2) --;
 		else
@@ -150,16 +150,18 @@ int air_main_loop()
 	TEST_DATA test_data;
 	for (;;)
 	{
-		ret_code = wait_for_packet( items, &item_cnt, COMM_PARTICIPANTS_MAX_COUNT );
+		ret_code = WAIT_FOR_PACKET( items, &item_cnt, COMM_PARTICIPANTS_MAX_COUNT );
 		if ( ret_code == COMMLAYER_RET_TIMEOUT )
 		{
 			ZEPTO_DEBUG_PRINTF_1( "Waiting for incoming packets...\n" );
 			continue;
 		}
+		else
+			ZEPTO_DEBUG_PRINTF_2( "Expected %d packets...\n", item_cnt );
 		ZEPTO_DEBUG_ASSERT( ret_code == COMMLAYER_RET_OK );
 		for ( j=0; j<item_cnt; j++ )
 		{
-			if ( get_packet( &test_data, packet_buff, 1024, &packet_sz, items[j] ) == COMMLAYER_RET_OK )
+			if ( GET_PACKET( &test_data, packet_buff, 1024, &packet_sz, items[j] ) == COMMLAYER_RET_OK )
 			{
 				add_new_packet( packet_buff, packet_sz );
 				if ( !allow_to_pass_packet( items[j] ) )
@@ -172,6 +174,8 @@ int air_main_loop()
 					if ( i != items[j] )
 						do_whatever_with_packet_to_be_sent( &test_data, packet_buff, packet_sz, items[j], i );
 			}
+			else
+				ZEPTO_DEBUG_PRINTF_2( "Getting packet from device %d failed...\n", items[j] );
 		}
 	}
 	return 0;
