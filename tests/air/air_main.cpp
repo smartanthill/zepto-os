@@ -103,6 +103,28 @@ bool testing_scenario_at_src_drop_for_random_period( int src )
 	}
 }
 
+bool testing_scenario_at_src_drop_for_fixed_period( int src )
+{
+	const int transm_period_length = 32;
+	const int drop_period_length = 2;
+	COMM_PARTICIPANT& dev = participants[src];
+	if ( dev.src_val1 ) // dropping is in effect
+	{
+		(dev.src_val1)--;
+		if ( dev.src_val1 == 0 )
+			dev.src_val2 = transm_period_length;
+		return false;
+	}
+	else
+	{
+		if ( dev.src_val2 )
+			(dev.src_val2) --;
+		else
+			dev.src_val1 = drop_period_length;
+		return true;
+	}
+}
+
 
 
 #include <math.h>
@@ -134,9 +156,10 @@ void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* pa
 bool allow_to_pass_packet( int src )
 {
 	(participants[src].cnt_from )++;
-	return testing_scenario_at_src_drop_none( src );
+//	return testing_scenario_at_src_drop_none( src );
 //	return testing_scenario_at_src_drop_at_random( src );
 //	return testing_scenario_at_src_drop_for_random_period( src );
+	return testing_scenario_at_src_drop_for_fixed_period( src );
 }
 
 int air_main_loop()
