@@ -1511,12 +1511,10 @@ REQUEST_REPLY_HANDLE memory_object_acquire()
 				ZEPTO_DEBUG_ASSERT( obj->ptr == NULL );
 				return MEMORY_HANDLE_INVALID;
 			}
-			// if prev_obj has been dyn allocated, its position mignt be changed after this move
-			if ( prev_obj != memory_objects + MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE )
-			{
-				base_buff = memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr;
-			}
-			prev_obj = (request_reply_mem_obj*)(base_buff) + prev - MEMORY_HANDLE_ACQUIRABLE_START;
+			// if prev_obj has been dyn allocated, its position mignt be changed after this move; let's reload the object
+			prev_obj = MEMORY_OBJECT_PTR( prev );
+			base_buff = memory_objects[MEMORY_HANDLE_ACQUIRABLE_HANDLE_STORAGE].ptr;
+
 			obj = (request_reply_mem_obj*)(base_buff) + prev + 1 - MEMORY_HANDLE_ACQUIRABLE_START;
 #ifdef SA_DEBUG
 			ZEPTO_DEBUG_ASSERT( prev_obj_resp_size + 1 == prev_obj->rsp_size ); // we just check our expectations of memory_object_append() which moves somehow and increases rsp_size respectively

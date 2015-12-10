@@ -19,7 +19,10 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "air_commlayer.h"
 #include "test_generation_support.h"
 
+#include <time.h>
+
 COMM_PARTICIPANT participants[COMM_PARTICIPANTS_MAX_COUNT];
+int start_time = time( 0 );
 
 
 bool air_main_init()
@@ -77,14 +80,25 @@ bool testing_scenario_at_src_drop_none( int src )
 
 bool testing_scenario_at_src_drop_at_random( int src )
 {
+	if ( src) return true;
+	static int period = 0;
 	bool allow = (tester_get_rand_val() & 1) != 0;
+	if ( !allow)
+	{
+		period++;
+		if ( period > 3 )
+		{
+			period = 0;
+			allow = true;
+		}
+	}
 	return allow;
 }
 
 bool testing_scenario_at_src_drop_for_random_period( int src )
 {
-	const int transm_period_max_length = 128;
-	const int drop_period_max_length = 12;
+	const int transm_period_max_length = 256;
+	const int drop_period_max_length = 6;
 	COMM_PARTICIPANT& dev = participants[src];
 	if ( dev.src_val1 )
 	{
@@ -105,8 +119,12 @@ bool testing_scenario_at_src_drop_for_random_period( int src )
 
 bool testing_scenario_at_src_drop_for_fixed_period( int src )
 {
-	const int transm_period_length = 32;
-	const int drop_period_length = 2;
+	if ( src) return true;
+	static int rep = 0;
+	rep++;
+	if ( rep > 512 ) return true;
+	const int transm_period_length = 64;
+	const int drop_period_length = 8;
 	COMM_PARTICIPANT& dev = participants[src];
 	if ( dev.src_val1 ) // dropping is in effect
 	{
@@ -123,6 +141,13 @@ bool testing_scenario_at_src_drop_for_fixed_period( int src )
 			dev.src_val1 = drop_period_length;
 		return true;
 	}
+}
+
+bool testing_scenario_at_src_drop_for_time_period( int src )
+{
+	if ( src) return true;
+	int time_now = time( 0 );
+	return time_now < start_time + 60 || time_now > start_time + 120;
 }
 
 
@@ -159,7 +184,8 @@ bool allow_to_pass_packet( int src )
 //	return testing_scenario_at_src_drop_none( src );
 //	return testing_scenario_at_src_drop_at_random( src );
 //	return testing_scenario_at_src_drop_for_random_period( src );
-	return testing_scenario_at_src_drop_for_fixed_period( src );
+//	return testing_scenario_at_src_drop_for_fixed_period( src );
+	return testing_scenario_at_src_drop_for_time_period( src );
 }
 
 int air_main_loop()
