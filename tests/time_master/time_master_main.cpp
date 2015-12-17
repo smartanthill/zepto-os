@@ -398,8 +398,8 @@ int main( int argc, char *argv[] )
 	ZEPTO_DEBUG_PRINTF_1( "TIME MASTER started\n" );
 	ZEPTO_DEBUG_PRINTF_1( "===================\n\n" );
 
-	bool for_recording = true; // TODO: from command line or alike
-//	bool for_recording = false; // TODO: from command line or alike
+//	bool for_recording = true; // TODO: from command line or alike
+	bool for_recording = false; // TODO: from command line or alike
 
     if ( !time_main_init( for_recording ) )
 	{
@@ -429,11 +429,12 @@ int main( int argc, char *argv[] )
 	}
 	else
 	{
-		bool filtered = false;
-//		bool filtered = true;
-		int devid = 0;
-		unsigned int stop_pos = (unsigned int)(-1);
-//		unsigned int stop_pos = 46;
+//		bool filtered = false;
+		bool filtered = true;
+//		int devid = 0xffff;
+		int devid = 1;
+//		unsigned int stop_pos = (unsigned int)(-1);
+		unsigned int stop_pos = 535062; // 1: 535065,163,249,536490
 		return time_main_loop_for_replaying( filtered, devid, stop_pos );
 	}
 

@@ -32,7 +32,10 @@ extern bool communication_initialize_with_time_master();
 
 #ifdef USE_TIME_MASTER
 
-const uint16_t DEVICE_SELF_ID = 0xFFFF;
+#define AIR_ID_WITH_TIMEMASTER_BASE 0xFFFF
+extern uint16_t AIR_SELF_ID;
+#define AIR_ID_WITH_TIMEMASTER (AIR_ID_WITH_TIMEMASTER_BASE - AIR_SELF_ID)
+
 #define MAX_PACKET_SIZE 1024
 
 // record types:
@@ -54,8 +57,8 @@ const uint16_t DEVICE_SELF_ID = 0xFFFF;
 uint16_t form_debug_packet( uint8_t* buff, uint8_t type, const uint8_t* data_buff, uint16_t data_sz_1 )
 {
 	uint16_t data_sz = data_sz_1;
-	buff[0] = (uint8_t)DEVICE_SELF_ID;
-	buff[1] = DEVICE_SELF_ID >> 8;
+	buff[0] = (uint8_t)AIR_ID_WITH_TIMEMASTER;
+	buff[1] = AIR_ID_WITH_TIMEMASTER >> 8;
 	buff[2] = type;
 	buff[3] = (uint8_t)data_sz;
 	buff[4] = data_sz >> 8;
@@ -74,7 +77,7 @@ uint8_t preanalyze_debug_packet( uint8_t* buff, uint16_t buff_size, uint16_t* pa
 
 	uint16_t dev_id = buff[1];
 	dev_id = (dev_id << 8 ) | buff[0];
-	ZEPTO_DEBUG_ASSERT( dev_id == DEVICE_SELF_ID );
+	ZEPTO_DEBUG_ASSERT( dev_id == AIR_ID_WITH_TIMEMASTER );
 
 	ZEPTO_DEBUG_ASSERT( expected_type == buff[2] );
 

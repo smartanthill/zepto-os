@@ -51,9 +51,9 @@ extern uint16_t DEVICE_SELF_ID;
 #endif // USE_TIME_MASTER_REGISTER
 
 
-uint16_t form_debug_packet( uint8_t* buff, uint8_t type, const uint8_t* data_buff_1, uint16_t data_sz_1 )//, const uint8_t* data_buff_2, uint16_t data_sz_2 )
+uint16_t form_debug_packet( uint8_t* buff, uint8_t type, const uint8_t* data_buff_1, uint16_t data_sz_1, const uint8_t* data_buff_2, uint16_t data_sz_2 )
 {
-	uint16_t data_sz = data_sz_1;// + data_sz_2;
+	uint16_t data_sz = data_sz_1 + data_sz_2;
 	ZEPTO_DEBUG_ASSERT( data_sz <= MAX_PACKET_SIZE );
 	buff[0] = (uint8_t)DEVICE_SELF_ID;
 	buff[1] = DEVICE_SELF_ID >> 8;
@@ -65,11 +65,11 @@ uint16_t form_debug_packet( uint8_t* buff, uint8_t type, const uint8_t* data_buf
 		ZEPTO_DEBUG_ASSERT( data_buff_1 != NULL );
 		ZEPTO_MEMCPY( buff + 5, data_buff_1, data_sz_1 );
 	}
-/*	if ( data_sz_2 )
+	if ( data_sz_2 )
 	{
 		ZEPTO_DEBUG_ASSERT( data_buff_2 != NULL );
 		ZEPTO_MEMCPY( buff + 5 + data_sz_1, data_buff_2, data_sz_2 );
-	}*/
+	}
 	ZEPTO_DEBUG_ASSERT( OUTGOING_DEBUG_PACKET_HEADER_SIZE == 5 ); // if not, then update it!
 	return data_sz + OUTGOING_DEBUG_PACKET_HEADER_SIZE;
 }
@@ -106,13 +106,16 @@ uint8_t preanalyze_debug_packet( uint8_t* buff, uint16_t buff_size, uint16_t* pa
 #ifdef USE_TIME_MASTER_REGISTER
 
 
-void register_packet_with_time_master( uint8_t* packet_buff, uint16_t packet_sz, bool incoming )
+void register_packet_with_time_master( uint8_t* packet_buff, uint16_t packet_sz, bool incoming, uint16_t bus_id )
 {
 	uint8_t ret;
 	uint8_t type_out = incoming ? TIME_RECORD_REGISTER_INCOMING_PACKET : TIME_RECORD_REGISTER_OUTGOING_PACKET;
+	uint8_t bus_id_buff[2];
+	bus_id_buff[0] = (uint8_t)bus_id;
+	bus_id_buff[1] = (uint8_t)(bus_id>>8);
 	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, bus_id_buff, 2, packet_buff, packet_sz );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -124,27 +127,30 @@ void register_packet_with_time_master( uint8_t* packet_buff, uint16_t packet_sz,
 }
 
 
-void register_incoming_packet( MEMORY_HANDLE mem_h )
+void register_incoming_packet( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	uint16_t packet_sz = memory_object_get_response_size( mem_h );
 	uint8_t* packet_buff = memory_object_get_response_ptr( mem_h );
-	register_packet_with_time_master( packet_buff, packet_sz, true );
+	register_packet_with_time_master( packet_buff, packet_sz, true, bus_id );
 }
 
-void register_outgoing_packet( MEMORY_HANDLE mem_h )
+void register_outgoing_packet( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	uint16_t packet_sz = memory_object_get_request_size( mem_h );
 	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
-	register_packet_with_time_master( packet_buff, packet_sz, false );
+	register_packet_with_time_master( packet_buff, packet_sz, false, bus_id );
 }
 
-void register_wait_request_ret_val( uint8_t ret_val )
+void register_wait_request_ret_val( uint8_t ret_val, uint16_t bus_id )
 {
 	uint8_t ret;
 	uint8_t type_out = TIME_RECORD_REGISTER_WAIT_RET_VALUE;
-	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE+1];
+	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE+3];
+	uint8_t bus_id_buff[2];
+	bus_id_buff[0] = (uint8_t)bus_id;
+	bus_id_buff[1] = (uint8_t)(bus_id>>8);
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, &ret_val, 1 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, bus_id_buff, 2, &ret_val, 1 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -169,7 +175,7 @@ void register_time_val( uint8_t point_id, const sa_time_val* in, sa_time_val* ou
 	uint8_t type_out = TIME_RECORD_REGISTER_TIME_VALUE;
 	uint8_t buff[OUTGOING_DEBUG_PACKET_HEADER_SIZE + sizeof(sa_time_val) + 1];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, data_buff, sizeof(sa_time_val) + 1 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, data_buff, sizeof(sa_time_val) + 1, 0, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -195,7 +201,7 @@ void register_eeprom_state()
 	uint8_t eeprom_buff[EEPROM_SERIALIZED_SIZE ];
 	eeprom_serialize( eeprom_buff );
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, eeprom_buff, EEPROM_SERIALIZED_SIZE );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, eeprom_buff, EEPROM_SERIALIZED_SIZE, 0, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -209,13 +215,13 @@ void register_eeprom_state()
 
 #else // USE_TIME_MASTER_REGISTER
 
-void request_incoming_packet( MEMORY_HANDLE mem_h )
+void request_incoming_packet( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	uint8_t ret;
 	uint8_t type_out = TIME_RECORD_REGISTER_INCOMING_PACKET;
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0, 0, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -227,20 +233,27 @@ void request_incoming_packet( MEMORY_HANDLE mem_h )
 	ZEPTO_DEBUG_ASSERT( packet_data_sz > 0 );
 	uint8_t* data_in = buff + data_offset;
 
+	ZEPTO_DEBUG_ASSERT( data_in[0] == (uint8_t)bus_id );
+	ZEPTO_DEBUG_ASSERT( data_in[1] == (uint8_t)(bus_id>>8) );
+	data_in += 2;
+
 	zepto_parser_free_memory( mem_h );
 	zepto_write_block( mem_h, data_in, packet_data_sz );
 }
 
-void request_outgoing_packet( MEMORY_HANDLE mem_h )
+void request_outgoing_packet( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	uint16_t packet_sz = memory_object_get_request_size( mem_h );
 	uint8_t* packet_buff = memory_object_get_request_ptr( mem_h );
+	uint8_t bus_id_buff[2];
+	bus_id_buff[0] = (uint8_t)bus_id;
+	bus_id_buff[1] = (uint8_t)(bus_id>>8);
 
 	uint8_t ret;
 	uint8_t type_out = TIME_RECORD_REGISTER_OUTGOING_PACKET;
-	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE + 1 ];
+	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE + 3 ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, packet_buff, packet_sz );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, bus_id_buff, 2, packet_buff, packet_sz );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -251,13 +264,13 @@ void request_outgoing_packet( MEMORY_HANDLE mem_h )
 	ZEPTO_DEBUG_ASSERT( packet_data_sz == 1 );
 }
 
-uint8_t request_wait_request_ret_val()
+uint8_t request_wait_request_ret_val( uint16_t* bus_id )
 {
 	uint8_t ret;
 	uint8_t type_out = TIME_RECORD_REGISTER_WAIT_RET_VALUE;
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0, NULL, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -265,9 +278,13 @@ uint8_t request_wait_request_ret_val()
 	ret = get_debug_packet( buff, &packet_data_sz, OUTGOING_DEBUG_PACKET_HEADER_SIZE+MAX_PACKET_SIZE+1 );
 	ZEPTO_DEBUG_ASSERT( ret == HAL_GET_PACKET_BYTES_DONE );
 	uint8_t data_offset = preanalyze_debug_packet( buff, packet_data_sz, &packet_data_sz, type_out );
-	ZEPTO_DEBUG_ASSERT( packet_data_sz == 1 );
+	ZEPTO_DEBUG_ASSERT( packet_data_sz == 3 );
 	
-	return buff[data_offset];
+	*bus_id = buff[data_offset+1];
+	*bus_id <<= 8;
+	*bus_id += buff[data_offset];
+	
+	return buff[data_offset+2];
 }
 
 void request_time_val( uint8_t point_id, sa_time_val* tv )
@@ -277,7 +294,7 @@ void request_time_val( uint8_t point_id, sa_time_val* tv )
 
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + MAX_PACKET_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0, NULL, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -302,7 +319,7 @@ void request_eeprom_state()
 
 	uint8_t buff[INCOMING_DEBUG_PACKET_HEADER_SIZE + EEPROM_SERIALIZED_SIZE ];
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, NULL, 0, NULL, 0 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -349,26 +366,26 @@ void check_get_time_call_point( uint8_t call_point, const char* file, uint16_t l
 }
 
 
-void debug_hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+void debug_hal_get_packet_bytes( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 #ifdef USE_TIME_MASTER_REGISTER
-	hal_get_packet_bytes( mem_h );
-	register_incoming_packet( mem_h );
+	hal_get_packet_bytes( mem_h, bus_id );
+	register_incoming_packet( mem_h, bus_id );
 	return;
 #else
-	request_incoming_packet( mem_h );
+	request_incoming_packet( mem_h, bus_id );
 	return;
 #endif // USE_TIME_MASTER_REGISTER
 }
 
-void debug_hal_send_message( MEMORY_HANDLE mem_h )
+void debug_hal_send_message( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 #if !defined USE_TIME_MASTER_REGISTER
-	request_outgoing_packet( mem_h );
+	request_outgoing_packet( mem_h, bus_id );
 	return;
 #else
-	register_outgoing_packet( mem_h );
-	send_message( mem_h );
+	register_outgoing_packet( mem_h, bus_id );
+	send_message( mem_h, bus_id );
 	return;
 #endif // USE_TIME_MASTER_REGISTER
 }
@@ -387,14 +404,14 @@ void  debug_hal_get_time( sa_time_val* tv, uint8_t call_point, const char* file,
 #endif // USE_TIME_MASTER_REGISTER
 }
 
-uint8_t debug_hal_wait_for( waiting_for* wf )
+uint8_t debug_hal_wait_for( waiting_for* wf, uint16_t* bus_id )
 {
 #ifdef USE_TIME_MASTER_REGISTER
-	uint8_t ret_code = hal_wait_for( wf );
-	register_wait_request_ret_val( ret_code );
+	uint8_t ret_code = hal_wait_for( wf, bus_id );
+	register_wait_request_ret_val( ret_code, *bus_id );
 	return ret_code;
 #else
-	return request_wait_request_ret_val();
+	return request_wait_request_ret_val( bus_id );
 #endif // USE_TIME_MASTER_REGISTER
 }
 

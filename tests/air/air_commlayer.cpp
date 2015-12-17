@@ -23,6 +23,8 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <stdlib.h>
 #include <sys/types.h>
 
+extern uint16_t AIR_SELF_ID;
+
 #if defined _MSC_VER || defined __MINGW32__
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -73,7 +75,7 @@ int sock_with_cl = -1;
 
 
 const char* inet_addr_as_string_with_cl = "127.0.0.1";
-uint16_t self_port_num = 7654;
+uint16_t self_port_num = 7654 + AIR_SELF_ID;
 
 uint16_t buffer_in_with_cl_pos;
 

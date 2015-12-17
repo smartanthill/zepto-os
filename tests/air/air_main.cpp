@@ -25,6 +25,9 @@ COMM_PARTICIPANT participants[COMM_PARTICIPANTS_MAX_COUNT];
 int start_time = time( 0 );
 
 
+unsigned uint16_t AIR_SELF_ID = 0;
+
+
 bool air_main_init()
 {
 	return COMMUNICATION_INITIALIZE();
@@ -182,10 +185,10 @@ bool allow_to_pass_packet( int src )
 {
 	(participants[src].cnt_from )++;
 //	return testing_scenario_at_src_drop_none( src );
-//	return testing_scenario_at_src_drop_at_random( src );
+	return testing_scenario_at_src_drop_at_random( src );
 //	return testing_scenario_at_src_drop_for_random_period( src );
 //	return testing_scenario_at_src_drop_for_fixed_period( src );
-	return testing_scenario_at_src_drop_for_time_period( src );
+//	return testing_scenario_at_src_drop_for_time_period( src );
 }
 
 int air_main_loop()
@@ -230,10 +233,72 @@ int air_main_loop()
 	return 0;
 }
 
+bool load_startup_data()
+{
+	extern uint8_t* AES_ENCRYPTION_KEY;
+	extern uint16_t AIR_SELF_ID;
+
+	FILE* fme = fopen( "airid.dat", "rb" );
+	if ( fme == 0 )
+	{
+		ZEPTO_DEBUG_PRINTF_1( "failed to access \'airid.dat\' file. Terminating...\n" );
+		return false;
+	}
+	int8_t buff[ 80 ];
+	uint8_t ret = fread( buff, 1, 80, fme );
+	fclose( fme );
+	if ( ret < 2 )
+	{
+		ZEPTO_DEBUG_PRINTF_1( "file \'airid.dat\' is incomplete or corrupted. Terminating...\n" );
+		return false;
+	}
+
+	uint8_t pos;
+	bool in_progress = false;
+
+	for ( pos=0; pos<ret; pos++ )
+	{
+		bool val_updated = true;
+		int8_t ch = buff[pos];
+		uint8_t val;
+		if ( ch >='0' && ch <='9' ) val = ch - '0';
+		else if ( ch >='a' && ch <='f' ) val = ch - 'a' + 10;
+		else if ( ch >='A' && ch <='F' ) val = ch - 'A' + 10;
+		else
+			val_updated = false;
+
+		if ( val_updated )
+		{
+			if ( in_progress )
+			{
+				AIR_SELF_ID = ( AIR_SELF_ID << 4 ) | val;
+				in_progress = false;
+			}
+			else
+			{
+					AIR_SELF_ID = val;
+				in_progress = true;
+			}
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	ZEPTO_DEBUG_PRINTF_2( "Running as: Air ID = %d", AIR_SELF_ID );
+	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
+
+	return true;
+}
+
+
 int main( int argc, char *argv[] )
 {
 	ZEPTO_DEBUG_PRINTF_1( "AIR started\n" );
 	ZEPTO_DEBUG_PRINTF_1( "===========\n\n" );
+	if ( !load_startup_data() )
+		return 0;
 
 	if ( !air_main_init() )
 	{

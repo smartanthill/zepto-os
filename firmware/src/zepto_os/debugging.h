@@ -32,10 +32,10 @@ Copyright (C) 2015 OLogN Technologies AG
 #ifdef USE_TIME_MASTER
 
 bool debug_communication_initialize();
-void debug_hal_get_packet_bytes( MEMORY_HANDLE mem_h );
-void debug_hal_send_message( MEMORY_HANDLE mem_h );
+void debug_hal_get_packet_bytes( MEMORY_HANDLE mem_h, uint16_t bus_id );
+void debug_hal_send_message( MEMORY_HANDLE mem_h, uint16_t bus_id );
 void  debug_hal_get_time( sa_time_val* tv, uint8_t call_point, const char* file, uint16_t line );
-uint8_t debug_hal_wait_for( waiting_for* wf );
+uint8_t debug_hal_wait_for( waiting_for* wf, uint16_t* bus_id );
 
 #ifdef USE_TIME_MASTER_REGISTER
 void register_eeprom_state();
@@ -45,19 +45,19 @@ void request_eeprom_state();
 #define DEBUG_ON_EEPROM_INIT() request_eeprom_state()
 #endif
 #define HAL_COMMUNICATION_INITIALIZE debug_communication_initialize
-#define HAL_GET_PACKET_BYTES( packet_handle ) debug_hal_get_packet_bytes( packet_handle )
-#define HAL_SEND_PACKET( packet_handle ) debug_hal_send_message( packet_handle )
+#define HAL_GET_PACKET_BYTES( packet_handle, bus_id ) debug_hal_get_packet_bytes( packet_handle, bus_id )
+#define HAL_SEND_PACKET( packet_handle, bus_id ) debug_hal_send_message( packet_handle, bus_id )
 #define HAL_GET_TIME( time_val_ptr, REQUEST_POINT )  debug_hal_get_time( time_val_ptr, REQUEST_POINT, __FILE__, (uint16_t)__LINE__ )
-#define HAL_WAIT_FOR( wait_for_ptr ) debug_hal_wait_for( wait_for_ptr )
+#define HAL_WAIT_FOR( wait_for_ptr, bus_id_ptr ) debug_hal_wait_for( wait_for_ptr, bus_id_ptr )
 
 #else // USE_TIME_MASTER
 
 #define DEBUG_ON_EEPROM_INIT()
 #define HAL_COMMUNICATION_INITIALIZE communication_initialize
-#define HAL_GET_PACKET_BYTES( packet_handle ) hal_get_packet_bytes( packet_handle )
-#define HAL_SEND_PACKET( packet_handle ) send_message( packet_handle )
+#define HAL_GET_PACKET_BYTES( packet_handle, bus_id ) hal_get_packet_bytes( packet_handle, bus_id )
+#define HAL_SEND_PACKET( packet_handle, bus_id ) send_message( packet_handle, bus_id )
 #define HAL_GET_TIME( time_val_ptr, REQUEST_POINT )  sa_get_time( time_val_ptr )
-#define HAL_WAIT_FOR( wait_for_ptr ) hal_wait_for( wait_for_ptr )
+#define HAL_WAIT_FOR( wait_for_ptr, bus_id_ptr ) hal_wait_for( wait_for_ptr, bus_id_ptr )
 
 #endif // USE_TIME_MASTER
 

@@ -213,7 +213,7 @@ int sa_main_loop()
 	PACKET_ASSOCIATED_DATA working_handle = {MEMORY_HANDLE_MAIN_LOOP_2, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR, MEMORY_HANDLE_INVALID, 0 };
 	PACKET_ASSOCIATED_DATA packet_getting_handle = {MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR, MEMORY_HANDLE_INVALID, 0 };
 
-	uint16_t bus_id;
+	uint16_t bus_id = SIOT_MESH_BUS_UNDEFINED;
 	uint16_t ack_bus_id;
 	uint8_t signal_level = 0; // TODO: source?
 	uint8_t error_count = 0; // TODO: source?
@@ -309,7 +309,7 @@ wait_for_comm_event:
 			// [[QUICK CHECK FOR UNITS POTENTIALLY WAITING FOR TIMEOUT end]]
 
 
-			ret_code = HAL_WAIT_FOR( &wait_for );
+			ret_code = HAL_WAIT_FOR( &wait_for, &bus_id );
 			SA_TIME_SET_INFINITE_TIME( wait_for.wait_time );
 
 			switch ( ret_code )
@@ -352,7 +352,7 @@ wait_for_comm_event:
 					goto wait_for_comm_event;
 #else							
 					// regular processing will be done below in the next block
-					HAL_GET_PACKET_BYTES( packet_getting_handle.packet_h );
+					HAL_GET_PACKET_BYTES( packet_getting_handle.packet_h, bus_id );
 					zepto_response_to_request( packet_getting_handle.packet_h );
 					SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
 					goto siotmp_rec;
@@ -506,7 +506,7 @@ siotmp_rec:
 			case SIOT_MESH_RET_SEND_ACK_AND_PASS_TO_PROCESS:
 			{
 				zepto_response_to_request( MEMORY_HANDLE_MESH_ACK );
-				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK ); // TODO: ack_bus_id is to be passed here!
+				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, bus_id ); // TODO: ack_bus_id is to be passed here!
 				zepto_parser_free_memory( MEMORY_HANDLE_MESH_ACK );
 				// regular processing will be done below in the next block
 				break;
@@ -524,7 +524,7 @@ siotmp_rec:
 			case SIOT_MESH_RET_SEND_ACK_AND_PASS_TO_SEND:
 			{
 				zepto_response_to_request( MEMORY_HANDLE_MESH_ACK );
-				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK ); // TODO: ack_bus_id is to be passed here!
+				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, bus_id ); // TODO: ack_bus_id is to be passed here!
 				zepto_parser_free_memory( MEMORY_HANDLE_MESH_ACK );
 				goto hal_send;
 				break;
@@ -1078,7 +1078,7 @@ hal_send:
 #endif
 #else
 //			ZEPTO_DEBUG_ASSERT( bus_id == 0 ); // TODO: bus_id must be a part of send_packet() call; we are now just in the middle of development...
-			HAL_SEND_PACKET( working_handle.packet_h );
+			HAL_SEND_PACKET( working_handle.packet_h, bus_id );
 #endif
 			zepto_parser_free_memory( working_handle.packet_h );
 			INCREMENT_COUNTER( 90, "MAIN LOOP, packet sent" );

@@ -22,6 +22,12 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #define MAX_PACKET_SIZE 80
 
+#ifdef USED_AS_RETRANSMITTER
+#define BUS_COUNT 1
+#else
+#define BUS_COUNT 2
+#endif
+
 
 #include <stdio.h>
 #include <errno.h>
@@ -97,17 +103,14 @@ uint16_t other_port_num = 7767;
 #endif
 #else
 #ifdef _MSC_VER
-SOCKET sock;
-SOCKET sock_accepted;
+SOCKET sock[ BUS_COUNT ];
+SOCKET sock_accepted[ BUS_COUNT ];
 #else
 int sock;
 int sock_accepted;
 #endif
-struct sockaddr_in sa_self, sa_other;
+struct sockaddr_in sa_other[ BUS_COUNT ];
 const char* inet_addr_as_string = "127.0.0.1";
-//uint16_t self_port_num = 7654;
-//uint16_t other_port_num = 7667;
-uint16_t self_port_num = 7668;
 uint16_t other_port_num = 7654;
 #endif
 
@@ -183,128 +186,65 @@ bool _communication_initialize_2()
 
 #endif // (defined MESH_TEST) && (defined SA_RETRANSMITTER)
 
-#if 0
 
-bool _communication_initialize()
+bool _communication_initialize_for_each_bus( uint8_t bus_id )
 {
+	ZEPTO_DEBUG_ASSERT( bus_id < BUS_COUNT );
 	//Zero out socket address
-	ZEPTO_MEMSET(&sa_self, 0, sizeof sa_self);
-	ZEPTO_MEMSET(&sa_other, 0, sizeof sa_other);
+	memset(&(sa_other[ bus_id ]), 0, sizeof(struct sockaddr_in));
 
 	//create an internet, datagram, socket using UDP
-//	sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (-1 == sock) /* if socket failed to initialize, exit */
+	sock[ bus_id ] = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (-1 == sock[ bus_id ]) /* if socket failed to initialize, exit */
 	{
 		ZEPTO_DEBUG_PRINTF_1("Error Creating Socket\n");
 		return false;
 	}
 
 	//The address is ipv4
-	sa_other.sin_family = AF_INET;
-	sa_self.sin_family = AF_INET;
+	sa_other[ bus_id ].sin_family = AF_INET;
 
 	//ip_v4 adresses is a uint32_t, convert a string representation of the octets to the appropriate value
-	sa_self.sin_addr.s_addr = inet_addr( inet_addr_as_string );
-	sa_other.sin_addr.s_addr = inet_addr( inet_addr_as_string );
+	sa_other[ bus_id ].sin_addr.s_addr = inet_addr( inet_addr_as_string );
 
 	//sockets are unsigned shorts, htons(x) ensures x is in network byte order, set the port to 7654
-	sa_self.sin_port = htons( self_port_num );
-	sa_other.sin_port = htons( other_port_num );
+	sa_other[ bus_id ].sin_port = htons( other_port_num );
 
-	if (-1 == bind(sock, (struct sockaddr *)&sa_self, sizeof(sa_self)))
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-#else
-		int error = errno;
-#endif
-		ZEPTO_DEBUG_PRINTF_2( "bind sock failed; error %d\n", error );
-		CLOSE_SOCKET(sock);
-		return false;
-	}
-	if(-1 == listen(sock, 10))
-    {
-      perror("error listen failed");
-      CLOSE_SOCKET(sock);
-      return false;
-    }
-
-	sock_accepted = accept(sock, NULL, NULL);
-
-      if ( 0 > sock_accepted )
-      {
-        perror("error accept failed");
-        CLOSE_SOCKET(sock);
-        exit(EXIT_FAILURE);
-      }
-
-	  sock = sock_accepted; /*just to keep names*/
-
-#ifdef _MSC_VER
-    unsigned long ul = 1;
-    ioctlsocket(sock, FIONBIO, &ul);
-#else
-    fcntl(sock,F_SETFL,O_NONBLOCK);
-#endif
-	return true;
-}
-
-#else // 0
-
-bool _communication_initialize()
-{
-	//Zero out socket address
-	memset(&sa_self, 0, sizeof sa_self);
-	memset(&sa_other, 0, sizeof sa_other);
-
-	//create an internet, datagram, socket using UDP
-	sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (-1 == sock) /* if socket failed to initialize, exit */
-	{
-		ZEPTO_DEBUG_PRINTF_1("Error Creating Socket\n");
-		return false;
-	}
-
-	//The address is ipv4
-	sa_other.sin_family = AF_INET;
-	sa_self.sin_family = AF_INET;
-
-	//ip_v4 adresses is a uint32_t, convert a string representation of the octets to the appropriate value
-	sa_self.sin_addr.s_addr = inet_addr( inet_addr_as_string );
-	sa_other.sin_addr.s_addr = inet_addr( inet_addr_as_string );
-
-	//sockets are unsigned shorts, htons(x) ensures x is in network byte order, set the port to 7654
-	sa_self.sin_port = htons( self_port_num );
-	sa_other.sin_port = htons( other_port_num );
-
-/*	if (-1 == bind(sock, (struct sockaddr *)&sa_self, sizeof(sa_self)))
-	{
-#ifdef _MSC_VER
-		int error = WSAGetLastError();
-#else
-		int error = errno;
-#endif
-		ZEPTO_DEBUG_PRINTF_2( "bind sock failed; error %d\n", error );
-		CLOSE_SOCKET(sock);
-		return false;
-	}*/
-
-	if (-1 == connect(sock, (struct sockaddr *)&sa_other, sizeof(sa_other)))
+	if (-1 == connect(sock[ bus_id ], (struct sockaddr *)&(sa_other[ bus_id ]), sizeof(struct sockaddr_in)))
 		{
 		  perror("connect failed");
-			CLOSE_SOCKET(sock);
+			CLOSE_SOCKET(sock[ bus_id ]);
 		  return false;
 		}
 	return true;
 }
 
-#endif // 0
+bool _communication_initialize()
+{
+	uint8_t bus_id = 0;
+	for ( bus_id=0; bus_id<BUS_COUNT; bus_id++ )
+	{
+		if ( !_communication_initialize_for_each_bus( bus_id ) )
+			return false;
+	}
+	return true;
+}
+
+void _communication_terminate_for_bus( uint8_t bus_id )
+{
+	CLOSE_SOCKET(sock[bus_id]);
+#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
+	CLOSE_SOCKET(sock2);
+#endif
+}
 
 void _communication_terminate()
 {
-	CLOSE_SOCKET(sock);
+	uint8_t bus_id = 0;
+	for ( bus_id=0; bus_id<BUS_COUNT; bus_id++ )
+		_communication_terminate_for_bus( bus_id );
 #if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
+#error not implemented
 	CLOSE_SOCKET(sock2);
 #endif
 }
@@ -376,10 +316,11 @@ uint8_t hal_send_packet( MEMORY_HANDLE mem_h, uint8_t bus_id, uint8_t intrabus_i
 	return ret_code;
 }
 #else
-uint8_t send_message( MEMORY_HANDLE mem_h )
+uint8_t send_message( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	uint8_t ret_code;
-	ret_code = internal_send_packet( mem_h, sock, (struct sockaddr *)(&sa_other) );
+	ZEPTO_DEBUG_ASSERT( bus_id < BUS_COUNT );
+	ret_code = internal_send_packet( mem_h, sock[ bus_id ], (struct sockaddr *)(&(sa_other[ bus_id ])) );
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
 	memory_object_response_to_request( mem_h );
@@ -494,7 +435,7 @@ uint8_t internal_get_packet_bytes( MEMORY_HANDLE mem_h, int _sock, struct sockad
 #endif
 
 
-uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 #ifdef MESH_TEST
 #ifdef USE_TIME_MASTER // NOTE: code with USE_TIME_MASTER defined is intended for testing purposes only on 'desktop' platform and should not be taken as a sample for any other platform
@@ -514,7 +455,8 @@ uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
 #endif
 
 #else // MESH_TEST
-	return internal_get_packet_bytes( mem_h, sock, (struct sockaddr *)(&sa_other) );
+	ZEPTO_DEBUG_ASSERT( bus_id < BUS_COUNT );
+	return internal_get_packet_bytes( mem_h, sock[ bus_id ], (struct sockaddr *)(&(sa_other[bus_id])) );
 #endif
 }
 
@@ -541,7 +483,7 @@ TEST_DATA test_data = { 2.0, 0, 0};
 #endif
 
 
-void report_coordinates()
+void report_coordinates_to_air( uint8_t bus_id )
 {
 	uint8_t buff[ 3 + sizeof(TEST_DATA) ];
 	uint16_t sz = sizeof(TEST_DATA);
@@ -555,7 +497,14 @@ void report_coordinates()
 	pos += sizeof(test_data.pos.x);
 	ZEPTO_MEMCPY( buff + pos, &(test_data.pos.z), sizeof(test_data.pos.z) );
 	pos += sizeof(test_data.pos.x);
-	int bytes_sent = sendto( sock, (char*)buff, sz+3, 0, (struct sockaddr *)(&sa_other), sizeof (struct sockaddr) );
+	int bytes_sent = sendto( sock[bus_id], (char*)buff, sz+3, 0, (struct sockaddr *)(&(sa_other[bus_id])), sizeof (struct sockaddr) );
+}
+
+void report_coordinates()
+{
+	uint8_t bus_id = 0;
+	for ( bus_id=0; bus_id<BUS_COUNT; bus_id++ )
+		report_coordinates_to_air( bus_id );
 }
 
 bool communication_initialize()
@@ -585,27 +534,38 @@ uint8_t hal_get_busid_of_last_packet()
 }
 #endif
 
-uint8_t internal_wait_for_communication_event( unsigned int timeout )
+uint8_t internal_wait_for_communication_event( unsigned int timeout, uint16_t* using_bus_id )
 {
 	ZEPTO_DEBUG_PRINTF_1( "internal_wait_for_communication_event()... " );
     fd_set rfds;
     struct timeval tv;
     int retval;
-	int fd_cnt;
+	int fd_cnt = 0;
 
-    /* Watch stdin (fd 0) to see when it has input. */
+	*using_bus_id = 0xFFFF;
+
+    /* Watch stdin (fd 0) to see when it has input. *///, uint16_t bus_id
     FD_ZERO(&rfds);
 
-    FD_SET(sock, &rfds);
 #ifdef MESH_TEST
+#error not supported
 #ifdef SA_RETRANSMITTER
+    FD_SET(sock, &rfds);
     FD_SET(sock2, &rfds);
 	fd_cnt = (int)(sock > sock2 ? sock + 1 : sock2 + 1);
 #else
+    FD_SET(sock, &rfds);
 	fd_cnt = (int)(sock + 1);
 #endif
 #else
-	fd_cnt = (int)(sock + 1);
+	uint8_t bus_id = 0;
+	for ( bus_id=0; bus_id<BUS_COUNT; bus_id++ )
+	{
+		FD_SET(sock[ bus_id ], &rfds);
+		if ( fd_cnt < (int)(sock[ bus_id ]) )
+			fd_cnt = (int)(sock[ bus_id ]);
+	}
+	fd_cnt++; // greater than greatest
 #endif
 
     /* Wait */
@@ -634,6 +594,7 @@ uint8_t internal_wait_for_communication_event( unsigned int timeout )
     else if (retval)
 	{
 #ifdef MESH_TEST
+#error not supported
 #ifdef SA_RETRANSMITTER
 		// so far, just resent to the other direction
 		if ( FD_ISSET(sock, &rfds) )
@@ -661,6 +622,10 @@ uint8_t internal_wait_for_communication_event( unsigned int timeout )
 #else
 		ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
 #endif
+		for ( bus_id=0; bus_id<BUS_COUNT; bus_id++ )
+			if ( FD_ISSET(sock[ bus_id ], &rfds) )
+				*using_bus_id = bus_id;
+		ZEPTO_DEBUG_ASSERT( *using_bus_id != 0xFFFF );
 		return COMMLAYER_RET_FROM_DEV;
 	}
     else
@@ -698,7 +663,7 @@ uint8_t internal_wait_for_timeout( unsigned int timeout)
 	}
 }
 
-uint8_t hal_wait_for( waiting_for* wf )
+uint8_t hal_wait_for( waiting_for* wf, uint16_t* bus_id )
 {
 	unsigned int timeout = wf->wait_time.high_t;
 	timeout <<= 16;
@@ -710,7 +675,7 @@ uint8_t hal_wait_for( waiting_for* wf )
 //	int now = GetTickCount();
 	if ( wf->wait_packet )
 	{
-		ret_code = internal_wait_for_communication_event( timeout );
+		ret_code = internal_wait_for_communication_event( timeout, bus_id );
 //		ZEPTO_DEBUG_PRINTF_2( ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> actual wait time = %d ms <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\n", GetTickCount() - now );
 		switch ( ret_code )
 		{
