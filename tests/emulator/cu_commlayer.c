@@ -145,9 +145,10 @@ void _communication_terminate()
 	CLOSE_SOCKET(sock);
 }
 
-uint8_t send_message_to_slave( MEMORY_HANDLE mem_h )
+uint8_t send_message_to_slave( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	ZEPTO_DEBUG_PRINTF_1( "send_message() called...\n" );
+	ZEPTO_DEBUG_ASSERT( bus_id == 0 ); // remove this assertion if more that a single bus is expected to be used at MASTER (ROOT)
 
 	uint16_t sz = memory_object_get_request_size( mem_h );
 	memory_object_request_to_response( mem_h );
@@ -385,10 +386,10 @@ uint8_t try_get_packet_within_master_loop( uint8_t* buff, uint16_t sz )
 
 }
 
-uint8_t try_get_packet_size_within_master_loop( uint8_t* buff )
+uint8_t try_get_packet_size_within_master_loop( uint8_t* buff, uint16_t sz )
 {
 	socklen_t fromlen = sizeof(sa_other_with_cl);
-	int recsize = recvfrom(sock_with_cl, (char *)(buff + buffer_in_with_cl_pos), 3 - buffer_in_with_cl_pos, 0, (struct sockaddr *)&sa_other_with_cl, &fromlen);
+	int recsize = recvfrom(sock_with_cl, (char *)(buff + buffer_in_with_cl_pos), sz - buffer_in_with_cl_pos, 0, (struct sockaddr *)&sa_other_with_cl, &fromlen);
 	if (recsize < 0)
 	{
 #ifdef _MSC_VER
@@ -410,7 +411,7 @@ uint8_t try_get_packet_size_within_master_loop( uint8_t* buff )
 	else
 	{
 		buffer_in_with_cl_pos += recsize;
-		if ( buffer_in_with_cl_pos < 3 )
+		if ( buffer_in_with_cl_pos < sz )
 		{
 			return COMMLAYER_RET_PENDING;
 		}
@@ -419,7 +420,7 @@ uint8_t try_get_packet_size_within_master_loop( uint8_t* buff )
 
 }
 
-uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h )
+uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id )
 {
 	// do cleanup
 	memory_object_response_to_request( mem_h );
@@ -431,13 +432,15 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h )
 
 	do //TODO: add delays or some waiting
 	{
-		ret = try_get_packet_size_within_master_loop( buff );
+		ret = try_get_packet_size_within_master_loop( buff, 5 );
 	}
 	while ( ret == COMMLAYER_RET_PENDING );
 	if ( ret != COMMLAYER_RET_OK )
 		return ret;
 	uint16_t sz = buff[1]; sz <<= 8; sz += buff[0];
-	uint8_t packet_src = buff[2];
+	*bus_id = buff[3]; *bus_id <<= 8; *bus_id += buff[2];
+	uint8_t packet_src = buff[4];
+	ZEPTO_DEBUG_PRINTF_4( "try_get_packet_size_within_master_loop(): sz = %d, bus_id = %d, src = %d\n", sz, *bus_id, packet_src );
 
 	buffer_in_with_cl_pos = 0;
 	do //TODO: add delays or some waiting
@@ -469,7 +472,7 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h )
 	return ret;
 }
 
-uint8_t send_within_master( MEMORY_HANDLE mem_h, uint8_t destination )
+uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destination )
 {
 	ZEPTO_DEBUG_PRINTF_1( "send_within_master() called...\n" );
 
@@ -477,12 +480,14 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint8_t destination )
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
 	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
-	uint8_t* buff = memory_object_prepend( mem_h, 3 );
+	uint8_t* buff = memory_object_prepend( mem_h, 5 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
 	buff[1] = sz >> 8;
-	buff[2] = destination;
-	int bytes_sent = sendto(sock_with_cl, (char*)buff, sz+3, 0, (struct sockaddr*)&sa_other_with_cl, sizeof sa_other_with_cl);
+	buff[2] = (uint8_t)param;
+	buff[3] = param >> 8;
+	buff[4] = destination;
+	int bytes_sent = sendto(sock_with_cl, (char*)buff, sz+5, 0, (struct sockaddr*)&sa_other_with_cl, sizeof sa_other_with_cl);
 	// do full cleanup
 	memory_object_response_to_request( mem_h );
 	memory_object_response_to_request( mem_h );
@@ -507,9 +512,12 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint8_t destination )
 }
 
 
-uint8_t wait_for_communication_event( unsigned int timeout )
+uint8_t wait_for_communication_event( unsigned int timeout, uint16_t* bus_id )
 {
 	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()... " );
+
+	*bus_id = 0xFFFF;
+
     fd_set rfds;
     struct timeval tv;
     int retval;
@@ -549,12 +557,14 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 		if ( FD_ISSET(sock, &rfds) )
 		{
 			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
+			*bus_id = 0; // TODO: if more than a single bus is supported...
 			return COMMLAYER_RET_FROM_DEV;
 		}
 		else
 		{
 			ZEPTO_DEBUG_ASSERT( FD_ISSET(sock_with_cl, &rfds) );
 			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_CENTRAL_UNIT\n" );
+			*bus_id = 0xFFFF; // not applicable
 			return COMMLAYER_RET_FROM_CENTRAL_UNIT;
 		}
 	}
@@ -565,44 +575,33 @@ uint8_t wait_for_communication_event( unsigned int timeout )
 	}
 }
 
-uint8_t send_message( MEMORY_HANDLE mem_h )
+uint8_t send_message( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
-	return send_message_to_slave( mem_h );
+	return send_message_to_slave( mem_h, bus_id );
 }
 
 
-uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h, uint16_t terget_id )
+uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h, uint16_t target_id )
 {
-/*	static cnt = 0;
-	cnt++;
-	if ( cnt == 2) return COMMLAYER_RET_OK;
-	Sleep(1000);*/
-	ZEPTO_DEBUG_ASSERT( terget_id > 0 );
-	parser_obj po, po1;
-	zepto_parser_init( &po, mem_h );
-	zepto_parser_init( &po1, mem_h );
-	uint16_t sz = zepto_parsing_remaining_bytes( &po );
+	ZEPTO_DEBUG_ASSERT( target_id > 0 );
 #ifdef _DEBUG
 	{
-		uint16_t sz_copy = sz;
-		parser_obj po2;
-		zepto_parser_init( &po2, mem_h );
-		ZEPTO_DEBUG_PRINTF_3( "entering send_to_commm_stack_as_from_master(), packet size = %d, target = %d\n", sz_copy, terget_id );
-		while ( sz_copy-- )
-			ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po2 ) );
+		parser_obj po;
+		zepto_parser_init( &po, mem_h );
+		uint16_t sz = zepto_parsing_remaining_bytes( &po );
+		ZEPTO_DEBUG_PRINTF_3( "entering send_to_commm_stack_as_from_master(), packet size = %d, target = %d\n", sz, target_id );
+		while ( sz-- )
+			ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
 		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 	}
 #endif
-	zepto_parse_skip_block( &po1, sz );
-	zepto_convert_part_of_request_to_response( mem_h, &po, &po1 );
-	zepto_parser_encode_and_prepend_uint16( mem_h, terget_id );
-	zepto_response_to_request( mem_h );
 	ZEPTO_DEBUG_PRINTF_2( "send_to_commm_stack_as_from_master(), about to call send_within_master(): rq.size = %d\n", memory_object_get_request_size( mem_h ) );
-	return send_within_master( mem_h, 38 );
+	return send_within_master( mem_h, target_id, 38 );
 }
 
-uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h )
+uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
+	ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 #if 0//def _DEBUG
 	parser_obj po;
 	zepto_parser_init( &po, mem_h );
@@ -612,7 +611,7 @@ uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h )
 		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
 	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 #endif
-	return send_within_master( mem_h, 40 );
+	return send_within_master( mem_h, bus_id, 40 );
 }
 
 

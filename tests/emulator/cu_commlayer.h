@@ -49,15 +49,15 @@ extern uint16_t other_port_num_with_cl; // TODO: in general, it will be more ela
 bool communication_initialize();
 void communication_terminate();
 
-uint8_t send_message( MEMORY_HANDLE mem_h );
+uint8_t send_message( MEMORY_HANDLE mem_h, uint16_t bus_id );
 uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h );
 uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h, uint16_t terget_id );
-uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h );
+uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h, uint16_t bus_id );
 
-uint8_t wait_for_communication_event( unsigned int timeout );
-uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h );
+uint8_t wait_for_communication_event( unsigned int timeout, uint16_t* bus_id );
+uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id );
 //uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h );
-uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h );
+//uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h );
 
 #ifdef __cplusplus
 }

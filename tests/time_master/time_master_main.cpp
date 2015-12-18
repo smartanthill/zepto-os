@@ -121,8 +121,8 @@ bool process_packet_for_recording( uint8_t* packet_in, uint16_t packet_sz, uint8
 		{
 			ZEPTO_DEBUG_PRINTF_1( "Adding wait_ret record\n" );;
 			uint8_t ret_val = data_buff[0];
-			ZEPTO_DEBUG_ASSERT( data_sz == 1 );
-			add_waitingfor_ret_record( time_id, dev_id, ret_val );
+			ZEPTO_DEBUG_ASSERT( data_sz == 1 || data_sz == 3 );
+			add_waitingfor_ret_record( time_id, dev_id, data_buff, data_sz );
 			packet_out[0] = (uint8_t)dev_id;
 			packet_out[1] = (uint8_t)(dev_id>>8);
 			packet_out[2] = type;
@@ -143,6 +143,22 @@ bool process_packet_for_recording( uint8_t* packet_in, uint16_t packet_sz, uint8
 			packet_out[3] = 0;
 			packet_out[4] = 0;
 			*packet_out_sz = 5;
+			return true;
+			break;
+		}
+		case TIME_RECORD_REGISTER_DEVICE_DISCONNECT:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "Adding wait_ret record\n" );
+			uint8_t ret_val = data_buff[0];
+			ZEPTO_DEBUG_ASSERT( data_sz == 1 );
+			add_dev_disconnect_record( time_id, dev_id, ret_val );
+			packet_out[0] = (uint8_t)dev_id;
+			packet_out[1] = (uint8_t)(dev_id>>8);
+			packet_out[2] = type;
+			packet_out[3] = 1;
+			packet_out[4] = 0;
+			*packet_out_sz = 6;
+			packet_out[5] = ret_val;
 			return true;
 			break;
 		}
@@ -432,9 +448,9 @@ int main( int argc, char *argv[] )
 //		bool filtered = false;
 		bool filtered = true;
 //		int devid = 0xffff;
-		int devid = 1;
-//		unsigned int stop_pos = (unsigned int)(-1);
-		unsigned int stop_pos = 535062; // 1: 535065,163,249,536490
+		int devid = 0x1;
+		unsigned int stop_pos = (unsigned int)(-1);
+//		unsigned int stop_pos = 535062; // 1: 535065,163,249,536490
 		return time_main_loop_for_replaying( filtered, devid, stop_pos );
 	}
 

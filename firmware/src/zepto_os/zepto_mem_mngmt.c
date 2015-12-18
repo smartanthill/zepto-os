@@ -448,6 +448,14 @@ void zepto_mem_man_move_obj_max_right( REQUEST_REPLY_HANDLE mem_h )
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 	if ( obj->ptr == 0 )
 	{
+#ifdef SA_DEBUG
+static int ctr = 0;
+ctr++;
+if ( !( mem_h > MEMORY_HANDLE_MAX ) )
+{
+	ZEPTO_DEBUG_PRINTF_3( "*** ctr-zepto_mem_man_move_obj_max_right = %d (before failure), mem_h = %d \n", ctr, mem_h );
+}
+#endif
 		ZEPTO_DEBUG_ASSERT( mem_h > MEMORY_HANDLE_MAX );
 		return;
 	}

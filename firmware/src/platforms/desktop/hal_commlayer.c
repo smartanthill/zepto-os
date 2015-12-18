@@ -106,12 +106,18 @@ uint16_t other_port_num = 7767;
 SOCKET sock[ BUS_COUNT ];
 SOCKET sock_accepted[ BUS_COUNT ];
 #else
-int sock;
-int sock_accepted;
+int sock[ BUS_COUNT ];
+int sock_accepted[ BUS_COUNT ];
 #endif
 struct sockaddr_in sa_other[ BUS_COUNT ];
+
 const char* inet_addr_as_string = "127.0.0.1";
+#ifdef USED_AS_RETRANSMITTER
+#define BUS_COUNT 1
 uint16_t other_port_num = 7654;
+#else
+uint16_t other_port_num = 7655;
+#endif
 #endif
 
 uint16_t buffer_in_pos;

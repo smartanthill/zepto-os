@@ -238,7 +238,18 @@ public:
 		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x %02x %02x %02x %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_TIME_VALUE, 5, point_id, (uint8_t)time_returned, (uint8_t)(time_returned>>8), (uint8_t)(time_returned>>16), (uint8_t)(time_returned>>24) );
 		return add_record( formatting_buffer, sz );
 	}
-	bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
+	bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, unsigned char* data, int size )
+	{
+//		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 1, ret_val );
+		int sz;
+		int i;
+		sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: ", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, size );
+		for ( i=0; i<size; i++ )
+			sz += sprintf( formatting_buffer + sz, "%02x ", data[i] );
+		sz += sprintf( formatting_buffer + sz, "\n" );
+		return add_record( formatting_buffer, sz );
+	}
+	bool add_dev_disconnect_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
 	{
 		int sz = sprintf( formatting_buffer, "%08x %08x: dev: %04x, type: %02x, sz: %04x, data: %02x\n", (uint32_t)(timestamp>>32), (uint32_t)timestamp, dev_id, TIME_RECORD_REGISTER_WAIT_RET_VALUE, 1, ret_val );
 		return add_record( formatting_buffer, sz );
@@ -308,9 +319,9 @@ bool add_time_record( time_id_type timestamp, int dev_id, int point_id, uint32_t
 {
 	return logfile.add_time_record( timestamp, dev_id, point_id, time_returned );
 }
-bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
+bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, unsigned char* data, int size )
 {
-	return logfile.add_waitingfor_ret_record( timestamp, dev_id, ret_val );
+	return logfile.add_waitingfor_ret_record( timestamp, dev_id, data, size );
 }
 bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size )
 {
@@ -323,6 +334,10 @@ bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_siz
 bool add_eeprom_ini_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size )
 {
 	return logfile.add_abstract_data_record( timestamp, dev_id, type, data, size );
+}
+bool add_dev_disconnect_record( time_id_type timestamp, int dev_id, uint8_t ret_val )
+{
+	return logfile.add_dev_disconnect_record( timestamp, dev_id, ret_val );
 }
 
 

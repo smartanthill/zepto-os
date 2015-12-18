@@ -25,7 +25,7 @@ COMM_PARTICIPANT participants[COMM_PARTICIPANTS_MAX_COUNT];
 int start_time = time( 0 );
 
 
-unsigned uint16_t AIR_SELF_ID = 0;
+uint16_t AIR_SELF_ID = 0;
 
 
 bool air_main_init()
@@ -276,7 +276,7 @@ bool load_startup_data()
 			}
 			else
 			{
-					AIR_SELF_ID = val;
+				AIR_SELF_ID = val;
 				in_progress = true;
 			}
 		}

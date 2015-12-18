@@ -37,6 +37,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define TIME_RECORD_REGISTER_WAIT_RET_VALUE 4
 #define TIME_RECORD_REGISTER_EEPROM_STATE 5
 #define TIME_RECORD_REGISTER_INCOMING_PACKET_AT_COMM_STACK 6
+#define TIME_RECORD_REGISTER_DEVICE_DISCONNECT 7
 
 // TIME ID calls
 void get_time_id( time_id_type* time_id );
@@ -61,8 +62,9 @@ bool init_access_for_replay( const char* path = NULL );
 bool add_in_out_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size );
 bool add_rand_value_request_32_record( time_id_type timestamp, int dev_id, uint32_t rand_val );
 bool add_time_record( time_id_type timestamp, int dev_id, int point_id, uint32_t time_returned );
-bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, uint8_t ret_val );
+bool add_waitingfor_ret_record( time_id_type timestamp, int dev_id, unsigned char* data, int size );
 bool add_eeprom_ini_packet_record( time_id_type timestamp, int dev_id, int type, unsigned char* data, int size );
+bool add_dev_disconnect_record( time_id_type timestamp, int dev_id, uint8_t ret_val );
 
 bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size );
 bool read_next_record( READ_RECORD_HEAD* record, uint8_t* data, int data_max_size, unsigned int stop_pos );

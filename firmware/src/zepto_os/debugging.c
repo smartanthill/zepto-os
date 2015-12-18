@@ -150,7 +150,7 @@ void register_wait_request_ret_val( uint8_t ret_val, uint16_t bus_id )
 	bus_id_buff[0] = (uint8_t)bus_id;
 	bus_id_buff[1] = (uint8_t)(bus_id>>8);
 
-	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, bus_id_buff, 2, &ret_val, 1 );
+	uint16_t debug_packet_sz = form_debug_packet( buff, type_out, &ret_val, 1, bus_id_buff, 2 );
 	ret = send_debug_packet( buff, debug_packet_sz );
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 
@@ -235,10 +235,9 @@ void request_incoming_packet( MEMORY_HANDLE mem_h, uint16_t bus_id )
 
 	ZEPTO_DEBUG_ASSERT( data_in[0] == (uint8_t)bus_id );
 	ZEPTO_DEBUG_ASSERT( data_in[1] == (uint8_t)(bus_id>>8) );
-	data_in += 2;
 
 	zepto_parser_free_memory( mem_h );
-	zepto_write_block( mem_h, data_in, packet_data_sz );
+	zepto_write_block( mem_h, data_in + 2, packet_data_sz - 2 );
 }
 
 void request_outgoing_packet( MEMORY_HANDLE mem_h, uint16_t bus_id )
@@ -280,11 +279,11 @@ uint8_t request_wait_request_ret_val( uint16_t* bus_id )
 	uint8_t data_offset = preanalyze_debug_packet( buff, packet_data_sz, &packet_data_sz, type_out );
 	ZEPTO_DEBUG_ASSERT( packet_data_sz == 3 );
 	
-	*bus_id = buff[data_offset+1];
+	*bus_id = buff[data_offset+2];
 	*bus_id <<= 8;
-	*bus_id += buff[data_offset];
+	*bus_id += buff[data_offset+1];
 	
-	return buff[data_offset+2];
+	return buff[data_offset];
 }
 
 void request_time_val( uint8_t point_id, sa_time_val* tv )

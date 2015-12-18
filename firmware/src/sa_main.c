@@ -242,7 +242,7 @@ wait_for_comm_event:
 			{
 				case SIOT_MESH_RET_PASS_TO_SEND:
 				{
-					// TODO: implement
+					ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 					zepto_response_to_request( working_handle.packet_h );
 					goto hal_send;
 					break;
@@ -505,6 +505,7 @@ siotmp_rec:
 		{
 			case SIOT_MESH_RET_SEND_ACK_AND_PASS_TO_PROCESS:
 			{
+				ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 				zepto_response_to_request( MEMORY_HANDLE_MESH_ACK );
 				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, bus_id ); // TODO: ack_bus_id is to be passed here!
 				zepto_parser_free_memory( MEMORY_HANDLE_MESH_ACK );
@@ -518,9 +519,11 @@ siotmp_rec:
 			}
 			case SIOT_MESH_RET_PASS_TO_SEND:
 			{
+				ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 				goto hal_send;
 				break;
 			}
+#ifdef USED_AS_RETRANSMITTER
 			case SIOT_MESH_RET_SEND_ACK_AND_PASS_TO_SEND:
 			{
 				zepto_response_to_request( MEMORY_HANDLE_MESH_ACK );
@@ -529,6 +532,7 @@ siotmp_rec:
 				goto hal_send;
 				break;
 			}
+#endif // USED_AS_RETRANSMITTER
 			case SIOT_MESH_RET_OK:
 			case SIOT_MESH_RET_GARBAGE_RECEIVED:
 			case SIOT_MESH_RET_NOT_FOR_THIS_DEV_RECEIVED:
@@ -1056,6 +1060,7 @@ saoudp_send:
 		{
 			case SIOT_MESH_RET_PASS_TO_SEND:
 			{
+				ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 				// regular processing will be done below in the next block
 				break;
 			}
@@ -1078,6 +1083,7 @@ hal_send:
 #endif
 #else
 //			ZEPTO_DEBUG_ASSERT( bus_id == 0 ); // TODO: bus_id must be a part of send_packet() call; we are now just in the middle of development...
+			ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 			HAL_SEND_PACKET( working_handle.packet_h, bus_id );
 #endif
 			zepto_parser_free_memory( working_handle.packet_h );
