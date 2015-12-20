@@ -75,7 +75,7 @@ int sock_with_cl = -1;
 
 
 const char* inet_addr_as_string_with_cl = "127.0.0.1";
-uint16_t self_port_num = 7654 + AIR_SELF_ID;
+uint16_t self_port_num_base = 7654;
 
 uint16_t buffer_in_with_cl_pos;
 
@@ -129,7 +129,7 @@ bool communication_with_comm_layer_initialize()
 //	conn->sa_other_with_cl.sin_addr.s_addr = inet_addr( inet_addr_as_string_with_cl );
 
 	//sockets are unsigned shorts, htons(x) ensures x is in network byte order, set the port to 7654
-	sa_self_with_cl.sin_port = htons( self_port_num );
+	sa_self_with_cl.sin_port = htons( self_port_num_base + AIR_SELF_ID );
 //	conn->sa_other_with_cl.sin_port = htons( conn->other_port_num );
 
 	if (-1 == bind( sock_with_cl, (struct sockaddr *)&sa_self_with_cl, sizeof(sa_self_with_cl)))
@@ -139,7 +139,7 @@ bool communication_with_comm_layer_initialize()
 #else
 		int error = errno;
 #endif
-		ZEPTO_DEBUG_PRINTF_2( "bind sock_with_cl failed; error %d\n", error );
+		ZEPTO_DEBUG_PRINTF_3( "communication_with_comm_layer_initialize(): bind sock_with_cl failed; self_port_num = %d, error %d\n", self_port_num_base + AIR_SELF_ID, error );
 		CLOSE_SOCKET(sock_with_cl);
 		return false;
 	}

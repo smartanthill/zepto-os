@@ -298,7 +298,10 @@ int main( int argc, char *argv[] )
 	ZEPTO_DEBUG_PRINTF_1( "AIR started\n" );
 	ZEPTO_DEBUG_PRINTF_1( "===========\n\n" );
 	if ( !load_startup_data() )
+	{
+		ZEPTO_DEBUG_PRINTF_1( "Failed to load startup data\n" );
 		return 0;
+	}
 
 	if ( !air_main_init() )
 	{

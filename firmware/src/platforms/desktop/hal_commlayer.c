@@ -23,9 +23,9 @@ Copyright (C) 2015 OLogN Technologies AG
 #define MAX_PACKET_SIZE 80
 
 #ifdef USED_AS_RETRANSMITTER
-#define BUS_COUNT 1
-#else
 #define BUS_COUNT 2
+#else
+#define BUS_COUNT 1
 #endif
 
 
@@ -113,7 +113,6 @@ struct sockaddr_in sa_other[ BUS_COUNT ];
 
 const char* inet_addr_as_string = "127.0.0.1";
 #ifdef USED_AS_RETRANSMITTER
-#define BUS_COUNT 1
 uint16_t other_port_num = 7654;
 #else
 uint16_t other_port_num = 7655;
@@ -214,7 +213,7 @@ bool _communication_initialize_for_each_bus( uint8_t bus_id )
 	sa_other[ bus_id ].sin_addr.s_addr = inet_addr( inet_addr_as_string );
 
 	//sockets are unsigned shorts, htons(x) ensures x is in network byte order, set the port to 7654
-	sa_other[ bus_id ].sin_port = htons( other_port_num );
+	sa_other[ bus_id ].sin_port = htons( other_port_num + bus_id );
 
 	if (-1 == connect(sock[ bus_id ], (struct sockaddr *)&(sa_other[ bus_id ]), sizeof(struct sockaddr_in)))
 		{

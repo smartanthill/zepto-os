@@ -105,10 +105,17 @@ int main(int argc, char *argv[])
 {
 #ifdef SA_DYN_PAIRING_ENABLED 
 	if ( !load_device_ids() )
+	{
+		ZEPTO_DEBUG_PRINTF_1( "load_device_ids() failed\n" );
 		return 0;
+	}
 #endif // SA_DYN_PAIRING_ENABLED
 
-    sa_main_init();
+    if ( !sa_main_init() )
+	{
+		ZEPTO_DEBUG_PRINTF_1( "sa_main_init() failed\n" );
+		return 0;
+	}
 
     return sa_main_loop();
 }
