@@ -451,12 +451,12 @@ void zepto_mem_man_move_obj_max_right( REQUEST_REPLY_HANDLE mem_h )
 #ifdef SA_DEBUG
 static int ctr = 0;
 ctr++;
-if ( !( mem_h > MEMORY_HANDLE_ACQUIRABLE_START ) )
+if ( !( mem_h >= MEMORY_HANDLE_ACQUIRABLE_START ) )
 {
 	ZEPTO_DEBUG_PRINTF_3( "*** ctr-zepto_mem_man_move_obj_max_right = %d (before failure), mem_h = %d \n", ctr, mem_h );
 }
 #endif
-		ZEPTO_DEBUG_ASSERT( mem_h > MEMORY_HANDLE_ACQUIRABLE_START );
+		ZEPTO_DEBUG_ASSERT( mem_h >= MEMORY_HANDLE_ACQUIRABLE_START );
 		return;
 	}
 #endif
@@ -1774,7 +1774,8 @@ void zepto_convert_part_of_request_to_response( MEMORY_HANDLE mem_h, parser_obj*
 //	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
-	ZEPTO_DEBUG_ASSERT( po_start->mem_handle < MEMORY_HANDLE_MAX );
+//	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
+	ASSERT_MEMORY_HANDLE_VALID( po_start->mem_handle );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
 	MEMORY_HANDLE ret_handle = po_start->mem_handle;
 	po_start->mem_handle = MEMORY_HANDLE_INVALID;
@@ -1788,7 +1789,8 @@ void zepto_append_part_of_request_to_response( MEMORY_HANDLE mem_h, parser_obj* 
 //	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
-	ZEPTO_DEBUG_ASSERT( po_start->mem_handle < MEMORY_HANDLE_MAX );
+//	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
+	ASSERT_MEMORY_HANDLE_VALID( po_start->mem_handle );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
 	uint8_t* dest_buff = memory_object_append( mem_h, po_end->offset - po_start->offset );
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
@@ -1819,6 +1821,7 @@ void zepto_append_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, M
 	ZEPTO_DEBUG_ASSERT( mem_h != target_mem_h );
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
 //	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
+	ASSERT_MEMORY_HANDLE_VALID( target_mem_h );
 	ZEPTO_DEBUG_ASSERT( target_mem_h != MEMORY_HANDLE_INVALID );
 	// copying
 	uint8_t* dest_buff = memory_object_append( target_mem_h, memory_object_get_response_size( mem_h ) );
@@ -1853,7 +1856,7 @@ void zepto_copy_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem
 //	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
-	ZEPTO_DEBUG_ASSERT( po_start->mem_handle < MEMORY_HANDLE_MAX );
+	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
 	// cleanup
 	zepto_response_to_request( target_mem_h );
@@ -1872,7 +1875,7 @@ void zepto_append_part_of_request_to_response_of_another_handle( MEMORY_HANDLE m
 //	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
-	ZEPTO_DEBUG_ASSERT( po_start->mem_handle < MEMORY_HANDLE_MAX );
+	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
 	// copying
 	uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
