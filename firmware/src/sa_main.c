@@ -192,22 +192,6 @@ int sa_main_loop()
 	uint8_t ret_code;
 	sa_time_val currt;
 
-	// test setup values
-	// TODO: all code related to simulation and test generation MUST be moved out here ASAP!
-#if 0
-	bool wait_for_incoming_chain_with_timer = 0;
-#endif
-//	uint16_t wake_time_to_start_new_chain = 0;
-//	uint8_t wait_to_continue_processing = 0;
-//	uint16_t wake_time_continue_processing = 0;
-	// END OF test setup values
-
-/*	REQUEST_REPLY_HANDLE interchangable_handles[2];
-	interchangable_handles[0] = MEMORY_HANDLE_MAIN_LOOP_1;
-	interchangable_handles[1] = MEMORY_HANDLE_MAIN_LOOP_2;*/
-
-/*	REQUEST_REPLY_HANDLE working_handle = MEMORY_HANDLE_MAIN_LOOP_2;
-	REQUEST_REPLY_HANDLE packet_getting_handle = MEMORY_HANDLE_MAIN_LOOP_1;*/
 	PACKET_ASSOCIATED_DATA working_handle = {MEMORY_HANDLE_MAIN_LOOP_2, MEMORY_HANDLE_MAIN_LOOP_2_SAOUDP_ADDR, MEMORY_HANDLE_INVALID, 0 };
 	PACKET_ASSOCIATED_DATA packet_getting_handle = {MEMORY_HANDLE_MAIN_LOOP_1, MEMORY_HANDLE_MAIN_LOOP_1_SAOUDP_ADDR, MEMORY_HANDLE_INVALID, 0 };
 
@@ -318,101 +302,14 @@ wait_for_comm_event:
 				}
 				case WAIT_RESULTED_IN_PACKET:
 				{
-#if (defined MESH_TEST) && (defined SA_RETRANSMITTER)
-					uint8_t bus_id = hal_get_busid_of_last_packet();
-					ret_code = hal_get_packet_bytes( packet_getting_handle.packet_h );
-					switch ( ret_code )
-					{
-						case HAL_GET_PACKET_BYTES_FAILED:
-						{
-							zepto_parser_free_memory( packet_getting_handle.packet_h );
-							return 0; // TODO: think about recovery (later attempts, etc)
-							goto start_over;
-							break;
-						}
-						case HAL_GET_PACKET_BYTES_DONE:
-						{
-							zepto_response_to_request( packet_getting_handle.packet_h );
-							hal_send_packet( packet_getting_handle.packet_h, 1-bus_id, 0 );
-							goto wait_for_comm_event;
-							break;
-						}
-						default:
-						{
-							ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
-							ZEPTO_DEBUG_ASSERT( 0 );
-							return 0;
-							break;
-						}
-					}
-					goto wait_for_comm_event;
-#else							
 					// regular processing will be done below in the next block
 					HAL_GET_PACKET_BYTES( packet_getting_handle.packet_h, bus_id );
 					zepto_response_to_request( packet_getting_handle.packet_h );
 					SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
 					goto siotmp_rec;
-#if 0
-					ret_code = hal_get_packet_bytes( packet_getting_handle.packet_h );
-					switch ( ret_code )
-					{
-						case HAL_GET_PACKET_BYTES_FAILED:
-						{
-							zepto_parser_free_memory( packet_getting_handle.packet_h );
-							return 0; // TODO: think about recovery (later attempts, etc)
-							goto start_over;
-							break;
-						}
-						case HAL_GET_PACKET_BYTES_DONE:
-						{
-							zepto_response_to_request( packet_getting_handle.packet_h );
-//							REQUEST_REPLY_HANDLE tmp_h = working_handle; working_handle = packet_getting_handle; packet_getting_handle = tmp_h;
-							SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
-							goto siotmp_rec;
-							break;
-						}
-						default:
-						{
-							ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
-							ZEPTO_DEBUG_ASSERT( 0 );
-							return 0;
-							break;
-						}
-					}
-#endif // 0
-#endif
 				}
 				case WAIT_RESULTED_IN_TIMEOUT:
 				{
-//					ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
-#if 0
-					HAL_GET_TIME( &(currt) );
-					gdp_context = SAGDP_CONTEXT_UNKNOWN;
-					ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
-					if ( ret_code == SAGDP_RET_OK )
-					{
-						zepto_response_to_request( working_handle.packet_h );
-						zepto_response_to_request( working_handle.addr_h );
-						goto wait_for_comm_event;
-					}
-					else if ( ret_code == SAGDP_RET_NEED_NONCE )
-					{
-						ret_code = handler_sasp_get_packet_id( nonce );
-						ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-						ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
-						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
-						zepto_response_to_request( working_handle.packet_h );
-						zepto_response_to_request( working_handle.addr_h );
-						goto saspsend;
-						break;
-					}
-					else
-					{
-						ZEPTO_DEBUG_PRINTF_2( "ret_code = %d\n", ret_code );
-						ZEPTO_DEBUG_ASSERT( 0 );
-					}
-#endif // 0
-
 					goto wait_for_comm_event;
 					break;
 				}
@@ -431,50 +328,6 @@ wait_for_comm_event:
 			goto sasp_rec;
 #endif // TEST_RAM_CONSUMPTION
 
-
-#if 0
-//			if ( timer_val && getTime() >= wake_time )
-//			if ( tact.action )
-//			if ( sagdp_data.event_type ) //TODO: temporary solution
-			if ( 1 ) //TODO: temporary solution
-			{
-				ZEPTO_DEBUG_PRINTF_1( "no reply received; the last message (if any) will be resent by timer\n" );
-				HAL_GET_TIME( &(currt) );
-				gdp_context = SAGDP_CONTEXT_UNKNOWN;
-				ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, NULL, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
-				if ( ret_code == SAGDP_RET_OK )
-				{
-					zepto_response_to_request( working_handle.packet_h );
-					zepto_response_to_request( working_handle.addr_h );
-					goto wait_for_comm_event;
-				}
-				else if ( ret_code == SAGDP_RET_NEED_NONCE )
-				{
-					ret_code = handler_sasp_get_packet_id( nonce );
-					ZEPTO_DEBUG_ASSERT( ret_code == SASP_RET_NONCE );
-					ret_code = handler_sagdp_timer( &gdp_context, &currt, &wait_for, nonce, working_handle.packet_h, working_handle.addr_h/*, &sagdp_data*/ );
-		ZEPTO_DEBUG_PRINTF_2( "ret_code = %d\n", ret_code );
-					ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE && ret_code != SAGDP_RET_OK );
-					zepto_response_to_request( working_handle.packet_h );
-					zepto_response_to_request( working_handle.addr_h );
-					goto saspsend;
-					break;
-				}
-				else
-				{
-					ZEPTO_DEBUG_PRINTF_2( "ret_code = %d\n", ret_code );
-					ZEPTO_DEBUG_ASSERT( 0 );
-				}
-			}
-			else if ( wait_for_incoming_chain_with_timer && getTime() >= wake_time_to_start_new_chain )
-			{
-				wait_for_incoming_chain_with_timer = false;
-				zepto_response_to_request( working_handle.packet_h );
-				gdp_context = SAGDP_CONTEXT_UNKNOWN;
-				goto alt_entry;
-				break;
-			}
-#endif
 		}
 		if ( ret_code != COMMLAYER_RET_OK )
 		{
@@ -933,13 +786,6 @@ alt_entry:
 			{
 				// TODO: process reset
 				sagdp_init( &sagdp_context_app );
-//				bool start_now = tester_get_rand_val() % 3;
-//				bool start_now = true;
-//				wake_time_to_start_new_chain = start_now ? getTime() : getTime() + tester_get_rand_val() % 8;
-//				wake_time_to_start_new_chain = getTime();
-#if 0
-				wait_for_incoming_chain_with_timer = true;
-#endif
 				zepto_response_to_request( working_handle.packet_h );
 				goto saspsend;
 				break;
@@ -1065,20 +911,11 @@ saoudp_send:
 		}
 
 hal_send:
-#ifdef MESH_TEST
-#ifdef SA_RETRANSMITTER
-			ret_code = hal_send_packet( working_handle.packet_h, 0, 0 );
-#else
-			ret_code = hal_send_packet( working_handle.packet_h, 0, 0 );
-#endif
-#else
-//			ZEPTO_DEBUG_ASSERT( bus_id == 0 ); // TODO: bus_id must be a part of send_packet() call; we are now just in the middle of development...
 			ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 #if !defined USED_AS_RETRANSMITTER
 				ZEPTO_DEBUG_ASSERT( bus_id == 0 );
 #endif
 			HAL_SEND_PACKET( working_handle.packet_h, bus_id );
-#endif
 			zepto_parser_free_memory( working_handle.packet_h );
 			INCREMENT_COUNTER( 90, "MAIN LOOP, packet sent" );
 			ZEPTO_DEBUG_PRINTF_1("\nMessage replied to client\n");
