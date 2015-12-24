@@ -18,13 +18,13 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot_hal/hal_commlayer.h>
 #include <simpleiot_hal/hal_waiting.h>
 
-uint8_t hal_wait_for( waiting_for* wf )
+uint8_t hal_wait_for( waiting_for* wf, uint16_t* bus_id  )
 {
 	ZEPTO_DEBUG_ASSERT(0);
 	return 0;
 }
 
-uint8_t hal_get_packet_bytes( MEMORY_HANDLE mem_h )
+uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h, uint16_t bus_id)
 {
 	ZEPTO_DEBUG_ASSERT(0);
 	return 0;
@@ -36,7 +36,7 @@ bool communication_initialize()
 	return false;
 }
 
-uint8_t send_message( MEMORY_HANDLE mem_h )
+uint8_t send_message (MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
 	ZEPTO_DEBUG_ASSERT(0);
 	return 0;

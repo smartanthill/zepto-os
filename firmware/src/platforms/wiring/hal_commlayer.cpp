@@ -24,8 +24,11 @@ Copyright (C) 2015 OLogN Technologies AG
 
 uint8_t transport_num = 0;
 
-uint8_t hal_wait_for (waiting_for* wf)
+uint8_t hal_wait_for( waiting_for* wf, uint16_t* bus_id )
 {
+    ZEPTO_DEBUG_ASSERT( wf->wait_legs == 0 ); // not implemented
+    ZEPTO_DEBUG_ASSERT( wf->wait_i2c == 0 ); // not implemented
+
     for (;;)
     {
         transport_num = 0;
@@ -54,7 +57,7 @@ uint8_t wait_for_timeout (uint32_t timeout)
     return 0;
 }
 
-uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h)
+uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h, uint16_t bus_id)
 {
     sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t));
     serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t_config));
@@ -72,7 +75,7 @@ bool communication_initialize()
     return true;
 }
 
-uint8_t send_message (MEMORY_HANDLE mem_h)
+uint8_t send_message (MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
     sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t));
     serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t_config));
