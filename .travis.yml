@@ -27,6 +27,12 @@ language: python
 python:
     - "2.7"
 
+# Cache PlatformIO packages using Travis CI container-based infrastructure
+sudo: false
+cache:
+    directories:
+        - "~/.platformio"
+
 env:
     - SA_BASH_CMD="platformio --force run --project-dir=firmware"
     - SA_BASH_CMD="make build-cu"
