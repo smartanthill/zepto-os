@@ -37,9 +37,11 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #include "sa_main.h"
 
+DECLARE_AES_ENCRYPTION_KEY
 DECLARE_DEVICE_ID
 
 waiting_for wait_for;
+uint16_t bus_id;
 
 bool sa_main_init()
 {
@@ -76,7 +78,7 @@ int sa_main_loop()
 	{
 		// 1. Wait for an event
 wait_for_comm_event:
-			ret_code = hal_wait_for( &wait_for );
+			ret_code = hal_wait_for( &wait_for, &bus_id );
 
 			switch ( ret_code )
 			{
@@ -88,6 +90,7 @@ wait_for_comm_event:
 				}
 				case WAIT_RESULTED_IN_PACKET:
 				{
+#if 0
 //					uint8_t bus_id = hal_get_busid_of_last_packet();
 					ret_code = hal_get_packet_bytes( MEMORY_HANDLE_MAIN_LOOP_1 );
 					switch ( ret_code )
@@ -101,8 +104,7 @@ wait_for_comm_event:
 						case HAL_GET_PACKET_BYTES_DONE:
 						{
 							zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-//							hal_send_packet( MEMORY_HANDLE_MAIN_LOOP_1, 1-bus_id, 0 );
-							ret_code = send_message( MEMORY_HANDLE_MAIN_LOOP_1 );
+							ret_code = send_message( MEMORY_HANDLE_MAIN_LOOP_1, bus_id );
 							goto wait_for_comm_event;
 							break;
 						}
@@ -114,6 +116,10 @@ wait_for_comm_event:
 							break;
 						}
 					}
+#endif // 0
+					hal_get_packet_bytes( MEMORY_HANDLE_MAIN_LOOP_1, bus_id );
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					send_message( MEMORY_HANDLE_MAIN_LOOP_1, bus_id );
 					goto wait_for_comm_event;
 				}
 				case WAIT_RESULTED_IN_TIMEOUT:
