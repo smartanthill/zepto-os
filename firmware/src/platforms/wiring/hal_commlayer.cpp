@@ -22,7 +22,6 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "../../common/sadlp_protocol.h"
 #include "../../transports/serial/serial.h"
 
-uint8_t transport_num = 0;
 
 uint8_t hal_wait_for( waiting_for* wf, uint16_t* bus_id )
 {
@@ -31,7 +30,6 @@ uint8_t hal_wait_for( waiting_for* wf, uint16_t* bus_id )
 
     for (;;)
     {
-        transport_num = 0;
         if (wf->wait_packet)
         {
             uint16_t i;
@@ -41,7 +39,7 @@ uint8_t hal_wait_for( waiting_for* wf, uint16_t* bus_id )
                 serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[i].t_config));
                 if (handler_sadlp_is_packet(transport, tc))
                 {
-                    transport_num = i;
+                    *bus_id = i;
                     return WAIT_RESULTED_IN_PACKET;
                 }
             }
@@ -59,8 +57,8 @@ uint8_t wait_for_timeout (uint32_t timeout)
 
 uint8_t hal_get_packet_bytes (MEMORY_HANDLE mem_h, uint16_t bus_id)
 {
-    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t));
-    serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t_config));
+    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[bus_id].t));
+    serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[bus_id].t_config));
     return handler_sadlp_get_packet (transport, tc, mem_h);
 }
 
@@ -77,8 +75,8 @@ bool communication_initialize()
 
 uint8_t send_message (MEMORY_HANDLE mem_h, uint16_t bus_id )
 {
-    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t));
-    serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[transport_num].t_config));
+    sa_transport* transport = (sa_transport*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[bus_id].t));
+    serial_transport_config* tc = (serial_transport_config*) ZEPTO_PROG_CONSTANT_READ_PTR(&(buses[bus_id].t_config));
     return handler_sadlp_send_packet (transport, tc, mem_h);
 }
 
