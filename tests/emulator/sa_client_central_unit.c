@@ -102,13 +102,13 @@ int main_loop()
 		// should come back: 02 01 01 02 01 02 2d 2d 2d 2d 3e
 #endif
 
-	uint16_t bus_id;
+	uint16_t bus_or_device_id;
 
 	// MAIN LOOP
 	for (;;)
 	{
 wait_for_comm_event:
-		ret_code = wait_for_communication_event( 200, &bus_id ); // TODO: recalculation
+		ret_code = wait_for_communication_event( 200, &bus_or_device_id ); // TODO: recalculation
 //		zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 
 		switch ( ret_code )
@@ -117,7 +117,7 @@ wait_for_comm_event:
 			{
 				// regular processing will be done below in the next block
 //				ZEPTO_DEBUG_PRINTF_1( "just waiting...\n" );
-				ZEPTO_DEBUG_ASSERT( bus_id == 0xFFFF );
+				ZEPTO_DEBUG_ASSERT( bus_or_device_id == 0xFFFF );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 				goto wait_for_comm_event;
 				break;
@@ -125,15 +125,15 @@ wait_for_comm_event:
 			case COMMLAYER_RET_FROM_COMMM_STACK:
 			{
 				// regular processing will be done below in the next block
-				ZEPTO_DEBUG_ASSERT( bus_id == 0xFFFF );
-				ret_code = try_get_message_within_master( MEMORY_HANDLE_MAIN_LOOP_1, &bus_id );
+				ZEPTO_DEBUG_ASSERT( bus_or_device_id == 0xFFFF );
+				ret_code = try_get_message_within_master( MEMORY_HANDLE_MAIN_LOOP_1, &bus_or_device_id );
 				if ( ret_code == COMMLAYER_RET_FAILED )
 					return 0;
 				if ( ret_code == COMMLAYER_RET_OK_FOR_CU )
 				{
-					ZEPTO_DEBUG_ASSERT( bus_id == 0xFFFF );
+					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-					parser_obj po, po1;
+/*					parser_obj po, po1;
 					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
 					dev_in_use = zepto_parse_encoded_uint16( &po );
 					ZEPTO_DEBUG_ASSERT( dev_in_use > 0 );
@@ -142,14 +142,16 @@ wait_for_comm_event:
 					zepto_parser_init_by_parser( &po1, &po );
 					zepto_parse_skip_block( &po1, zepto_parsing_remaining_bytes( &po ) );
 					zepto_convert_part_of_request_to_response( MEMORY_HANDLE_MAIN_LOOP_1, &po, &po1 );
-					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );*/
+					dev_in_use = bus_or_device_id;
+					dev_in_use --;
 					ZEPTO_DEBUG_PRINTF_4( "msg received; rq_size: %d, rsp_size: %d, src: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use );
 					goto process_reply;
 					break;
 				}
 				else if ( ret_code == COMMLAYER_RET_OK_FOR_SLAVE )
 				{
-					ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
+					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 					ZEPTO_DEBUG_PRINTF_3( "msg is about to be sent to slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 					// [[AIR test block START]]
@@ -183,7 +185,7 @@ wait_for_comm_event:
 						ZEPTO_DEBUG_PRINTF_1("\nOutgoing message lost on the way...\n");
 					}
 #else // SA_ACTIVE_AIR_DEBUG
-					send_message( MEMORY_HANDLE_MAIN_LOOP_1, bus_id );
+					send_message( MEMORY_HANDLE_MAIN_LOOP_1, bus_or_device_id );
 #endif // SA_ACTIVE_AIR_DEBUG
 					// [[AIR test block END]]
 					goto wait_for_comm_event;
@@ -192,12 +194,20 @@ wait_for_comm_event:
 				else if ( ret_code == COMMLAYER_RET_OK_FOR_CU_ERROR )
 				{
 					// since now we implement just a testing helper, we simply show the content of the error
-					ZEPTO_DEBUG_ASSERT( bus_id == 0xFFFF );
+					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					parser_obj po;
 					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
-					uint8_t bt1 = zepto_parse_uint8( &po );
-					uint8_t bt2 = zepto_parse_uint8( &po );
-					ZEPTO_DEBUG_PRINTF_3("\n>>>>>>>>>>>>>>>>>>>>>>> Comm.Stack has reported an error: %d, %d\n", bt1, bt2 );
+					uint16_t sz = zepto_parsing_remaining_bytes( &po );
+					if ( sz >= 2 )
+					{
+						uint8_t bt1 = zepto_parse_uint8( &po );
+						uint8_t bt2 = zepto_parse_uint8( &po );
+						ZEPTO_DEBUG_PRINTF_4("\n>>>>>>>>>>>>>>>>>>>>>>> Comm.Stack has reported an error: [%d, %d] for device %d\n", bt1, bt2, bus_or_device_id );
+					}
+					else
+					{
+						ZEPTO_DEBUG_PRINTF_2("\n>>>>>>>>>>>>>>>>>>>>>>> Comm.Stack has reported an error for device %d\n", bus_or_device_id );
+					}
 					ZEPTO_DEBUG_ASSERT( 0 );
 				}
 				else
@@ -208,6 +218,7 @@ wait_for_comm_event:
 			case COMMLAYER_RET_FROM_DEV:
 			{
 				// regular processing will be done below in the next block
+				ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 				ret_code = hal_get_packet_bytes( MEMORY_HANDLE_MAIN_LOOP_1 );
 				if ( ret_code == HAL_GET_PACKET_BYTES_FAILED )
 					return 0;
@@ -245,7 +256,7 @@ wait_for_comm_event:
 						ZEPTO_DEBUG_PRINTF_1("\nIncoming message lost on the way...\n");
 					}
 #else // SA_ACTIVE_AIR_DEBUG
-				send_to_commm_stack_as_from_slave( MEMORY_HANDLE_MAIN_LOOP_1, bus_id );
+				send_to_commm_stack_as_from_slave( MEMORY_HANDLE_MAIN_LOOP_1, bus_or_device_id );
 #endif // SA_ACTIVE_AIR_DEBUG
 				// [[AIR test block END]]
 				goto wait_for_comm_event;
