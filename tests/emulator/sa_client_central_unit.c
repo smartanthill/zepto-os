@@ -213,7 +213,7 @@ wait_for_comm_event:
 					return 0;
 				ZEPTO_DEBUG_ASSERT( ret_code == HAL_GET_PACKET_BYTES_DONE );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-				ZEPTO_DEBUG_PRINTF_3( "msg received from slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+//				ZEPTO_DEBUG_PRINTF_3( "msg received from slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 				// [[AIR test block START]]
 #ifdef SA_ACTIVE_AIR_DEBUG
 				tester_registerIncomingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );

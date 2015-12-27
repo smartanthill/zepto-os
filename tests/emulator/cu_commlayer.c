@@ -474,7 +474,7 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id )
 
 uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destination )
 {
-	ZEPTO_DEBUG_PRINTF_1( "send_within_master() called...\n" );
+//	ZEPTO_DEBUG_PRINTF_1( "send_within_master() called...\n" );
 
 	uint16_t sz = memory_object_get_request_size( mem_h );
 	memory_object_request_to_response( mem_h );
@@ -503,18 +503,20 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destina
 #endif
 		return COMMLAYER_RET_FAILED;
 	}
+/*
 #ifdef _MSC_VER
 	ZEPTO_DEBUG_PRINTF_4( "[%d] message sent within master; mem_h = %d, size = %d\n", GetTickCount(), mem_h, sz );
 #else
 	ZEPTO_DEBUG_PRINTF_3( "[--] message sent within master; mem_h = %d, size = %d\n", mem_h, sz );
 #endif
+	*/
 	return COMMLAYER_RET_OK;
 }
 
 
 uint8_t wait_for_communication_event( unsigned int timeout, uint16_t* bus_id )
 {
-	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()... " );
+//	ZEPTO_DEBUG_PRINTF_1( "wait_for_communication_event()... " );
 
 	*bus_id = 0xFFFF;
 
@@ -556,21 +558,21 @@ uint8_t wait_for_communication_event( unsigned int timeout, uint16_t* bus_id )
 	{
 		if ( FD_ISSET(sock, &rfds) )
 		{
-			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
+//			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_DEV\n" );
 			*bus_id = 0; // TODO: if more than a single bus is supported...
 			return COMMLAYER_RET_FROM_DEV;
 		}
 		else
 		{
 			ZEPTO_DEBUG_ASSERT( FD_ISSET(sock_with_cl, &rfds) );
-			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_CENTRAL_UNIT\n" );
+//			ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_FROM_CENTRAL_UNIT\n" );
 			*bus_id = 0xFFFF; // not applicable
 			return COMMLAYER_RET_FROM_CENTRAL_UNIT;
 		}
 	}
     else
 	{
-		ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_TIMEOUT\n" );
+//		ZEPTO_DEBUG_PRINTF_1( "COMMLAYER_RET_TIMEOUT\n" );
         return COMMLAYER_RET_TIMEOUT;
 	}
 }
@@ -589,7 +591,7 @@ uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h, uint16_t target
 		parser_obj po;
 		zepto_parser_init( &po, mem_h );
 		uint16_t sz = zepto_parsing_remaining_bytes( &po );
-		ZEPTO_DEBUG_PRINTF_3( "entering send_to_commm_stack_as_from_master(), packet size = %d, target = %d\n", sz, target_id );
+//		ZEPTO_DEBUG_PRINTF_3( "entering send_to_commm_stack_as_from_master(), packet size = %d, target = %d\n", sz, target_id );
 		while ( sz-- )
 			ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
 		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
