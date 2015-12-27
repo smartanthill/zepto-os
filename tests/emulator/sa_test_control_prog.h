@@ -47,6 +47,12 @@ typedef struct _DefaultTestingControlProgramState
 	uint16_t chain_ini_size;
 	uint16_t reply_to_id;
 	uint16_t self_id;
+
+	// timing
+	uint32_t time_rq_sent;
+	uint32_t period_ctrs[24];
+	uint8_t max_range_used;
+	uint32_t interval_total_cnt;
 } DefaultTestingControlProgramState;
 
 uint8_t default_test_control_program_init( void* control_prog_state, uint16_t dev_id );

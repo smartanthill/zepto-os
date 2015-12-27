@@ -22,7 +22,9 @@ Copyright (C) 2015 OLogN Technologies AG
 
 //#include <stdio.h> // for sprintf() in fake implementation
 #include <stdlib.h> // for get_rand_val()
+#include <time.h> // for time()
 uint16_t tester_get_rand_val(){	return (uint16_t)( rand() );}
+uint32_t tester_get_time_stamp(){	return time(0);}
 
 //DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[10];
 
@@ -37,6 +39,11 @@ uint8_t default_test_control_program_init( void* control_prog_state, uint16_t de
 	ps->state = 0;
 	ps->currChainIdBase[0] = 0;
 	ps->currChainIdBase[1] = MASTER_SLAVE_BIT << 15;
+	// timing
+	ps->time_rq_sent = 0;
+	ps->max_range_used = 0;
+	ps->interval_total_cnt = 0;
+	ZEPTO_MEMSET( ps->period_ctrs, 0, sizeof(ps->period_ctrs) );
 	return CONTROL_PROG_OK;
 }
 
@@ -49,6 +56,8 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 	PRINT_COUNTERS();
 
 	DefaultTestingControlProgramState* ps = (DefaultTestingControlProgramState*)control_prog_state;
+
+	ps->time_rq_sent = tester_get_time_stamp();
 
 	ps->first_byte = SAGDP_P_STATUS_FIRST;
 
@@ -134,6 +143,8 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 {
 	DefaultTestingControlProgramState* ps = (DefaultTestingControlProgramState*)control_prog_state;
 
+	ps->time_rq_sent = tester_get_time_stamp();
+
 	zepto_response_to_request( reply );
 
 	zepto_write_uint8( reply, ps->first_byte );
@@ -211,6 +222,28 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 //	*wait_to_process_time = 0;
 
 	DefaultTestingControlProgramState* ps = (DefaultTestingControlProgramState*)control_prog_state;
+
+	uint32_t time_diff = tester_get_time_stamp() - ps->time_rq_sent;
+//	time_diff >>= 5; // thus reducing to 32 ms periods
+	uint8_t time_range = 0;
+	while ( time_diff ) { time_range++; time_diff >>= 1; }
+	(ps->period_ctrs[time_range] )++;
+	(ps->interval_total_cnt)++;
+	if ( ps->max_range_used < time_range )
+		ps->max_range_used = time_range;
+	if ( ( ps->interval_total_cnt & 0xFF ) == 0 )
+	{
+		ZEPTO_DEBUG_PRINTF_3( "\n*** DevId = %d, total count = %d ***\n", ps->dev_id, ps->interval_total_cnt );
+		uint8_t ii;
+		for ( ii=0; ii<=ps->max_range_used; ii++ )
+		{
+			if ( ii < 5 )
+				ZEPTO_DEBUG_PRINTF_2( " %d |", ps->period_ctrs[ii] );
+			else
+				ZEPTO_DEBUG_PRINTF_2( "| %d ", ps->period_ctrs[ii] );
+		}
+		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
+	}
 
 	INCREMENT_COUNTER( 4, "master_continue(), packet received" );
 
