@@ -40,3 +40,8 @@ void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value)
 {
     gpio_write((gpio_t*)pin->pin_obj, value);
 }
+
+uint16_t hapi_gpio_analog_read (hapi_gpio_t* pin)
+{
+    return 0;
+}
