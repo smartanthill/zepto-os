@@ -15,39 +15,40 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __HAPI_GPIO_H__
-#define __HAPI_GPIO_H__
+
+#if !defined __SA_DHT_PLUGIN_H__
+#define __SA_DHT_PLUGIN_H__
 
 #include <simpleiot/siot_common.h>
+#include <simpleiot/siot_data_types.h>
+#include <simpleiot_hal/hal_waiting.h>
+#include "../../common/hapi_gpio.h"
 
-typedef enum {
-  HAPI_GPIO_TYPE_INPUT,
-  HAPI_GPIO_TYPE_OUTPUT
-} hapi_gpio_mode;
-
-enum {
-  HAPI_GPIO_VALUE_LOW,
-  HAPI_GPIO_VALUE_HIGH
-};
-
-typedef struct _hapi_gpio_t
+typedef struct _dht_plugin_config
 {
-  uint32_t pin_name;
-  void* pin_obj;
-} hapi_gpio_t;
+    hapi_gpio_t* dht_pin;
+} dht_plugin_config;
+
+typedef struct _dht_plugin_state
+{
+    uint8_t dummy_byte;
+} dht_plugin_state;
+
+typedef struct _dht_plugin_persistent_state
+{
+    uint8_t dummy_byte;
+} dht_plugin_persistent_state;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void hapi_gpio_init (hapi_gpio_t* pin);
-void hapi_gpio_set_mode (hapi_gpio_t* pin, hapi_gpio_mode mode);
-uint8_t hapi_gpio_read (hapi_gpio_t* pin);
-void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value);
-uint16_t hapi_gpio_analog_read (hapi_gpio_t* pin);
+uint8_t dht_plugin_handler_init( const void* plugin_config, void* plugin_state );
+uint8_t dht_plugin_exec_init( const void* plugin_config, void* plugin_state );
+uint8_t dht_plugin_handler( const void* plugin_config, void* plugin_persistent_state, void* plugin_state, parser_obj* command, MEMORY_HANDLE reply, waiting_for* wf, uint8_t first_byte );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __HAPI_GPIO_H__
+#endif // __SA_DHT_PLUGIN_H__

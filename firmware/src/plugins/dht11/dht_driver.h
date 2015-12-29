@@ -15,39 +15,32 @@ Copyright (C) 2015 OLogN Technologies AG
     51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 *******************************************************************************/
 
-#if !defined __HAPI_GPIO_H__
-#define __HAPI_GPIO_H__
+
+#if !defined __SA_DHT_DRIVER_H__
+#define __SA_DHT_DRIVER_H__
 
 #include <simpleiot/siot_common.h>
+#include "../../common/hapi_gpio.h"
+
+typedef struct _dht_data
+{
+    uint16_t temperature;
+    uint16_t humidity;
+} dht_data;
 
 typedef enum {
-  HAPI_GPIO_TYPE_INPUT,
-  HAPI_GPIO_TYPE_OUTPUT
-} hapi_gpio_mode;
-
-enum {
-  HAPI_GPIO_VALUE_LOW,
-  HAPI_GPIO_VALUE_HIGH
-};
-
-typedef struct _hapi_gpio_t
-{
-  uint32_t pin_name;
-  void* pin_obj;
-} hapi_gpio_t;
+  DHT_RESULT_ERROR,
+  DHT_RESULT_OK
+} dht_operation_result_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void hapi_gpio_init (hapi_gpio_t* pin);
-void hapi_gpio_set_mode (hapi_gpio_t* pin, hapi_gpio_mode mode);
-uint8_t hapi_gpio_read (hapi_gpio_t* pin);
-void hapi_gpio_write (hapi_gpio_t* pin, uint8_t value);
-uint16_t hapi_gpio_analog_read (hapi_gpio_t* pin);
+dht_operation_result_t dht_get_data(hapi_gpio_t* pin_dht, dht_data* data);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif // __HAPI_GPIO_H__
+#endif // __SA_DHT_DRIVER_H__

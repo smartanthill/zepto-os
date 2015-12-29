@@ -26,7 +26,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 typedef struct _write_digital_pin_plugin_config
 {
-    hapi_gpio_t* pin;
+    hapi_gpio_t* pin_num;
 } write_digital_pin_plugin_config;
 
 typedef struct _write_digital_pin_plugin_state
