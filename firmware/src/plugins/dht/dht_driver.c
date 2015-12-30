@@ -43,10 +43,11 @@ dht_operation_result_t dht_get_data(hapi_gpio_t* pin_dht, dht_data* data)
     uint8_t result = 0;
     uint8_t _data[5] = {0};
 
-    for (uint8_t i=0; i<5; i++)
+    uint8_t i, j;
+    for (i=0; i<5; i++)
     {
         result = 0;
-        for(uint8_t j=0; j<8; j++)
+        for(j=0; j<8; j++)
         {
             while(!(hapi_gpio_read (pin_dht)));
             count = 0;
