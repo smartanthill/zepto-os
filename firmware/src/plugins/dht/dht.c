@@ -16,7 +16,7 @@ Copyright (C) 2015 OLogN Technologies AG
 *******************************************************************************/
 
 
-#include "dht11.h"
+#include "dht.h"
 #include "dht_driver.h"
 #include <simpleiot/siot_bodypart_list_common.h>
 #include "../../common/hapi_gpio.h"
@@ -37,7 +37,7 @@ uint8_t dht_plugin_handler( const void* plugin_config, void* plugin_persistent_s
 {
     dht_plugin_config* pc = (dht_plugin_config*)plugin_config;
     dht_data data = {0};
-    if (dht22_get_data(pc->dht_pin, &data) == DHT_RESULT_OK)
+    if (dht_get_data(pc->dht_pin, &data) == DHT_RESULT_OK)
     {
         zepto_write_uint8(reply, (data.temperature>>8));
         return PLUGIN_OK;

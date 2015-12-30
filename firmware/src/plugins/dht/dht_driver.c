@@ -41,7 +41,7 @@ dht_operation_result_t dht_get_data(hapi_gpio_t* pin_dht, dht_data* data)
     }
 
     uint8_t result = 0;
-    uint8_t data[5] = {0};
+    uint8_t _data[5] = {0};
 
     for (uint8_t i=0; i<5; i++)
     {
@@ -68,18 +68,18 @@ dht_operation_result_t dht_get_data(hapi_gpio_t* pin_dht, dht_data* data)
                 result = (result<<1);
             }
         }
-        data[i] = result;
+        _data[i] = result;
     }
 
-    uint16_t  crc1 = (data[0] + data[1] + data[2] + data[3]);
+    uint16_t  crc1 = (_data[0] + _data[1] + _data[2] + _data[3]);
     crc1 &= ~(1<<8);
-    if (data[4] != crc1)
+    if (_data[4] != crc1)
     {
         return DHT_RESULT_ERROR;
     }
 
-    data->temperature = (data[2] <<8)+ data[3];
-    data->humidity = (data[0]<<8) +data[1];
+    data->temperature = (_data[2] <<8)+ _data[3];
+    data->humidity = (_data[0]<<8) +_data[1];
 
     return DHT_RESULT_OK;
 }
