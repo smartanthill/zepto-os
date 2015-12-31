@@ -24,6 +24,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #ifdef SA_ACTIVE_AIR_DEBUG
 #include "test_generator.h"
 #endif // SA_ACTIVE_AIR_DEBUG
+#include "cu_persistent_storage.h"
 
 #include <stdio.h>
 
@@ -385,10 +386,52 @@ void set_port_from_command_line(int argc, char *argv[])
 	}
 }
 
+char* get_persistent_storage_path_from_command_line(int argc, char *argv[])
+{
+	uint8_t i;
+	for ( i = 0; i<argc; i++ )
+		if ( ZEPTO_MEMCMP( argv[i], "--psp=", 6 ) == 0 )
+		{
+			ZEPTO_DEBUG_PRINTF_2( "persistent storage is at: \"%s\"\n", argv[i]+6 );
+			return argv[i]+6;
+		}
+	ZEPTO_DEBUG_PRINTF_1( "default persistent storage location will be used\n" );
+	return NULL;
+}
+
+int init_eeprom(int argc, char *argv[])
+{
+	char* persistent_storage_path = get_persistent_storage_path_from_command_line( argc, argv );
+	uint8_t ret_code = hal_init_eeprom_access( persistent_storage_path );
+	switch ( ret_code )
+	{
+		case HAL_PS_INIT_FAILED:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "init_eeprom_access() failed\n" );
+			return 0;
+		}
+		case HAL_PS_INIT_OK:
+		{
+			ZEPTO_DEBUG_PRINTF_1( "hal_init_eeprom_access() passed\n" );
+			break;
+		}
+		case HAL_PS_INIT_OK_NEEDS_INITIALIZATION:
+		{
+			init_default_storage();
+			ZEPTO_DEBUG_PRINTF_1( "initializing eeprom done\n" );
+			break;
+		}
+	}
+
+	return 1;
+}
+
 int main(int argc, char *argv[])
 {
 	set_port_from_command_line( argc, argv );
 	zepto_mem_man_init_memory_management();
+	if ( !init_eeprom( argc, argv ) )
+		return 0;
 
 	return main_loop();
 }
