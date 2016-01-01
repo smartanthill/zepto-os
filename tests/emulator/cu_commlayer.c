@@ -616,6 +616,28 @@ uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h, uint16_t bus_id 
 	return send_within_master( mem_h, bus_id, 40 );
 }
 
+uint8_t send_to_commm_stack_initializing_packet( MEMORY_HANDLE mem_h, uint16_t ordinal )
+{
+#if 0//def _DEBUG
+	parser_obj po;
+	zepto_parser_init( &po, mem_h );
+	uint16_t sz = zepto_parsing_remaining_bytes( &po );
+	ZEPTO_DEBUG_PRINTF_2( "send_to_commm_stack_as_from_slave(), packet size = %d\n", sz );
+	while ( sz-- )
+		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
+	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
+#endif
+	return send_within_master( mem_h, ordinal, 55 );
+}
+
+uint8_t send_to_commm_stack_end_of_initialization_packet( uint16_t count )
+{
+	MEMORY_HANDLE mem_h = acquire_memory_handle();
+	uint8_t ret_code = send_within_master( mem_h, count, 56 );
+	release_memory_handle( mem_h );
+	return ret_code;
+}
+
 
 
 // from comm.stack: 35: intended for slave; 37: intended for central unit

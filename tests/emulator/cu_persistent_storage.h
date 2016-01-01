@@ -27,6 +27,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #define MAX_FILELDS_PER_RECORD 16
 #define MAX_FIELD_SIZE 512
+#define MAX_FIELD_SIZE_AVAILABLE ( MAX_FIELD_SIZE - 2 )
 #define MAX_DEVICE_COUNT 64
 
 #ifdef __cplusplus

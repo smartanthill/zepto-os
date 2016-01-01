@@ -29,6 +29,75 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <stdio.h>
 
 
+#define MAX_INSTANCES_SUPPORTED 3
+
+void test_mode_load_default_test_project()
+{
+	// we assume that the first field represents basic information and is structured as follows:
+	// | device_id (2 bytes, low, high) | key (16 bytes) | is_retransmitter (1 byte) | bus_type_count (1 byte) | bus_type_list (variable size) |
+	uint8_t base_key[16] = { 	0x00, 0x01,	0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, };
+	uint8_t bus_types[2];
+	bus_types[0] = 0;
+	bus_types[1] = 1;
+	uint8_t base_record[MAX_FIELD_SIZE_AVAILABLE];
+	unsigned int i, j;
+	for ( i=0; i<MAX_INSTANCES_SUPPORTED; i++ )
+	{
+		uint16_t device_id = (uint16_t)(i + 1);
+		base_record[0] = (uint8_t)device_id;
+		base_record[1] = (uint8_t)(device_id>>8);
+		for ( j=0; j<16; j++ )
+			base_record[2+j] = base_key[j] + ( device_id << 4 );
+		if ( i == 0 )
+		{
+			base_record[18] = 1;
+			base_record[19] = 2; // bus type count
+			base_record[20] = 0;
+			base_record[21] = 1;
+			write_field( device_id, 0, 22, base_record );
+		}
+		else
+		{
+			base_record[18] = 0;
+			base_record[19] = 1; // bus type count
+			base_record[20] = 1;
+			write_field( device_id, 0, 21, base_record );
+		}
+	}
+}
+
+void test_mode_reload_unconditionally()
+{
+	return;
+	init_default_storage();
+	test_mode_load_default_test_project();
+}
+
+
+int run_init_loop()
+{
+	unsigned int i;
+	uint8_t base_record[MAX_FIELD_SIZE_AVAILABLE];
+	uint16_t data_sz;
+	MEMORY_HANDLE mem_h = acquire_memory_handle();
+	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
+	for ( i=0; i<MAX_DEVICE_COUNT; i++ )
+	{
+		read_field( i, 0, &data_sz, base_record );
+		if ( data_sz )
+		{
+			zepto_write_block( mem_h, base_record, data_sz );
+			zepto_response_to_request( mem_h );
+			send_to_commm_stack_initializing_packet( mem_h, i );
+			zepto_parser_free_memory( mem_h );
+		}
+	}
+	send_to_commm_stack_end_of_initialization_packet( i );
+	release_memory_handle( mem_h );
+	return 1;
+}
+
+
 int main_loop()
 {
 #ifdef ENABLE_COUNTER_SYSTEM
@@ -66,14 +135,13 @@ int main_loop()
 
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
 
-#define MAX_INSTANCES_SUPPORTED 3
 
 
 	DefaultTestingControlProgramState DefaultTestingControlProgramState_struct[ MAX_INSTANCES_SUPPORTED ];
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
 		default_test_control_program_init( DefaultTestingControlProgramState_struct + dev_in_use, dev_in_use + 1 );
 
-	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
+	for ( dev_in_use=1; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
 //	dev_in_use=1;
 	{
 		ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct + dev_in_use, MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -418,6 +486,7 @@ int init_eeprom(int argc, char *argv[])
 		case HAL_PS_INIT_OK_NEEDS_INITIALIZATION:
 		{
 			init_default_storage();
+			test_mode_load_default_test_project();
 			ZEPTO_DEBUG_PRINTF_1( "initializing eeprom done\n" );
 			break;
 		}
@@ -433,5 +502,8 @@ int main(int argc, char *argv[])
 	if ( !init_eeprom( argc, argv ) )
 		return 0;
 
+	test_mode_reload_unconditionally();
+
+	run_init_loop();
 	return main_loop();
 }

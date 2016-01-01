@@ -40,6 +40,21 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #define COMMLAYER_RET_FROM_COMMM_STACK 10
 
+// sent packet status
+#define COMMLAYER_RET_OK_CU_FOR_SLAVE 38
+#define COMMLAYER_RET_OK_SLAVE_FOR_CU 40
+#define COMMLAYER_RET_OK_INITIALIZER 50
+#define COMMLAYER_RET_OK_INITIALIZER_LAST 51
+#define COMMLAYER_RET_OK_ADD_DEVICE 55
+#define COMMLAYER_RET_OK_SYNC_CONFIRMATION 57
+
+// received packet status
+#define COMMLAYER_STATUS_FOR_CU_FROM_SLAVE 35
+#define COMMLAYER_STATUS_FOR_SLAVE 37
+#define COMMLAYER_STATUS_FOR_CU_SLAVE_ERROR 47
+#define COMMLAYER_STATUS_FOR_CU_SYNC_REQUEST 55
+
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -58,6 +73,8 @@ uint8_t wait_for_communication_event( unsigned int timeout, uint16_t* bus_id );
 uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id );
 //uint8_t send_to_commm_stack_as_from_master( MEMORY_HANDLE mem_h );
 //uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h );
+uint8_t send_to_commm_stack_initializing_packet( MEMORY_HANDLE mem_h, uint16_t ordinal );
+uint8_t send_to_commm_stack_end_of_initialization_packet( uint16_t count );
 
 #ifdef __cplusplus
 }
