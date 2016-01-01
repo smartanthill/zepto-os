@@ -452,7 +452,10 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id )
 	memory_object_response_to_request( mem_h );
 	memory_object_cut_and_make_response( mem_h, 0, sz );
 
-	ZEPTO_DEBUG_ASSERT( packet_src == 37 || packet_src == 35 || packet_src == 47 );
+//	ZEPTO_DEBUG_ASSERT( packet_src == 37 || packet_src == 35 || packet_src == 47 );
+	if ( ret ==  COMMLAYER_RET_FAILED )
+		return COMMLAYER_STATUS_FAILED;
+	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
 #if 0//def _DEBUG
 		uint16_t debug_sz = memory_object_get_response_size( mem_h );
 		uint8_t* debug_ptr = memory_object_get_response_ptr( mem_h );
@@ -461,15 +464,15 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id )
 			ZEPTO_DEBUG_PRINTF_2( "%02x ", (debug_ptr++)[0] );
 		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 #endif
-	if ( packet_src == 37 )
+/*	if ( packet_src == 37 )
 		return COMMLAYER_RET_OK_FOR_CU;
 	if ( packet_src == 35 )
 		return COMMLAYER_RET_OK_FOR_SLAVE;
 	if ( packet_src == 47 )
 		return COMMLAYER_RET_OK_FOR_CU_ERROR;
 
-
-	return ret;
+	return ret;*/
+	return packet_src;
 }
 
 uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destination )

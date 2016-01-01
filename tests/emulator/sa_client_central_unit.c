@@ -196,29 +196,19 @@ wait_for_comm_event:
 				// regular processing will be done below in the next block
 				ZEPTO_DEBUG_ASSERT( bus_or_device_id == 0xFFFF );
 				ret_code = try_get_message_within_master( MEMORY_HANDLE_MAIN_LOOP_1, &bus_or_device_id );
-				if ( ret_code == COMMLAYER_RET_FAILED )
+				if ( ret_code == COMMLAYER_STATUS_FAILED )
 					return 0;
-				if ( ret_code == COMMLAYER_RET_OK_FOR_CU )
+				if ( ret_code == COMMLAYER_STATUS_FOR_CU_FROM_SLAVE )
 				{
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-/*					parser_obj po, po1;
-					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
-					dev_in_use = zepto_parse_encoded_uint16( &po );
-					ZEPTO_DEBUG_ASSERT( dev_in_use > 0 );
-					ZEPTO_DEBUG_PRINTF_2( "Packet received from device %d\n", dev_in_use );
-					dev_in_use --;
-					zepto_parser_init_by_parser( &po1, &po );
-					zepto_parse_skip_block( &po1, zepto_parsing_remaining_bytes( &po ) );
-					zepto_convert_part_of_request_to_response( MEMORY_HANDLE_MAIN_LOOP_1, &po, &po1 );
-					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );*/
 					dev_in_use = bus_or_device_id;
 					dev_in_use --;
 					ZEPTO_DEBUG_PRINTF_4( "msg received; rq_size: %d, rsp_size: %d, src: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use );
 					goto process_reply;
 					break;
 				}
-				else if ( ret_code == COMMLAYER_RET_OK_FOR_SLAVE )
+				else if ( ret_code == COMMLAYER_STATUS_FOR_SLAVE )
 				{
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -260,7 +250,7 @@ wait_for_comm_event:
 					goto wait_for_comm_event;
 					break;
 				}
-				else if ( ret_code == COMMLAYER_RET_OK_FOR_CU_ERROR )
+				else if ( ret_code == COMMLAYER_STATUS_FOR_CU_SLAVE_ERROR )
 				{
 					// since now we implement just a testing helper, we simply show the content of the error
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
@@ -278,6 +268,53 @@ wait_for_comm_event:
 						ZEPTO_DEBUG_PRINTF_2("\n>>>>>>>>>>>>>>>>>>>>>>> Comm.Stack has reported an error for device %d\n", bus_or_device_id );
 					}
 					ZEPTO_DEBUG_ASSERT( 0 );
+				}
+				else if ( ret_code == COMMLAYER_STATUS_FOR_CU_SYNC_REQUEST )
+				{
+					parser_obj po;
+					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
+					uint8_t rq_type = zepto_parse_uint8( &po );
+					switch ( rq_type )
+					{
+						case REQUEST_WRITE_DATA:
+						{
+							uint8_t tmp = zepto_parse_uint8( &po );
+							uint16_t dev_id = zepto_parse_uint8( &po );
+							dev_id <<= 8;
+							dev_id += tmp;
+							uint8_t field_id = zepto_parse_uint8( &po );
+							tmp = zepto_parse_uint8( &po );
+							uint16_t sz = zepto_parse_uint8( &po );
+							sz <<= 8;
+							sz += tmp;
+							uint8_t base_record[MAX_FIELD_SIZE_AVAILABLE];
+							ZEPTO_DEBUG_ASSERT( zepto_parsing_remaining_bytes( &po ) == sz );
+							zepto_parse_read_block( &po, base_record, sz );
+							write_field( dev_id, field_id, sz, base_record );
+							// TODO: prepare send reply (confirmation)
+							break;
+						}
+						case REQUEST_READ_DATA:
+						{
+							uint8_t tmp = zepto_parse_uint8( &po );
+							uint16_t dev_id = zepto_parse_uint8( &po );
+							dev_id <<= 8;
+							dev_id += tmp;
+							uint8_t field_id = zepto_parse_uint8( &po );
+
+							uint16_t sz;
+							uint8_t base_record[MAX_FIELD_SIZE_AVAILABLE];
+							read_field( dev_id, field_id, &sz, base_record );
+
+							// TODO: prepare and send reply (requested data)
+							break;
+						}
+						default:
+						{
+							ZEPTO_DEBUG_ASSERT( 0 == "Unexpected request type" );
+							break;
+						}
+					}
 				}
 				else
 				{
