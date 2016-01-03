@@ -176,7 +176,7 @@ uint16_t zepto_mem_man_parse_encoded_uint16_no_size_checks_backward( uint8_t* bu
 uint16_t zepto_mem_man_ever_reached = 0;
 
 void zepto_mem_man_print_mem_stats()
-{
+{return;
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 #ifdef SA_DEBUG
 	if ( skip_sanity_check ) return;

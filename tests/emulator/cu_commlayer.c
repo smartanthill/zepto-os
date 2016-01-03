@@ -452,10 +452,10 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id )
 	memory_object_response_to_request( mem_h );
 	memory_object_cut_and_make_response( mem_h, 0, sz );
 
-//	ZEPTO_DEBUG_ASSERT( packet_src == 37 || packet_src == 35 || packet_src == 47 );
 	if ( ret ==  COMMLAYER_RET_FAILED )
-		return COMMLAYER_STATUS_FAILED;
+		return COMMLAYER_TO_CU_STATUS_RESERVED_FAILED;
 	ZEPTO_DEBUG_ASSERT( ret == COMMLAYER_RET_OK );
+
 #if 0//def _DEBUG
 		uint16_t debug_sz = memory_object_get_response_size( mem_h );
 		uint8_t* debug_ptr = memory_object_get_response_ptr( mem_h );
@@ -464,15 +464,8 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id )
 			ZEPTO_DEBUG_PRINTF_2( "%02x ", (debug_ptr++)[0] );
 		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 #endif
-/*	if ( packet_src == 37 )
-		return COMMLAYER_RET_OK_FOR_CU;
-	if ( packet_src == 35 )
-		return COMMLAYER_RET_OK_FOR_SLAVE;
-	if ( packet_src == 47 )
-		return COMMLAYER_RET_OK_FOR_CU_ERROR;
 
-	return ret;*/
-	return packet_src;
+		return packet_src;
 }
 
 uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destination )
@@ -482,7 +475,7 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destina
 	uint16_t sz = memory_object_get_request_size( mem_h );
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
-	ZEPTO_DEBUG_ASSERT( sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
+	ZEPTO_DEBUG_ASSERT( destination == COMMLAYER_FROM_CU_STATUS_INITIALIZER_LAST || sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
 	uint8_t* buff = memory_object_prepend( mem_h, 5 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
@@ -616,7 +609,7 @@ uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h, uint16_t bus_id 
 		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
 	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 #endif
-	return send_within_master( mem_h, bus_id, 40 );
+	return send_within_master( mem_h, bus_id, COMMLAYER_FROM_CU_STATUS_FROM_SLAVE );
 }
 
 uint8_t send_to_commm_stack_initializing_packet( MEMORY_HANDLE mem_h, uint16_t ordinal )
@@ -630,18 +623,18 @@ uint8_t send_to_commm_stack_initializing_packet( MEMORY_HANDLE mem_h, uint16_t o
 		ZEPTO_DEBUG_PRINTF_2( "%02x ", zepto_parse_uint8( &po ) );
 	ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 #endif
-	return send_within_master( mem_h, ordinal, 55 );
+	return send_within_master( mem_h, ordinal, COMMLAYER_FROM_CU_STATUS_INITIALIZER );
 }
 
 uint8_t send_to_commm_stack_end_of_initialization_packet( uint16_t count )
 {
 	MEMORY_HANDLE mem_h = acquire_memory_handle();
-	uint8_t ret_code = send_within_master( mem_h, count, 56 );
+	uint8_t ret_code = send_within_master( mem_h, count, COMMLAYER_FROM_CU_STATUS_INITIALIZER_LAST );
 	release_memory_handle( mem_h );
 	return ret_code;
 }
 
-
-
-// from comm.stack: 35: intended for slave; 37: intended for central unit
-//   to comm.stack: 40: received from slave; 38: received from central unit
+uint8_t send_to_commm_stack_reply( MEMORY_HANDLE mem_h, uint16_t packet_id )
+{
+	return send_within_master( mem_h, packet_id, COMMLAYER_FROM_CU_STATUS_SYNC_CONFIRMATION );
+}

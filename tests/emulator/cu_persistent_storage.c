@@ -44,7 +44,7 @@ HANDLE hfile = INVALID_HANDLE_VALUE;
 uint8_t hal_init_eeprom_access( char* path )
 {
 	FILE* ftest;
-	if ( path == NULL ) path = "sa-eeprom-master.dat";
+	if ( path == NULL ) path = "sa_client_dummy_db.dat";
 
 	bool exists = false;
 	ftest = fopen( path, "r" );
@@ -69,7 +69,7 @@ uint8_t hal_init_eeprom_access( char* path )
 		return HAL_PS_INIT_FAILED;
 }
 
-bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint16_t address )
+bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint32_t address )
 {
 	int res;
 	res = lseek( efile, address, SEEK_SET);
@@ -81,7 +81,7 @@ bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint16_t address )
 	return true;
 }
 
-bool hal_eeprom_read( uint8_t* data, uint16_t size, uint16_t address)
+bool hal_eeprom_read( uint8_t* data, uint16_t size, uint32_t address)
 {
 	int res;
 	res = lseek( efile, address, SEEK_SET);
@@ -137,7 +137,7 @@ bool read_field( uint16_t device_id, uint8_t field_id, uint16_t* data_sz, uint8_
 
 	*data_sz = szbts[1]; *data_sz <<= 8; *data_sz += szbts[0];
 	ZEPTO_DEBUG_ASSERT( *data_sz < MAX_FIELD_SIZE - 2 );
-	return hal_eeprom_read( data, *data_sz, field_offset );
+	return hal_eeprom_read( data, *data_sz, field_offset + 2 );
 }
 
 bool init_default_storage()

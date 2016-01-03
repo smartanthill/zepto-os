@@ -36,8 +36,8 @@ extern "C" {
 
 uint8_t hal_init_eeprom_access( char* path );
 
-bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint16_t address );
-bool hal_eeprom_read( uint8_t* data, uint16_t size, uint16_t address);
+bool hal_eeprom_write( const uint8_t* data, uint16_t size, uint32_t address );
+bool hal_eeprom_read( uint8_t* data, uint16_t size, uint32_t address);
 void hal_eeprom_flush();
 
 bool write_field( uint16_t device_id, uint8_t field_id, uint16_t data_sz, uint8_t* data );

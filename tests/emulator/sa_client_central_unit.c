@@ -50,7 +50,7 @@ void test_mode_load_default_test_project()
 			base_record[2+j] = base_key[j] + ( device_id << 4 );
 		if ( i == 0 )
 		{
-			base_record[18] = 1;
+			base_record[18] = 1; // is retransmitter
 			base_record[19] = 2; // bus type count
 			base_record[20] = 0;
 			base_record[21] = 1;
@@ -124,13 +124,6 @@ int main_loop()
 //	uint16_t wake_time_continue_processing;
 
 
-	// Try to initialize connection
-	bool comm_init_ok = communication_initialize();
-	if ( !comm_init_ok )
-	{
-		return -1;
-	}
-
 
 
 #ifdef MASTER_ENABLE_ALT_TEST_MODE
@@ -196,9 +189,9 @@ wait_for_comm_event:
 				// regular processing will be done below in the next block
 				ZEPTO_DEBUG_ASSERT( bus_or_device_id == 0xFFFF );
 				ret_code = try_get_message_within_master( MEMORY_HANDLE_MAIN_LOOP_1, &bus_or_device_id );
-				if ( ret_code == COMMLAYER_STATUS_FAILED )
+				if ( ret_code == COMMLAYER_TO_CU_STATUS_RESERVED_FAILED )
 					return 0;
-				if ( ret_code == COMMLAYER_STATUS_FOR_CU_FROM_SLAVE )
+				if ( ret_code == COMMLAYER_TO_CU_STATUS_FROM_SLAVE )
 				{
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -208,7 +201,7 @@ wait_for_comm_event:
 					goto process_reply;
 					break;
 				}
-				else if ( ret_code == COMMLAYER_STATUS_FOR_SLAVE )
+				else if ( ret_code == COMMLAYER_TO_CU_STATUS_FOR_SLAVE )
 				{
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -250,7 +243,7 @@ wait_for_comm_event:
 					goto wait_for_comm_event;
 					break;
 				}
-				else if ( ret_code == COMMLAYER_STATUS_FOR_CU_SLAVE_ERROR )
+				else if ( ret_code == COMMLAYER_TO_CU_STATUS_SLAVE_ERROR )
 				{
 					// since now we implement just a testing helper, we simply show the content of the error
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
@@ -269,14 +262,15 @@ wait_for_comm_event:
 					}
 					ZEPTO_DEBUG_ASSERT( 0 );
 				}
-				else if ( ret_code == COMMLAYER_STATUS_FOR_CU_SYNC_REQUEST )
+				else if ( ret_code == COMMLAYER_TO_CU_STATUS_SYNC_REQUEST )
 				{
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 					parser_obj po;
 					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
 					uint8_t rq_type = zepto_parse_uint8( &po );
 					switch ( rq_type )
 					{
-						case REQUEST_WRITE_DATA:
+						case REQUEST_TO_CU_WRITE_DATA:
 						{
 							uint8_t tmp = zepto_parse_uint8( &po );
 							uint16_t dev_id = zepto_parse_uint8( &po );
@@ -287,26 +281,50 @@ wait_for_comm_event:
 							uint16_t sz = zepto_parse_uint8( &po );
 							sz <<= 8;
 							sz += tmp;
-							uint8_t base_record[MAX_FIELD_SIZE_AVAILABLE];
+							uint8_t base_record[MAX_FIELD_SIZE];
 							ZEPTO_DEBUG_ASSERT( zepto_parsing_remaining_bytes( &po ) == sz );
 							zepto_parse_read_block( &po, base_record, sz );
 							write_field( dev_id, field_id, sz, base_record );
-							// TODO: prepare send reply (confirmation)
+
+							base_record[0] = REPLY_FROM_CU_WRITE_DATA;
+							base_record[1] = (uint8_t)dev_id;
+							base_record[2] = (uint8_t)(dev_id>>8);
+							base_record[3] = field_id;
+
+							MEMORY_HANDLE reply_h = acquire_memory_handle();
+							ZEPTO_DEBUG_ASSERT( reply_h != MEMORY_HANDLE_INVALID );
+							zepto_write_block( reply_h, base_record, sz + 4 );
+							zepto_response_to_request( reply_h );
+							send_to_commm_stack_reply( reply_h, bus_or_device_id );
+							release_memory_handle( reply_h );
+
+							goto wait_for_comm_event;
 							break;
 						}
-						case REQUEST_READ_DATA:
+						case REQUEST_TO_CU_READ_DATA:
 						{
+							uint16_t sz;
 							uint8_t tmp = zepto_parse_uint8( &po );
 							uint16_t dev_id = zepto_parse_uint8( &po );
 							dev_id <<= 8;
 							dev_id += tmp;
 							uint8_t field_id = zepto_parse_uint8( &po );
 
-							uint16_t sz;
-							uint8_t base_record[MAX_FIELD_SIZE_AVAILABLE];
-							read_field( dev_id, field_id, &sz, base_record );
+							uint8_t base_record[MAX_FIELD_SIZE + 4];
+							base_record[0] = REPLY_FROM_CU_READ_DATA;
+							base_record[1] = (uint8_t)dev_id;
+							base_record[2] = (uint8_t)(dev_id>>8);
+							base_record[3] = field_id;
+							read_field( dev_id, field_id, &sz, base_record + 4 );
 
-							// TODO: prepare and send reply (requested data)
+							MEMORY_HANDLE reply_h = acquire_memory_handle();
+							ZEPTO_DEBUG_ASSERT( reply_h != MEMORY_HANDLE_INVALID );
+							zepto_write_block( reply_h, base_record, sz + 4 );
+							zepto_response_to_request( reply_h );
+							send_to_commm_stack_reply( reply_h, bus_or_device_id );
+							release_memory_handle( reply_h );
+
+							goto wait_for_comm_event;
 							break;
 						}
 						default:
@@ -465,7 +483,7 @@ process_reply:
 
 #endif // MASTER_ENABLE_ALT_TEST_MODE
 
-send_command:
+//send_command:
 		ZEPTO_DEBUG_PRINTF_4( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d; for device %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use + 1 );
 		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
 	}
@@ -540,6 +558,13 @@ int main(int argc, char *argv[])
 		return 0;
 
 	test_mode_reload_unconditionally();
+
+	// Try to initialize connection
+	bool comm_init_ok = communication_initialize();
+	if ( !comm_init_ok )
+	{
+		return -1;
+	}
 
 	run_init_loop();
 	return main_loop();

@@ -40,6 +40,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 #define COMMLAYER_RET_FROM_COMMM_STACK 10
 
+/*
 // sent packet status
 #define COMMLAYER_RET_OK_CU_FOR_SLAVE 38
 #define COMMLAYER_RET_OK_SLAVE_FOR_CU 40
@@ -55,9 +56,34 @@ Copyright (C) 2015 OLogN Technologies AG
 #define COMMLAYER_STATUS_FOR_CU_SLAVE_ERROR 47
 #define COMMLAYER_STATUS_FOR_CU_SYNC_REQUEST 55
 
-// REQUEST CODES
+// REQUEST/REPLY CODES
 #define REQUEST_WRITE_DATA 0
 #define REQUEST_READ_DATA 1
+#define REPLY_WRITE_DATA 0
+#define REPLY_READ_DATA 1
+*/
+
+// sent packet status
+#define COMMLAYER_FROM_CU_STATUS_FAILED 0
+#define COMMLAYER_FROM_CU_STATUS_FOR_SLAVE 38
+#define COMMLAYER_FROM_CU_STATUS_FROM_SLAVE 40
+#define COMMLAYER_FROM_CU_STATUS_INITIALIZER 50
+#define COMMLAYER_FROM_CU_STATUS_INITIALIZER_LAST 51
+#define COMMLAYER_FROM_CU_STATUS_ADD_DEVICE 55
+#define COMMLAYER_FROM_CU_STATUS_SYNC_CONFIRMATION 57
+
+// received packet status
+#define COMMLAYER_TO_CU_STATUS_RESERVED_FAILED 0
+#define COMMLAYER_TO_CU_STATUS_FOR_SLAVE 37
+#define COMMLAYER_TO_CU_STATUS_FROM_SLAVE 35
+#define COMMLAYER_TO_CU_STATUS_SLAVE_ERROR 47
+#define COMMLAYER_TO_CU_STATUS_SYNC_REQUEST 56
+
+// REQUEST/REPLY CODES
+#define REQUEST_TO_CU_WRITE_DATA 0
+#define REQUEST_TO_CU_READ_DATA 1
+#define REPLY_FROM_CU_WRITE_DATA 0
+#define REPLY_FROM_CU_READ_DATA 1
 
 
 #ifdef __cplusplus
@@ -80,6 +106,7 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id );
 //uint8_t send_to_commm_stack_as_from_slave( MEMORY_HANDLE mem_h );
 uint8_t send_to_commm_stack_initializing_packet( MEMORY_HANDLE mem_h, uint16_t ordinal );
 uint8_t send_to_commm_stack_end_of_initialization_packet( uint16_t count );
+uint8_t send_to_commm_stack_reply( MEMORY_HANDLE mem_h, uint16_t packet_id );
 
 #ifdef __cplusplus
 }
