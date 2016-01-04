@@ -636,5 +636,5 @@ uint8_t send_to_commm_stack_end_of_initialization_packet( uint16_t count )
 
 uint8_t send_to_commm_stack_reply( MEMORY_HANDLE mem_h, uint16_t packet_id )
 {
-	return send_within_master( mem_h, packet_id, COMMLAYER_FROM_CU_STATUS_SYNC_CONFIRMATION );
+	return send_within_master( mem_h, packet_id, COMMLAYER_FROM_CU_STATUS_SYNC_RESPONSE );
 }

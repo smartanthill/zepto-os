@@ -286,14 +286,16 @@ wait_for_comm_event:
 							zepto_parse_read_block( &po, base_record, sz );
 							write_field( dev_id, field_id, sz, base_record );
 
-							base_record[0] = REPLY_FROM_CU_WRITE_DATA;
+							base_record[0] = RESPONSE_FROM_CU_WRITE_DATA;
 							base_record[1] = (uint8_t)dev_id;
 							base_record[2] = (uint8_t)(dev_id>>8);
 							base_record[3] = field_id;
+							base_record[4] = (uint8_t)sz;
+							base_record[5] = (uint8_t)(sz>>8);
 
 							MEMORY_HANDLE reply_h = acquire_memory_handle();
 							ZEPTO_DEBUG_ASSERT( reply_h != MEMORY_HANDLE_INVALID );
-							zepto_write_block( reply_h, base_record, sz + 4 );
+							zepto_write_block( reply_h, base_record, 6 );
 							zepto_response_to_request( reply_h );
 							send_to_commm_stack_reply( reply_h, bus_or_device_id );
 							release_memory_handle( reply_h );
@@ -310,16 +312,18 @@ wait_for_comm_event:
 							dev_id += tmp;
 							uint8_t field_id = zepto_parse_uint8( &po );
 
-							uint8_t base_record[MAX_FIELD_SIZE + 4];
-							base_record[0] = REPLY_FROM_CU_READ_DATA;
+							uint8_t base_record[MAX_FIELD_SIZE + 6];
+							base_record[0] = RESPONSE_FROM_CU_READ_DATA;
 							base_record[1] = (uint8_t)dev_id;
 							base_record[2] = (uint8_t)(dev_id>>8);
 							base_record[3] = field_id;
-							read_field( dev_id, field_id, &sz, base_record + 4 );
+							read_field( dev_id, field_id, &sz, base_record + 6 );
+							base_record[4] = (uint8_t)sz;
+							base_record[5] = (uint8_t)(sz>>8);
 
 							MEMORY_HANDLE reply_h = acquire_memory_handle();
 							ZEPTO_DEBUG_ASSERT( reply_h != MEMORY_HANDLE_INVALID );
-							zepto_write_block( reply_h, base_record, sz + 4 );
+							zepto_write_block( reply_h, base_record, sz + 6 );
 							zepto_response_to_request( reply_h );
 							send_to_commm_stack_reply( reply_h, bus_or_device_id );
 							release_memory_handle( reply_h );
