@@ -475,7 +475,7 @@ uint8_t send_within_master( MEMORY_HANDLE mem_h, uint16_t param, uint8_t destina
 	uint16_t sz = memory_object_get_request_size( mem_h );
 	memory_object_request_to_response( mem_h );
 	ZEPTO_DEBUG_ASSERT( sz == memory_object_get_response_size( mem_h ) );
-	ZEPTO_DEBUG_ASSERT( destination == COMMLAYER_FROM_CU_STATUS_INITIALIZER_LAST || sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
+	ZEPTO_DEBUG_ASSERT( destination == COMMLAYER_FROM_CU_STATUS_INITIALIZER_LAST || destination == COMMLAYER_FROM_CU_STATUS_GET_DEV_PERF_COUNTERS_REQUEST || sz != 0 ); // note: any valid message would have to have at least some bytes for headers, etc, so it cannot be empty
 	uint8_t* buff = memory_object_prepend( mem_h, 5 );
 	ZEPTO_DEBUG_ASSERT( buff != NULL );
 	buff[0] = (uint8_t)sz;
