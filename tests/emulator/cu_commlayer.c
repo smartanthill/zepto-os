@@ -638,3 +638,8 @@ uint8_t send_to_commm_stack_reply( MEMORY_HANDLE mem_h, uint16_t packet_id )
 {
 	return send_within_master( mem_h, packet_id, COMMLAYER_FROM_CU_STATUS_SYNC_RESPONSE );
 }
+
+uint8_t send_to_commm_stack_request_for_stats( MEMORY_HANDLE mem_h, uint16_t device_id )
+{
+	return send_within_master( mem_h, device_id, COMMLAYER_FROM_CU_STATUS_GET_DEV_PERF_COUNTERS_REQUEST );
+}

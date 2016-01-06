@@ -134,7 +134,7 @@ int main_loop()
 	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
 		default_test_control_program_init( DefaultTestingControlProgramState_struct + dev_in_use, dev_in_use + 1 );
 
-	for ( dev_in_use=1; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
+	for ( dev_in_use=0; dev_in_use<MAX_INSTANCES_SUPPORTED; dev_in_use++ )
 //	dev_in_use=1;
 	{
 		ret_code = default_test_control_program_start_new( DefaultTestingControlProgramState_struct + dev_in_use, MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -197,6 +197,13 @@ wait_for_comm_event:
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
 					dev_in_use = bus_or_device_id;
 					dev_in_use --;
+static uint16_t stats_request_ctr = 0;
+if ( (stats_request_ctr & 0x1F ) == 0 )
+{
+	 MEMORY_HANDLE mem_h_tmp = acquire_memory_handle();
+	send_to_commm_stack_request_for_stats( mem_h_tmp, bus_or_device_id );
+}
+stats_request_ctr++;
 					ZEPTO_DEBUG_PRINTF_4( "msg received; rq_size: %d, rsp_size: %d, src: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use );
 					goto process_reply;
 					break;
@@ -338,8 +345,38 @@ wait_for_comm_event:
 						}
 					}
 				}
+				else if ( ret_code == COMMLAYER_FROM_CU_STATUS_GET_DEV_PERF_COUNTERS_REPLY )
+				{
+					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
+					parser_obj po;
+					zepto_parser_init( &po, MEMORY_HANDLE_MAIN_LOOP_1 );
+					uint8_t reply_block[128];
+					uint16_t sz = zepto_parsing_remaining_bytes( &po );
+					zepto_parse_read_block( &po, reply_block, sz );
+					reply_block[sz] = 0;
+					ZEPTO_DEBUG_PRINTF_4( "Stats received from device 0x%x (%d bytes): %s\n", bus_or_device_id, sz, reply_block );
+
+					goto wait_for_comm_event;
+					break;
+				}
+				else if ( ret_code == COMMLAYER_TO_CU_STATUS_INITIALIZATION_DONE )
+				{
+					goto wait_for_comm_event;
+					break;
+				}
+				else if ( ret_code == COMMLAYER_TO_CU_STATUS_DEVICE_ADDED )
+				{
+					goto wait_for_comm_event;
+					break;
+				}
+				else if ( ret_code == COMMLAYER_TO_CU_STATUS_DEVICE_REMOVED )
+				{
+					goto wait_for_comm_event;
+					break;
+				}
 				else
 				{
+					ZEPTO_DEBUG_PRINTF_2( "Unexpected ret_code %d\n", ret_code );
 					ZEPTO_DEBUG_ASSERT( 0 );
 				}
 			}

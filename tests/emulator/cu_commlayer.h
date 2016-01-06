@@ -72,6 +72,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #define COMMLAYER_FROM_CU_STATUS_ADD_DEVICE 55
 #define COMMLAYER_FROM_CU_STATUS_REMOVE_DEVICE 60
 #define COMMLAYER_FROM_CU_STATUS_SYNC_RESPONSE 57
+#define COMMLAYER_FROM_CU_STATUS_GET_DEV_PERF_COUNTERS_REQUEST 70
 
 // sent packet status
 #define COMMLAYER_TO_CU_STATUS_RESERVED_FAILED 0
@@ -79,6 +80,10 @@ Copyright (C) 2015 OLogN Technologies AG
 #define COMMLAYER_TO_CU_STATUS_FROM_SLAVE 35
 #define COMMLAYER_TO_CU_STATUS_SLAVE_ERROR 47
 #define COMMLAYER_TO_CU_STATUS_SYNC_REQUEST 56
+#define COMMLAYER_TO_CU_STATUS_INITIALIZATION_DONE 60
+#define COMMLAYER_TO_CU_STATUS_DEVICE_ADDED 61
+#define COMMLAYER_TO_CU_STATUS_DEVICE_REMOVED 62
+#define COMMLAYER_FROM_CU_STATUS_GET_DEV_PERF_COUNTERS_REPLY 70
 
 // REQUEST/REPLY CODES
 #define REQUEST_TO_CU_WRITE_DATA 0
@@ -108,6 +113,7 @@ uint8_t try_get_message_within_master( MEMORY_HANDLE mem_h, uint16_t* bus_id );
 uint8_t send_to_commm_stack_initializing_packet( MEMORY_HANDLE mem_h, uint16_t ordinal );
 uint8_t send_to_commm_stack_end_of_initialization_packet( uint16_t count );
 uint8_t send_to_commm_stack_reply( MEMORY_HANDLE mem_h, uint16_t packet_id );
+uint8_t send_to_commm_stack_request_for_stats( MEMORY_HANDLE mem_h, uint16_t device_id );
 
 #ifdef __cplusplus
 }
