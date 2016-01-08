@@ -91,6 +91,7 @@ bool sa_main_init()
 	StackPaint();
 #endif // TEST_RAM_CONSUMPTION
 	zepto_mem_man_init_memory_management();
+	siot_init_ctrs();
 
 	if (!HAL_COMMUNICATION_INITIALIZE())
 		return false;

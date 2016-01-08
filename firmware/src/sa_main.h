@@ -29,6 +29,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot/siot_gd_protocol.h>
 #include <simpleiot/siot_cc_protocol.h>
 #include "zepto_config.h"
+#include <simpleiot/siot_stats_counters.h>
 
 #ifdef __cplusplus
 extern "C" {

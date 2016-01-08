@@ -70,9 +70,6 @@ uint8_t smart_echo_plugin_handler_continue( const void* plugin_config, void* plu
 	ZEPTO_DEBUG_ASSERT( msg_size >= 7 && msg_size <= 22 );
 #endif
 
-
-	INCREMENT_COUNTER( 1, "slave_process(), packet sent" );
-
 	// return status
 //	chainContinued = true;
 	return PLUGIN_OK;
