@@ -30,6 +30,16 @@ Copyright (C) 2015 OLogN Technologies AG
 #include <simpleiot/siot_cc_protocol.h>
 #include "zepto_config.h"
 #include <simpleiot/siot_stats_counters.h>
+#include "zepto_os/debugging.h"
+
+#define	MAIN_LOOP_SEND_PACKET( memh, busid )	{\
+	SIOUT_INCREMENT_CTR_PER_BUS( busid, SIOT_STATS_CTR_PACKET_SENT ) \
+	HAL_SEND_PACKET( memh, busid );}
+
+#define MAIN_LOOP_GET_PACKET_BYTES( memh, busid )	{\
+	SIOUT_INCREMENT_CTR_PER_BUS( busid, SIOT_STATS_CTR_PACKET_RECEIVED ) \
+	HAL_GET_PACKET_BYTES( memh, busid );}
+
 
 #ifdef __cplusplus
 extern "C" {

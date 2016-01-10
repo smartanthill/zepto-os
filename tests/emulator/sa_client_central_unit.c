@@ -25,6 +25,7 @@ Copyright (C) 2015 OLogN Technologies AG
 #include "test_generator.h"
 #endif // SA_ACTIVE_AIR_DEBUG
 #include "cu_persistent_storage.h"
+#include <simpleiot/siot_stats_counters.h> // for printing counters
 
 #include <stdio.h>
 
@@ -353,8 +354,17 @@ stats_request_ctr++;
 					uint8_t reply_block[128];
 					uint16_t sz = zepto_parsing_remaining_bytes( &po );
 					zepto_parse_read_block( &po, reply_block, sz );
-					reply_block[sz] = 0;
-					ZEPTO_DEBUG_PRINTF_4( "Stats received from device 0x%x (%d bytes): %s\n", bus_or_device_id, sz, reply_block );
+//					reply_block[sz] = 0;
+//					ZEPTO_DEBUG_PRINTF_4( "Stats received from device 0x%x (%d bytes): %s\n", bus_or_device_id, sz, reply_block );
+					uint16_t ctrctr = 0;
+					ZEPTO_DEBUG_PRINTF_3( "Stats received from device 0x%x (%d bytes):\n", bus_or_device_id, sz );
+					for ( ctrctr=0; ctrctr<SIOT_STATS_CTR_16_MAX; ctrctr++ )
+					{
+						uint16_t ctr = reply_block[ctrctr*2+1];
+						ctr <<= 8;
+						ctr += reply_block[ctrctr*2];
+						ZEPTO_DEBUG_PRINTF_3( "%d: %d\n", ctrctr, ctr );
+					}
 
 					goto wait_for_comm_event;
 					break;

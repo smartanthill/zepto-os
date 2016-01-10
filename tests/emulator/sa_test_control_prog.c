@@ -53,7 +53,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 	// Forms a first packet in the chain
 	// for structure of the packet see comments to yocto_process()
 	// Initial number of packets in the chain is currently entered manually by a tester
-	PRINT_COUNTERS();
+//	PRINT_COUNTERS();
 
 	DefaultTestingControlProgramState* ps = (DefaultTestingControlProgramState*)control_prog_state;
 
@@ -132,7 +132,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 	zepto_write_prepend_byte( reply, hdr );*/
 	zepto_write_prepend_byte( reply, SAGDP_P_STATUS_FIRST );
 
-	INCREMENT_COUNTER( 3, "master_start(), chain started" );
+//	INCREMENT_COUNTER( 3, "master_start(), chain started" );
 
 	// return status
 	return CONTROL_PROG_CHAIN_CONTINUE;
@@ -177,8 +177,8 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 	ZEPTO_DEBUG_PRINTF_5( "[0x%04x][0x%04x][0x%04x]%s\n", ps->chain_ini_size, ps->reply_to_id, ps->self_id, tail );
 	ZEPTO_DEBUG_ASSERT( msg_size >= 7 && msg_size <= 22 );
 
-	INCREMENT_COUNTER( 7, "master_continue(), packet sent" );
-	INCREMENT_COUNTER_IF( 8, "master_continue(), last packet sent", (ps->first_byte >> 1) );
+//	INCREMENT_COUNTER( 7, "master_continue(), packet sent" );
+//	INCREMENT_COUNTER_IF( 8, "master_continue(), last packet sent", (ps->first_byte >> 1) );
 
 	if ( ps->chain_ini_size > ps->self_id + 1 ) // a "complex" chain
 	{
@@ -245,7 +245,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 		ZEPTO_DEBUG_PRINTF_1( "\n\n" );
 	}
 
-	INCREMENT_COUNTER( 4, "master_continue(), packet received" );
+//	INCREMENT_COUNTER( 4, "master_continue(), packet received" );
 
 	uint16_t msg_size = zepto_parsing_remaining_bytes( received ); // just all bytes to the end...
 	uint8_t first_byte = zepto_parse_uint8( received );
@@ -256,7 +256,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 	{
 		ZEPTO_DEBUG_PRINTF_1( "_default_test_control_program_accept_reply(): ERROR MESSAGE RECEIVED IN ZEPTO\n" );
 		(ps->currChainIdBase[0]) ++;
-		INCREMENT_COUNTER( 9, "master_continue(), error message received" );
+//		INCREMENT_COUNTER( 9, "master_continue(), error message received" );
 		return CONTROL_PROG_CHAIN_DONE;
 		ZEPTO_DEBUG_ASSERT(0);
 	}
@@ -315,7 +315,7 @@ uint8_t _default_test_control_program_accept_reply( void* control_prog_state, ui
 	{
 //		chainContinued = false;
 		(ps->currChainIdBase[0]) ++;
-		INCREMENT_COUNTER( 6, "master_continue(), packet terminating received" );
+//		INCREMENT_COUNTER( 6, "master_continue(), packet terminating received" );
 		return CONTROL_PROG_CHAIN_DONE;
 	}
 

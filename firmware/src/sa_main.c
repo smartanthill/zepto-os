@@ -20,7 +20,6 @@ Copyright (C) 2015 OLogN Technologies AG
 #else // (defined VERY_DEBUG) && (defined VERY_DEBUG_SIMPLE_MAIN_LOOP)
 
 #include "sa_main.h"
-#include "zepto_os/debugging.h"
 
 // TODO: actual key loading, etc
 //uint8_t AES_ENCRYPTION_KEY[16];
@@ -304,7 +303,7 @@ wait_for_comm_event:
 				case WAIT_RESULTED_IN_PACKET:
 				{
 					// regular processing will be done below in the next block
-					HAL_GET_PACKET_BYTES( packet_getting_handle.packet_h, bus_id );
+					MAIN_LOOP_GET_PACKET_BYTES( packet_getting_handle.packet_h, bus_id );
 					zepto_response_to_request( packet_getting_handle.packet_h );
 					SWAP_PACKET_HANDLE_PAIR( working_handle, packet_getting_handle); // TODO: for "old" packet working handle must be restored!!!
 					goto siotmp_rec;
@@ -355,7 +354,7 @@ siotmp_rec:
 				ZEPTO_DEBUG_ASSERT( ack_bus_id == 0 );
 #endif
 				zepto_response_to_request( MEMORY_HANDLE_MESH_ACK );
-				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, ack_bus_id ); // TODO: ack_bus_id is to be passed here!
+				MAIN_LOOP_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, ack_bus_id );
 				zepto_parser_free_memory( MEMORY_HANDLE_MESH_ACK );
 				// regular processing will be done below in the next block
 				break;
@@ -380,7 +379,7 @@ siotmp_rec:
 				ZEPTO_DEBUG_ASSERT( bus_id != 0xFFFF );
 				ZEPTO_DEBUG_ASSERT( ack_bus_id != 0xFFFF );
 				zepto_response_to_request( MEMORY_HANDLE_MESH_ACK );
-				HAL_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, ack_bus_id ); // TODO: ack_bus_id is to be passed here!
+				MAIN_LOOP_SEND_PACKET( MEMORY_HANDLE_MESH_ACK, ack_bus_id ); // TODO: ack_bus_id is to be passed here!
 				zepto_parser_free_memory( MEMORY_HANDLE_MESH_ACK );
 				goto hal_send;
 				break;
@@ -916,7 +915,7 @@ hal_send:
 #if !defined USED_AS_RETRANSMITTER
 				ZEPTO_DEBUG_ASSERT( bus_id == 0 );
 #endif
-			HAL_SEND_PACKET( working_handle.packet_h, bus_id );
+			MAIN_LOOP_SEND_PACKET( working_handle.packet_h, bus_id );
 			zepto_parser_free_memory( working_handle.packet_h );
 			INCREMENT_COUNTER( 90, "MAIN LOOP, packet sent" );
 			ZEPTO_DEBUG_PRINTF_1("\nMessage replied to client\n");
