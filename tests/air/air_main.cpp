@@ -162,6 +162,33 @@ float calc_dist( DEVICE_POSITION* pos1, DEVICE_POSITION* pos2 )
 	return sqrt( ( pos1->x - pos2->x ) * ( pos1->x - pos2->x ) + ( pos1->y - pos2->y ) * ( pos1->y - pos2->y ) + ( pos1->z - pos2->z ) * ( pos1->z - pos2->z ) );
 }
 
+void testing_scenario_at_src_add_errors_at_random( const uint8_t* packet_buff, int packet_sz, int src, int destination )
+{
+	// TODO: think about spoiling more bits, etc
+	uint8_t packet_buff_to_send[1024];
+	bool add_errors = (tester_get_rand_val() & 1) != 0;
+	uint16_t error_count = tester_get_rand_val() & 0x7;
+	uint16_t error_rate = packet_sz / error_count;
+	uint16_t i;
+	for ( i=0; i<packet_sz; i++ )
+	{
+		bool add_error = ( tester_get_rand_val() % error_rate ) == 0;
+		if ( add_error )
+		{
+			uint8_t bit_to_flip = tester_get_rand_val() & 0x7;
+			uint8_t bt = packet_buff[i];
+			uint8_t mask_0 = 1 << bit_to_flip;
+			uint8_t mask_1 = ~mask_0;
+			packet_buff_to_send[i] = ( bt & mask_1 ) | ( ( bt & mask_0 ) ^ mask_0 );
+		}
+		else
+		{
+			packet_buff_to_send[i] = packet_buff[i];
+		}
+	}
+	SEND_PACKET( packet_buff_to_send, packet_sz, destination );
+}
+
 void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* packet_buff, int packet_sz, int src, int destination )
 {
 	ZEPTO_DEBUG_ASSERT( destination < COMM_PARTICIPANTS_MAX_COUNT );
@@ -177,7 +204,8 @@ void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* pa
 	}
 	ZEPTO_DEBUG_PRINTF_1( "will be passed\n" );
 
-	testing_scenario_at_destination_drop_none( packet_buff, packet_sz, src, destination );
+//	testing_scenario_at_destination_drop_none( packet_buff, packet_sz, src, destination );
+	testing_scenario_at_src_add_errors_at_random( packet_buff, packet_sz, src, destination );
 //	testing_scenario_at_destination_drop_at_random( packet_buff, packet_sz, src, destination );
 //	testing_scenario_at_destination_drop_for_random_period( packet_buff, packet_sz, src, destination );
 }

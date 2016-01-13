@@ -203,6 +203,7 @@ if ( (stats_request_ctr & 0x1F ) == 0 )
 {
 	 MEMORY_HANDLE mem_h_tmp = acquire_memory_handle();
 	send_to_commm_stack_request_for_stats( mem_h_tmp, bus_or_device_id );
+	release_memory_handle( mem_h_tmp );
 }
 stats_request_ctr++;
 					ZEPTO_DEBUG_PRINTF_4( "msg received; rq_size: %d, rsp_size: %d, src: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use );
@@ -356,7 +357,7 @@ stats_request_ctr++;
 					zepto_parse_read_block( &po, reply_block, sz );
 //					reply_block[sz] = 0;
 //					ZEPTO_DEBUG_PRINTF_4( "Stats received from device 0x%x (%d bytes): %s\n", bus_or_device_id, sz, reply_block );
-					uint16_t ctrctr = 0;
+					uint16_t ctrctr, busctr, busctrmax;
 					ZEPTO_DEBUG_PRINTF_3( "Stats received from device 0x%x (%d bytes):\n", bus_or_device_id, sz );
 					for ( ctrctr=0; ctrctr<SIOT_STATS_CTR_16_MAX; ctrctr++ )
 					{
@@ -364,6 +365,17 @@ stats_request_ctr++;
 						ctr <<= 8;
 						ctr += reply_block[ctrctr*2];
 						ZEPTO_DEBUG_PRINTF_3( "%d: %d\n", ctrctr, ctr );
+					}
+					busctrmax = ( sz - SIOT_STATS_CTR_16_MAX * 2 ) / ( SIOT_STATS_CTR_BUS_SPECIFIC_16_MAX * 2 ); // TODO: this info should be compared to that from DB regarding a device
+					for ( busctr=0; busctr<busctrmax; busctr++ )
+					{
+						for ( ctrctr=0; ctrctr<SIOT_STATS_CTR_BUS_SPECIFIC_16_MAX; ctrctr++ )
+						{
+							uint16_t ctr = reply_block[ctrctr*2+1];
+							ctr <<= 8;
+							ctr += reply_block[ctrctr*2];
+							ZEPTO_DEBUG_PRINTF_3( "%d: %d\n", ctrctr, ctr );
+						}
 					}
 
 					goto wait_for_comm_event;

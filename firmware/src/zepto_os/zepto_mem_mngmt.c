@@ -2032,7 +2032,7 @@ void zepto_parser_encode_uint( const uint8_t* num_bytes, uint8_t num_sz_max, uin
 	*/
 }
 
-void zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t* bytes_out, uint8_t target_size )
+bool zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t max_encoded_size, uint8_t* bytes_out, uint8_t target_size )
 {
 	ZEPTO_DEBUG_ASSERT( target_size != 0 );
 	ZEPTO_DEBUG_ASSERT( target_size <= 8 ); // TODO: implement and test for larger sizes
