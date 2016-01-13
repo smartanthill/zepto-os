@@ -167,26 +167,33 @@ void testing_scenario_at_src_add_errors_at_random( const uint8_t* packet_buff, i
 	// TODO: think about spoiling more bits, etc
 	uint8_t packet_buff_to_send[1024];
 	bool add_errors = (tester_get_rand_val() & 1) != 0;
-	uint16_t error_count = tester_get_rand_val() & 0x7;
-	uint16_t error_rate = packet_sz / error_count;
-	uint16_t i;
-	for ( i=0; i<packet_sz; i++ )
+	if ( add_errors )
 	{
-		bool add_error = ( tester_get_rand_val() % error_rate ) == 0;
-		if ( add_error )
+		uint16_t error_count = (tester_get_rand_val() & 0x7) + 1;
+		uint16_t error_rate = packet_sz / error_count + 1;
+		uint16_t i;
+		for ( i=0; i<packet_sz; i++ )
 		{
-			uint8_t bit_to_flip = tester_get_rand_val() & 0x7;
-			uint8_t bt = packet_buff[i];
-			uint8_t mask_0 = 1 << bit_to_flip;
-			uint8_t mask_1 = ~mask_0;
-			packet_buff_to_send[i] = ( bt & mask_1 ) | ( ( bt & mask_0 ) ^ mask_0 );
+			bool add_error = ( tester_get_rand_val() % error_rate ) == 0;
+			if ( add_error )
+			{
+				uint8_t bit_to_flip = tester_get_rand_val() & 0x7;
+				uint8_t bt = packet_buff[i];
+				uint8_t mask_0 = 1 << bit_to_flip;
+				uint8_t mask_1 = ~mask_0;
+				packet_buff_to_send[i] = ( bt & mask_1 ) | ( ( bt & mask_0 ) ^ mask_0 );
+			}
+			else
+			{
+				packet_buff_to_send[i] = packet_buff[i];
+			}
 		}
-		else
-		{
-			packet_buff_to_send[i] = packet_buff[i];
-		}
+		SEND_PACKET( packet_buff_to_send, packet_sz, destination );
 	}
-	SEND_PACKET( packet_buff_to_send, packet_sz, destination );
+	else
+	{
+		SEND_PACKET( packet_buff, packet_sz, destination );
+	}
 }
 
 void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* packet_buff, int packet_sz, int src, int destination )
@@ -212,8 +219,8 @@ void do_whatever_with_packet_to_be_sent( TEST_DATA* test_data, const uint8_t* pa
 bool allow_to_pass_packet( int src )
 {
 	(participants[src].cnt_from )++;
-//	return testing_scenario_at_src_drop_none( src );
-	return testing_scenario_at_src_drop_at_random( src );
+	return testing_scenario_at_src_drop_none( src );
+//	return testing_scenario_at_src_drop_at_random( src );
 //	return testing_scenario_at_src_drop_for_random_period( src );
 //	return testing_scenario_at_src_drop_for_fixed_period( src );
 //	return testing_scenario_at_src_drop_for_time_period( src );

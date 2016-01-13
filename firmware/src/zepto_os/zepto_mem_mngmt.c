@@ -2057,8 +2057,14 @@ bool zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t max_enco
 	(*packed_num_bytes)++;
 	interm += 128;
 	interm += ((uint16_t)( **packed_num_bytes & 0x7F )) << 7;
-	*bytes_out = (uint8_t)interm;
-	bytes_out++;
+	if ( bytes_out - bytes_out_start < target_size )
+	{
+		*bytes_out = (uint8_t)interm;
+		bytes_out++;
+	}
+	else
+		return false;
+	ZEPTO_DEBUG_ASSERT( bytes_out - bytes_out_start <= target_size );
 	interm >>= 8;
 
 	uint8_t i;
@@ -2068,8 +2074,13 @@ bool zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t max_enco
 		{
 			if ( interm )
 			{
-				*bytes_out = (uint8_t)interm;
-				bytes_out++;
+				if ( bytes_out - bytes_out_start < target_size )
+				{
+					*bytes_out = (uint8_t)interm;
+					bytes_out++;
+				}
+				else
+					return false;
 			}
 			ZEPTO_DEBUG_ASSERT( bytes_out - bytes_out_start <= target_size );
 			(*packed_num_bytes)++;
@@ -2081,8 +2092,13 @@ bool zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t max_enco
 		(*packed_num_bytes)++;
 //		interm += 128;
 		interm += (1+(uint16_t)( **packed_num_bytes & 0x7F )) << (7-i);
-		*bytes_out = (uint8_t)interm;
-		bytes_out++;
+		if ( bytes_out - bytes_out_start < target_size )
+		{
+			*bytes_out = (uint8_t)interm;
+			bytes_out++;
+		}
+		else
+			return false;
 		ZEPTO_DEBUG_ASSERT( bytes_out - bytes_out_start <= target_size );
 		interm >>= 8;
 	}
@@ -2394,7 +2410,7 @@ uint8_t zepto_parse_uint8_uncertain( parser_obj_uncertain* po )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	uint16_t rq_sz = memory_object_get_request_size( po->mem_handle );
-	if ( po->offset + 1 < rq_sz )
+	if ( po->offset < rq_sz )
 	{
 		uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
 		ZEPTO_DEBUG_ASSERT( buff != NULL );
