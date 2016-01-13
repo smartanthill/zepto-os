@@ -2474,7 +2474,7 @@ void zepto_parser_decode_uint_uncertain( parser_obj_uncertain* po, uint8_t* byte
 	uint8_t* end = buff;
 	if ( zepto_parser_decode_uint_core( &end, sz - po->offset, bytes_out, target_size ) )
 	{
-		ZEPTO_DEBUG_ASSERT( end - buff >= 0 && end - buff < sz - po->offset );
+		ZEPTO_DEBUG_ASSERT( end - buff >= 0 && end - buff <= sz - po->offset );
 		po->offset += (uint16_t)(end - buff);
 	}
 	else

@@ -172,7 +172,9 @@ void testing_scenario_at_src_add_errors_at_random( const uint8_t* packet_buff, i
 		uint16_t error_count = (tester_get_rand_val() & 0x7) + 1;
 		uint16_t error_rate = packet_sz / error_count + 1;
 		uint16_t i;
-		for ( i=0; i<packet_sz; i++ )
+		packet_buff_to_send[0] = packet_buff[0];
+		packet_buff_to_send[1] = packet_buff[1];
+		for ( i=2; i<packet_sz; i++ )
 		{
 			bool add_error = ( tester_get_rand_val() % error_rate ) == 0;
 			if ( add_error )
