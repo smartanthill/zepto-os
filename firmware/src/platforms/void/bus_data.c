@@ -22,8 +22,8 @@ Copyright (C) 2015 OLogN Technologies AG
 
 typedef struct _BUS_LIST_ITEM
 {
-//	uint16_t bus_id;
-	uint8_t bus_type;
+//  uint16_t bus_id;
+    uint8_t bus_type;
 } BUS_LIST_ITEM;
 
 #ifdef USED_AS_MASTER
@@ -38,6 +38,9 @@ BUS_LIST_ITEM bus_list[ BUS_LIST_ITEM_COUNT ] = {{0}, {1}};
 BUS_LIST_ITEM bus_list[ BUS_LIST_ITEM_COUNT ] = {1};
 #endif
 #endif
+
+uint16_t siot_stats_counters_bus_specific_16__[SIOT_STATS_CTR_BUS_SPECIFIC_16_MAX * BUS_LIST_ITEM_COUNT];
+uint16_t* siot_stats_counters_bus_specific_16 = siot_stats_counters_bus_specific_16__;
 
 uint8_t hal_get_bus_count() // bus IDs are then expected in the range 0..(ret_val-1)
 {

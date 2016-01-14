@@ -39,6 +39,9 @@ BUS_LIST_ITEM bus_list[ BUS_LIST_ITEM_COUNT ] = {1};
 #endif
 #endif
 
+uint16_t siot_stats_counters_bus_specific_16__[SIOT_STATS_CTR_BUS_SPECIFIC_16_MAX * BUS_LIST_ITEM_COUNT];
+uint16_t* siot_stats_counters_bus_specific_16 = siot_stats_counters_bus_specific_16__;
+
 uint8_t hal_get_bus_count() // bus IDs are then expected in the range 0..(ret_val-1)
 {
 	return BUS_LIST_ITEM_COUNT;
