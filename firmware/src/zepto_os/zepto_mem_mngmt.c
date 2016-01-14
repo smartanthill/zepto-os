@@ -2037,9 +2037,7 @@ bool zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t max_enco
 	ZEPTO_DEBUG_ASSERT( target_size != 0 );
 	ZEPTO_DEBUG_ASSERT( target_size <= 8 ); // TODO: implement and test for larger sizes
 	ZEPTO_MEMSET( bytes_out, 0, target_size );
-#ifdef SA_DEBUG
 	uint8_t* bytes_out_start = bytes_out;
-#endif
 	uint8_t* packed_num_bytes_end = *packed_num_bytes + max_encoded_size;
 	if ( packed_num_bytes_end == *packed_num_bytes )
 		return false;
