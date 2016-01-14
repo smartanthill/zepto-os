@@ -23,19 +23,10 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE
 
-.PHONY: build-firmware build-cs build-cu build-slv astyle
+.PHONY: build-firmware astyle
 
 build-firmware:
 	platformio run --project-dir=firmware
-
-build-cs:
-	cd tests/emulator; ./build_cs
-
-build-cu:
-	cd tests/emulator; ./build_cu
-
-build-slv:
-	cd tests/emulator; ./build_slv
 
 astyle:
 	astyle --options=.astylerc -rn "firmware/src/*"
