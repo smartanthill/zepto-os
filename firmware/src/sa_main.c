@@ -389,6 +389,7 @@ siotmp_rec:
 			case SIOT_MESH_RET_GARBAGE_RECEIVED:
 			case SIOT_MESH_RET_NOT_FOR_THIS_DEV_RECEIVED:
 			{
+				zepto_parser_free_memory( working_handle.packet_h );
 				goto start_over;
 				break;
 			}
@@ -455,6 +456,7 @@ siotmp_rec:
 			{
 				ZEPTO_DEBUG_PRINTF_1( "BAD PACKET RECEIVED\n" );
 				handler_siot_mesh_packet_rejected_broken( /*MEMORY_HANDLE mem_h, */&(working_handle.mesh_val) );
+				zepto_parser_free_memory( working_handle.packet_h );
 				goto start_over;
 				break;
 			}
