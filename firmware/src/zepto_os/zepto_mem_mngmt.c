@@ -245,7 +245,7 @@ void zepto_mem_man_check_sanity()
 
 	for ( i=0; i<MEMORY_HANDLE_MAX; i++ )
 	{
-		if ( memory_objects[i].rq_size + memory_objects[i].rsp_size )
+//		if ( memory_objects[i].rq_size + memory_objects[i].rsp_size )
 			ZEPTO_DEBUG_ASSERT( memory_objects[i].ptr != 0 );
 	}
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
@@ -471,7 +471,7 @@ void zepto_mem_man_move_obj_max_left( REQUEST_REPLY_HANDLE mem_h )
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 	if ( obj->ptr == 0 )
 	{
-		ZEPTO_DEBUG_ASSERT( mem_h > MEMORY_HANDLE_MAX );
+		ZEPTO_DEBUG_ASSERT( mem_h >= MEMORY_HANDLE_ACQUIRABLE_START );
 		return;
 	}
 #else
@@ -505,7 +505,7 @@ uint16_t zepto_mem_man_get_freeable_size_at_right( REQUEST_REPLY_HANDLE mem_h )
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 	if ( obj->ptr == 0 )
 	{
-		ZEPTO_DEBUG_ASSERT( mem_h > MEMORY_HANDLE_MAX );
+		ZEPTO_DEBUG_ASSERT( mem_h >= MEMORY_HANDLE_ACQUIRABLE_START );
 		return 0;
 	}
 #else
@@ -523,7 +523,7 @@ uint16_t zepto_mem_man_get_freeable_size_at_left( REQUEST_REPLY_HANDLE mem_h )
 #ifdef MEMORY_HANDLE_ALLOW_ACQUIRE_RELEASE
 	if ( obj->ptr == 0 )
 	{
-		ZEPTO_DEBUG_ASSERT( mem_h > MEMORY_HANDLE_MAX );
+		ZEPTO_DEBUG_ASSERT( mem_h >= MEMORY_HANDLE_ACQUIRABLE_START );
 		return 0;
 	}
 #else
@@ -1494,6 +1494,10 @@ REQUEST_REPLY_HANDLE memory_object_acquire()
 			if ( prev_obj_buff == NULL ) // failed to move; no space for a new object
 			{
 				ZEPTO_DEBUG_ASSERT( obj->ptr == NULL );
+#ifdef SA_DEBUG
+				skip_sanity_check = false;
+#endif
+				zepto_mem_man_check_sanity();
 				return MEMORY_HANDLE_INVALID;
 			}
 			// if prev_obj has been dyn allocated, its position mignt be changed after this move; let's reload the object
