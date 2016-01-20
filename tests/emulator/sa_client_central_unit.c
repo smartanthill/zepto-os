@@ -52,17 +52,19 @@ void test_mode_load_default_test_project()
 		if ( i == 0 )
 		{
 			base_record[18] = 1; // is retransmitter
-			base_record[19] = 2; // bus type count
-			base_record[20] = 0;
-			base_record[21] = 1;
-			write_field( device_id, 0, 22, base_record );
+			base_record[19] = 2; // bus count
+			base_record[20] = 2; // bus type count
+			base_record[21] = 0;
+			base_record[22] = 1;
+			write_field( device_id, 0, 23, base_record );
 		}
 		else
 		{
 			base_record[18] = 0;
-			base_record[19] = 1; // bus type count
-			base_record[20] = 1;
-			write_field( device_id, 0, 21, base_record );
+			base_record[19] = 1; // bus count
+			base_record[20] = 1; // bus type count
+			base_record[21] = 1;
+			write_field( device_id, 0, 22, base_record );
 		}
 	}
 }
@@ -293,7 +295,7 @@ stats_request_ctr++;
 							uint8_t base_record[MAX_FIELD_SIZE];
 							ZEPTO_DEBUG_ASSERT( zepto_parsing_remaining_bytes( &po ) == sz );
 							zepto_parse_read_block( &po, base_record, sz );
-							write_field( dev_id, field_id, sz, base_record );
+							write_field( dev_id, 1+field_id, sz, base_record );
 
 							base_record[0] = RESPONSE_FROM_CU_WRITE_DATA;
 							base_record[1] = (uint8_t)dev_id;
