@@ -87,6 +87,8 @@ INLINE void sa_hal_time_val_copy_from_if_src_less( sa_time_val* t1, const sa_tim
 
 INLINE bool sa_hal_time_val_get_remaining_time( const sa_time_val* now, const sa_time_val* expected, sa_time_val* remaining )
 {
+	// returns false, if expected time is already in the past
+	// returns true, if time remains before 'expected'
 	// updates 'remaining' if 'expected' is greater than 'now' (not yet happened), and a new value is less than that currently in 'remaining'
 	if ( expected->high_t < now->high_t ) return false; // already happpened; do not change 'remaining'
 	if ( expected->high_t == now->high_t )

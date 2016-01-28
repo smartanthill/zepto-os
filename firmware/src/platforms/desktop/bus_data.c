@@ -55,7 +55,7 @@ uint8_t hal_get_bus_type_by_bus_id( uint16_t bus_id )
 		if ( bus_list[idx].bus_id == bus_id )
 			return bus_list[idx].bus_type;*/
 	if ( bus_id < BUS_LIST_ITEM_COUNT )
-		bus_list[bus_id].bus_type;
+		return bus_list[bus_id].bus_type;
 	return BUS_TYPE_UNDEFINED;
 }
 
