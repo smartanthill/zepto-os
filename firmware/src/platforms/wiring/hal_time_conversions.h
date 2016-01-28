@@ -20,7 +20,7 @@ Copyright (C) 2015 OLogN Technologies AG
 
 // present implementation assumes that resolution of h/w timer is 1 ms
 // macros below must be reimplemented if this is not the case
-#define HAL_TIME_MILLISECONDS16_TO_TIMEVAL( mslow, timeval ) {}
-#define HAL_TIME_MILLISECONDS32_TO_TIMEVAL( mslow, mshigh, timeval ) {}
+#define HAL_TIME_MILLISECONDS16_TO_TIMEVAL( mslow, timeval ) {(timeval).low_t = (mslow); (timeval).high_t = 0;}
+#define HAL_TIME_MILLISECONDS32_TO_TIMEVAL( mslow, mshigh, timeval ) {(timeval).low_t = (mslow); (timeval).high_t = mshigh;}
 
 #endif
