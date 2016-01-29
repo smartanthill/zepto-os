@@ -84,6 +84,7 @@ int run_init_loop()
 	uint16_t data_sz;
 	MEMORY_HANDLE mem_h = acquire_memory_handle();
 	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
+	unsigned int sent_cnt = 0;
 	for ( i=0; i<MAX_DEVICE_COUNT; i++ )
 	{
 		read_field( i, 0, &data_sz, base_record );
@@ -91,11 +92,12 @@ int run_init_loop()
 		{
 			zepto_write_block( mem_h, base_record, data_sz );
 			zepto_response_to_request( mem_h );
-			send_to_commm_stack_initializing_packet( mem_h, i );
+			send_to_commm_stack_initializing_packet( mem_h, sent_cnt );
 			zepto_parser_free_memory( mem_h );
+			sent_cnt++;
 		}
 	}
-	send_to_commm_stack_end_of_initialization_packet( i );
+	send_to_commm_stack_end_of_initialization_packet( sent_cnt );
 	release_memory_handle( mem_h );
 	return 1;
 }
@@ -208,7 +210,7 @@ if ( (stats_request_ctr & 0x1F ) == 0 )
 	release_memory_handle( mem_h_tmp );
 }
 stats_request_ctr++;
-					ZEPTO_DEBUG_PRINTF_4( "msg received; rq_size: %d, rsp_size: %d, src: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use );
+					ZEPTO_DEBUG_PRINTF_4( "msg received; rq_size: %d, rsp_size: %d, src: %d\n", memory_object_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), memory_object_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use );
 					goto process_reply;
 					break;
 				}
@@ -216,7 +218,7 @@ stats_request_ctr++;
 				{
 					ZEPTO_DEBUG_ASSERT( bus_or_device_id != 0xFFFF );
 					zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-					ZEPTO_DEBUG_PRINTF_3( "msg is about to be sent to slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+					ZEPTO_DEBUG_PRINTF_3( "msg is about to be sent to slave; rq_size: %d, rsp_size: %d\n", memory_object_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), memory_object_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 					// [[AIR test block START]]
 #ifdef SA_ACTIVE_AIR_DEBUG
 					tester_registerOutgoingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -413,7 +415,7 @@ stats_request_ctr++;
 					return 0;
 				ZEPTO_DEBUG_ASSERT( ret_code == HAL_GET_PACKET_BYTES_DONE );
 				zepto_response_to_request( MEMORY_HANDLE_MAIN_LOOP_1 );
-//				ZEPTO_DEBUG_PRINTF_3( "msg received from slave; rq_size: %d, rsp_size: %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
+//				ZEPTO_DEBUG_PRINTF_3( "msg received from slave; rq_size: %d, rsp_size: %d\n", memory_object_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), memory_object_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ) );
 				// [[AIR test block START]]
 #ifdef SA_ACTIVE_AIR_DEBUG
 				tester_registerIncomingPacket( MEMORY_HANDLE_MAIN_LOOP_1 );
@@ -549,7 +551,7 @@ process_reply:
 #endif // MASTER_ENABLE_ALT_TEST_MODE
 
 //send_command:
-		ZEPTO_DEBUG_PRINTF_4( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d; for device %d\n", ugly_hook_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), ugly_hook_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use + 1 );
+		ZEPTO_DEBUG_PRINTF_4( "=============================================Msg is about to be sent; rq_size: %d, rsp_size: %d; for device %d\n", memory_object_get_request_size( MEMORY_HANDLE_MAIN_LOOP_1 ), memory_object_get_response_size( MEMORY_HANDLE_MAIN_LOOP_1 ), dev_in_use + 1 );
 		send_to_commm_stack_as_from_master( MEMORY_HANDLE_MAIN_LOOP_1, dev_in_use + 1 );
 	}
 

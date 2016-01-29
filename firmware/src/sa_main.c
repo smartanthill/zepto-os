@@ -271,7 +271,7 @@ wait_for_comm_event:
 				{
 					// NOTE:
 					zepto_response_to_request( working_handle.packet_h );
-					ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+					ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 					goto alt_entry;
 					break;
 				}
@@ -337,7 +337,7 @@ wait_for_comm_event:
 			goto start_over;
 		}
 		ZEPTO_DEBUG_PRINTF_1("Message from client received\n");
-		ZEPTO_DEBUG_PRINTF_4( "ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+		ZEPTO_DEBUG_PRINTF_4( "ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 
 
 		// 2.0. Pass to siot/mesh
@@ -447,7 +447,7 @@ siotmp_rec:
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		ret_code = handler_sasp_receive( AES_ENCRYPTION_KEY, pid, working_handle.packet_h );
 		zepto_response_to_request( working_handle.packet_h );
-		ZEPTO_DEBUG_PRINTF_4( "SASP1:  ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+		ZEPTO_DEBUG_PRINTF_4( "SASP1:  ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 		switch ( ret_code )
 		{
 			case SASP_RET_IGNORE_PACKET_BROKEN:
@@ -552,7 +552,7 @@ siotmp_rec:
 				ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 			}
 			zepto_response_to_request( working_handle.packet_h );
-			ZEPTO_DEBUG_PRINTF_4( "SAGDP1 (ctr): ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+			ZEPTO_DEBUG_PRINTF_4( "SAGDP1 (ctr): ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 
 			switch ( ret_code )
 			{
@@ -580,7 +580,7 @@ siotmp_rec:
 						ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 					}
 					zepto_response_to_request( working_handle.packet_h );
-					ZEPTO_DEBUG_PRINTF_4( "SAGDP2 (ctr): ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+					ZEPTO_DEBUG_PRINTF_4( "SAGDP2 (ctr): ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 			
 					switch ( ret_code )
 					{
@@ -644,7 +644,7 @@ siotmp_rec:
 			ZEPTO_DEBUG_ASSERT( ret_code != SAGDP_RET_NEED_NONCE );
 		}
 		zepto_response_to_request( working_handle.packet_h );
-		ZEPTO_DEBUG_PRINTF_4( "SAGDP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+		ZEPTO_DEBUG_PRINTF_4( "SAGDP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 
 		switch ( ret_code )
 		{
@@ -707,7 +707,7 @@ siotmp_rec:
 			case SACCP_RET_PASS_LOWER:
 			{
 				zepto_response_to_request( working_handle.packet_h );
-				ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+				ZEPTO_DEBUG_PRINTF_4( "SACCP1: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 				// regular processing will be done below in the next block
 				break;
 			}
@@ -764,7 +764,7 @@ alt_entry:
 		}
 		zepto_response_to_request( working_handle.packet_h );
 //		zepto_response_to_request( working_handle.addr_h );
-		ZEPTO_DEBUG_PRINTF_4( "SAGDP2: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+		ZEPTO_DEBUG_PRINTF_4( "SAGDP2: ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 
 		switch ( ret_code )
 		{
@@ -821,7 +821,7 @@ saspsend:
 #endif // ALLOW_PRINTING_SASP_INCOMING_MESSAGE
 		ret_code = handler_sasp_send( AES_ENCRYPTION_KEY, nonce, working_handle.packet_h );
 		zepto_response_to_request( working_handle.packet_h );
-		ZEPTO_DEBUG_PRINTF_4( "SASP2:  ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, ugly_hook_get_request_size( working_handle.packet_h ), ugly_hook_get_response_size( working_handle.packet_h ) );
+		ZEPTO_DEBUG_PRINTF_4( "SASP2:  ret: %d; rq_size: %d, rsp_size: %d\n", ret_code, memory_object_get_request_size( working_handle.packet_h ), memory_object_get_response_size( working_handle.packet_h ) );
 
 		switch ( ret_code )
 		{

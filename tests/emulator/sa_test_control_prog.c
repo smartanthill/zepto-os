@@ -106,7 +106,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 
 	// now the core is ready, and we are about to finalize the "program" 
 //	uint16_t msg_size = 11+varln+1;
-	uint16_t reply_sz = zepto_writer_get_response_size( reply );
+	uint16_t reply_sz = memory_object_get_response_size( reply );
 	zepto_parser_encode_and_prepend_uint16( reply, reply_sz ); // data size
 	zepto_parser_encode_and_prepend_uint16( reply, 0 ); // body part ID (default so far); TODO: determination
 	zepto_write_prepend_byte( reply, ZEPTOVM_OP_EXEC );
@@ -122,7 +122,7 @@ uint8_t default_test_control_program_start_new( void* control_prog_state, MEMORY
 		// need to add explicit exit command to specify packet status-in-chain of the reply
 		zepto_write_uint8( reply, ZEPTOVM_OP_EXIT );
 		zepto_write_uint8( reply, (uint8_t)SAGDP_P_STATUS_INTERMEDIATE ); // TODO: if padding is required, add necessary data here
-//		reply_sz = zepto_writer_get_response_size( reply );
+//		reply_sz = memory_object_get_response_size( reply );
 	}
 	else
 	{
@@ -166,7 +166,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 	zepto_write_block( reply, (uint8_t*)tail, varln + 1 );
 	uint16_t msg_size = 11+varln+1;
 
-	uint16_t reply_sz = zepto_writer_get_response_size( reply );
+	uint16_t reply_sz = memory_object_get_response_size( reply );
 	zepto_parser_encode_and_prepend_uint16( reply, reply_sz ); // data size
 	zepto_parser_encode_and_prepend_uint16( reply, 0 ); // body part ID (default so far); TODO: determination
 	zepto_write_prepend_byte( reply, ZEPTOVM_OP_EXEC );
@@ -185,7 +185,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 		// need to add explicit exit command to specify packet status-in-chain of the reply
 		zepto_write_uint8( reply, ZEPTOVM_OP_EXIT );
 		zepto_write_uint8( reply, (uint8_t)SAGDP_P_STATUS_INTERMEDIATE ); // TODO: if padding is required, add necessary data here
-//		reply_sz = zepto_writer_get_response_size( reply );
+//		reply_sz = memory_object_get_response_size( reply );
 		zepto_write_prepend_byte( reply, SAGDP_P_STATUS_INTERMEDIATE );
 		return CONTROL_PROG_CHAIN_CONTINUE;
 	}
@@ -195,7 +195,7 @@ uint8_t default_test_control_program_accept_reply_continue( void* control_prog_s
 		// need to add explicit exit command to specify packet status-in-chain of the reply
 		zepto_write_uint8( reply, ZEPTOVM_OP_EXIT );
 		zepto_write_uint8( reply, (uint8_t)SAGDP_P_STATUS_TERMINATING ); // TODO: if padding is required, add necessary data here
-//		reply_sz = zepto_writer_get_response_size( reply );
+//		reply_sz = memory_object_get_response_size( reply );
 		if (ps->chain_ini_size == ps->self_id + 1)
 		{
 			zepto_write_prepend_byte( reply, SAGDP_P_STATUS_INTERMEDIATE );

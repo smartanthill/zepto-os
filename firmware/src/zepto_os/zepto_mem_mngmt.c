@@ -1924,13 +1924,6 @@ void zepto_write_prepend_block( MEMORY_HANDLE mem_h, const uint8_t* block, uint1
 	ZEPTO_MEMCPY( memory_objects[ mem_h ].ptr, block, size );
 }
 
-
-
-uint16_t zepto_writer_get_response_size( MEMORY_HANDLE mem_h )
-{
-	return memory_object_get_response_size( mem_h );
-}
-
 // inspired by SAGDP: creating a copy of the packet
 /*
 void zepto_writer_get_copy_of_response( MEMORY_HANDLE mem_h, uint8_t* buff )
@@ -2309,20 +2302,6 @@ void zepto_parser_strip_beginning_of_request( parser_obj* po )
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	memory_object_strip_beginning_of_request( po->mem_handle, po->offset );
 	po->offset = 0;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-uint16_t ugly_hook_get_request_size( REQUEST_REPLY_HANDLE mem_h )
-{
-	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-	return memory_object_get_request_size( mem_h );
-}
-
-uint16_t ugly_hook_get_response_size( REQUEST_REPLY_HANDLE mem_h )
-{
-	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-	return memory_object_get_response_size( mem_h );
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
