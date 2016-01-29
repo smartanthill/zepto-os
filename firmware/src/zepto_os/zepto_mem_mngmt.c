@@ -50,7 +50,7 @@ typedef struct _request_reply_mem_obj_acquirable
 #define BASE_MEM_BLOCK_SIZE	0x1000
 #else // USED_AS_MASTER
 #ifdef USED_AS_RETRANSMITTER
-#define BASE_MEM_BLOCK_SIZE	0x800
+#define BASE_MEM_BLOCK_SIZE	0x500
 #else // USED_AS_RETRANSMITTER
 #define BASE_MEM_BLOCK_SIZE	0x180
 #endif // USED_AS_RETRANSMITTER
