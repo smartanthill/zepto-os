@@ -1599,111 +1599,6 @@ void memory_object_release( REQUEST_REPLY_HANDLE mem_h )
 
 
 ////	parsing functions	//////////////////////////////////////////////////////////////////////////////////////
-
-void zepto_parser_init( parser_obj* po, REQUEST_REPLY_HANDLE mem_h )
-{
-	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-//	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
-	po->mem_handle = mem_h;
-	po->offset = 0;
-}
-
-void zepto_parser_init_by_parser( parser_obj* po, const parser_obj* po_base )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po_base->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po_base->mem_handle != MEMORY_HANDLE_INVALID );
-	po->mem_handle = po_base->mem_handle;
-	po->offset = po_base->offset;
-}
-
-uint8_t zepto_parse_uint8( parser_obj* po )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-	uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
-	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	uint8_t ret = buff[ 0 ];
-	( po->offset ) ++;
-	return ret;
-}
-/*
-uint16_t zepto_parse_encoded_uint16( parser_obj* po )
-{
-ZEPTO_DEBUG_PRINTF_2( "zepto_parse_encoded_uint16(): ini offset = %d...", po->offset );
-	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-	uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
-	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	uint16_t ret;
-	if ( ( buff[ 0 ] & 128 ) == 0 )
-	{
-		ret = (uint16_t)(buff[ 0 ]);
-		(po->offset)++;
-	}
-	else if (  ( buff[ 1 ] & 128 ) == 0  )
-	{
-		ret = 128 + ( (uint16_t)(buff[0] & 0x7F) | ( ((uint16_t)(buff[1])) << 7) );
-		po->offset += 2;
-	}
-//	else if (buff[0] == 0x80 && buff[1] == 0xff && buff[2] == 1 )
-//	{
-//		ret = 0x8000;
-//		po->offset += 3;
-//	}
-	else
-	{
-		ZEPTO_DEBUG_ASSERT( (buff[2] & 0x80) == 0 );
-		ZEPTO_DEBUG_ASSERT( buff[2] < 4 ); // to stay within uint16_max
-		ret = 16512 + ( (uint16_t)(buff[0] & 0x7F) | ( (((uint16_t)(buff[1])) &0x7F ) << 7) ) | ( ((uint16_t)(buff[2])) << 14);
-		po->offset += 3;
-	}
-	ZEPTO_DEBUG_PRINTF_5( "new offset = %d, num = %x (%x, %x, %x)\n", po->offset, ret, buff[0], buff[1], buff[2] );
-	return ret;
-}
-*/
-bool zepto_parse_read_block( parser_obj* po, uint8_t* block, uint16_t size )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-	if ( po->offset + size > memory_object_get_request_size( po->mem_handle ) )
-		return false;
-	uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
-	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	ZEPTO_MEMCPY( block, buff, size );
-	(po->offset) += size;
-	return true;
-}
-
-bool zepto_parse_skip_block( parser_obj* po, uint16_t size )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-	if ( po->offset + size > memory_object_get_request_size( po->mem_handle ) )
-		return false;
-	(po->offset) += size;
-	return true;
-}
-
-bool zepto_is_parsing_done( parser_obj* po )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-	return po->offset >= memory_object_get_request_size( po->mem_handle );
-}
-
-uint16_t zepto_parsing_remaining_bytes( parser_obj* po )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-#ifdef SA_DEBUG
-if ( !(po->offset <= memory_object_get_request_size( po->mem_handle ) ) )
-{
-	ZEPTO_DEBUG_PRINTF_4( "zepto_parsing_remaining_bytes(): mem_h = %d, offset = %d, rq_sz = %d\n", po->mem_handle, po->offset, memory_object_get_request_size( po->mem_handle ) );
-}
-#endif // SA_DEBUG
-	ZEPTO_DEBUG_ASSERT( po->offset <= memory_object_get_request_size( po->mem_handle ) );
-	return memory_object_get_request_size( po->mem_handle ) - po->offset;
-}
-
 ////	writing functions	//////////////////////////////////////////////////////////////////////////////////////
 
 void zepto_write_uint8( REQUEST_REPLY_HANDLE mem_h, uint8_t val )
@@ -1760,32 +1655,34 @@ void zepto_response_to_request( MEMORY_HANDLE mem_h )
 void zepto_convert_part_of_request_to_response( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end )
 {
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-//	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
-//	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
 	ASSERT_MEMORY_HANDLE_VALID( po_start->mem_handle );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
-	MEMORY_HANDLE ret_handle = po_start->mem_handle;
-	po_start->mem_handle = MEMORY_HANDLE_INVALID;
-	po_end->mem_handle = MEMORY_HANDLE_INVALID;
-	memory_object_cut_and_make_response( ret_handle, po_start->offset, po_end->offset - po_start->offset );
+	if ( po_start->res_valid && po_end->res_valid )
+	{
+		MEMORY_HANDLE ret_handle = po_start->mem_handle;
+		po_start->mem_handle = MEMORY_HANDLE_INVALID;
+		po_end->mem_handle = MEMORY_HANDLE_INVALID;
+		memory_object_cut_and_make_response( ret_handle, po_start->offset, po_end->offset - po_start->offset );
+	}
 }
 
 void zepto_append_part_of_request_to_response( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end )
 {
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-//	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
-//	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
 	ASSERT_MEMORY_HANDLE_VALID( po_start->mem_handle );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
-	uint8_t* dest_buff = memory_object_append( mem_h, po_end->offset - po_start->offset );
-	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
-	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
-	ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
-	po_start->offset = po_end->offset;
+	if ( po_start->res_valid && po_end->res_valid )
+	{
+		uint8_t* dest_buff = memory_object_append( mem_h, po_end->offset - po_start->offset );
+		uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
+		ZEPTO_DEBUG_ASSERT( src_buff != NULL );
+		ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
+		po_start->offset = po_end->offset;
+	}
 }
 
 void zepto_copy_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEMORY_HANDLE target_mem_h )
@@ -1842,7 +1739,6 @@ void zepto_copy_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem
 {
 	ZEPTO_DEBUG_ASSERT( mem_h != target_mem_h );
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-//	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
@@ -1861,16 +1757,18 @@ void zepto_append_part_of_request_to_response_of_another_handle( MEMORY_HANDLE m
 {
 	ZEPTO_DEBUG_ASSERT( mem_h != target_mem_h );
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
-//	ZEPTO_DEBUG_ASSERT( mem_h != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == mem_h );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle == po_end->mem_handle );
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
-	// copying
-	uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
-	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
-	ZEPTO_DEBUG_ASSERT( src_buff != NULL );
-	ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
+	if ( po_start->res_valid && po_end->res_valid )
+	{
+		// copying
+		uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
+		uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
+		ZEPTO_DEBUG_ASSERT( src_buff != NULL );
+		ZEPTO_MEMCPY( dest_buff, src_buff, po_end->offset - po_start->offset );
+	}
 }
 
 void zepto_prepend_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem_h, parser_obj* po_start, parser_obj* po_end, MEMORY_HANDLE target_mem_h )
@@ -2113,53 +2011,6 @@ bool zepto_parser_decode_uint_core( uint8_t** packed_num_bytes, uint8_t max_enco
 #error SA_USED_ENDIANNES has unexpected value
 #endif
 
-void zepto_parser_decode_uint( parser_obj* po, uint8_t* bytes_out, uint8_t target_size )
-{
-	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
-//	ZEPTO_DEBUG_ASSERT( po->mem_handle != MEMORY_HANDLE_INVALID );
-	uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
-	uint16_t sz = memory_object_get_request_size( po->mem_handle );
-	ZEPTO_DEBUG_ASSERT( buff != NULL );
-	uint8_t* end = buff;
-	zepto_parser_decode_uint_core( &end, sz - po->offset, bytes_out, target_size );
-	ZEPTO_DEBUG_ASSERT( end - buff >= 0 && end - buff <= sz - po->offset );
-	po->offset += (uint16_t)(end - buff);
-}
-
-uint8_t zepto_parse_encoded_uint8( parser_obj* po )
-{
-	uint8_t num_out;
-	zepto_parser_decode_uint( po, &num_out, 1 );
-	return num_out;
-}
-
-uint16_t zepto_parse_encoded_uint16( parser_obj* po )
-{
-	uint16_t num_out;
-	uint8_t buff[2];
-	zepto_parser_decode_uint( po, buff, 2 );
-	num_out = buff[1];
-	num_out <<= 8;
-	num_out |= buff[0];
-	return num_out;
-}
-
-uint32_t zepto_parse_encoded_uint32( parser_obj* po )
-{
-	uint32_t num_out;
-	uint8_t buff[4];
-	zepto_parser_decode_uint( po, buff, 4 );
-	num_out = buff[3];
-	num_out <<= 24;
-	num_out |= buff[2];
-	num_out <<= 16;
-	num_out |= buff[1];
-	num_out <<= 8;
-	num_out |= buff[0];
-	return num_out;
-}
-
-
 #if (SA_USED_ENDIANNES == SA_LITTLE_ENDIAN)
 
 void zepto_parser_encode_and_append_uint( MEMORY_HANDLE mem_h, const uint8_t* num_bytes, uint8_t num_sz_max )
@@ -2379,7 +2230,7 @@ uint16_t zepto_memman_get_currently_allocated_size_for_locally_generated_data( M
 
 ///////////////////////////////////////    "uncertain" parsing (to be used when data can be corrupted)
 
-void zepto_parser_init_uncertain( parser_obj_uncertain* po, REQUEST_REPLY_HANDLE mem_h )
+void zepto_parser_init( parser_obj* po, REQUEST_REPLY_HANDLE mem_h )
 {
 	ASSERT_MEMORY_HANDLE_VALID( mem_h )
 	po->mem_handle = mem_h;
@@ -2387,7 +2238,7 @@ void zepto_parser_init_uncertain( parser_obj_uncertain* po, REQUEST_REPLY_HANDLE
 	po->offset = 0;
 }
 
-void zepto_parser_init_by_parser_uncertain( parser_obj_uncertain* po, const parser_obj_uncertain* po_base )
+void zepto_parser_init_by_parser( parser_obj* po, const parser_obj* po_base )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po_base->mem_handle )
 	po->mem_handle = po_base->mem_handle;
@@ -2395,7 +2246,7 @@ void zepto_parser_init_by_parser_uncertain( parser_obj_uncertain* po, const pars
 	po->offset = po_base->offset;
 }
 
-uint8_t zepto_parse_uint8_uncertain( parser_obj_uncertain* po )
+uint8_t zepto_parse_uint8( parser_obj* po )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	uint16_t rq_sz = memory_object_get_request_size( po->mem_handle );
@@ -2414,7 +2265,7 @@ uint8_t zepto_parse_uint8_uncertain( parser_obj_uncertain* po )
 	}
 }
 
-bool zepto_parse_read_block_uncertain( parser_obj_uncertain* po, uint8_t* block, uint16_t size )
+bool zepto_parse_read_block( parser_obj* po, uint8_t* block, uint16_t size )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	if ( po->offset + size > memory_object_get_request_size( po->mem_handle ) )
@@ -2429,7 +2280,7 @@ bool zepto_parse_read_block_uncertain( parser_obj_uncertain* po, uint8_t* block,
 	return true;
 }
 
-bool zepto_parse_skip_block_uncertain( parser_obj_uncertain* po, uint16_t size )
+bool zepto_parse_skip_block( parser_obj* po, uint16_t size )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	if ( po->offset + size > memory_object_get_request_size( po->mem_handle ) )
@@ -2441,7 +2292,7 @@ bool zepto_parse_skip_block_uncertain( parser_obj_uncertain* po, uint16_t size )
 	return true;
 }
 
-uint16_t zepto_parsing_remaining_bytes_uncertain( parser_obj_uncertain* po )
+uint16_t zepto_parsing_remaining_bytes( parser_obj* po )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	if( po->offset <= memory_object_get_request_size( po->mem_handle ) )
@@ -2454,7 +2305,7 @@ uint16_t zepto_parsing_remaining_bytes_uncertain( parser_obj_uncertain* po )
 }
 
 
-void zepto_parser_decode_uint_uncertain( parser_obj_uncertain* po, uint8_t* bytes_out, uint8_t target_size )
+void zepto_parser_decode_uint( parser_obj* po, uint8_t* bytes_out, uint8_t target_size )
 {
 	ASSERT_MEMORY_HANDLE_VALID( po->mem_handle )
 	uint8_t* buff = memory_object_get_request_ptr( po->mem_handle ) + po->offset;
@@ -2472,29 +2323,29 @@ void zepto_parser_decode_uint_uncertain( parser_obj_uncertain* po, uint8_t* byte
 	}
 }
 
-uint8_t zepto_parse_encoded_uint8_uncertain( parser_obj_uncertain* po )
+uint8_t zepto_parse_encoded_uint8( parser_obj* po )
 {
 	uint8_t num_out;
-	zepto_parser_decode_uint_uncertain( po, &num_out, 1 );
+	zepto_parser_decode_uint( po, &num_out, 1 );
 	return num_out;
 }
 
-uint16_t zepto_parse_encoded_uint16_uncertain( parser_obj_uncertain* po )
+uint16_t zepto_parse_encoded_uint16( parser_obj* po )
 {
 	uint16_t num_out;
 	uint8_t buff[2];
-	zepto_parser_decode_uint_uncertain( po, buff, 2 );
+	zepto_parser_decode_uint( po, buff, 2 );
 	num_out = buff[1];
 	num_out <<= 8;
 	num_out |= buff[0];
 	return num_out;
 }
 
-uint32_t zepto_parse_encoded_uint32_uncertain( parser_obj_uncertain* po )
+uint32_t zepto_parse_encoded_uint32( parser_obj* po )
 {
 	uint32_t num_out;
 	uint8_t buff[4];
-	zepto_parser_decode_uint_uncertain( po, buff, 4 );
+	zepto_parser_decode_uint( po, buff, 4 );
 	num_out = buff[3];
 	num_out <<= 24;
 	num_out |= buff[2];
