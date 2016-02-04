@@ -145,6 +145,7 @@ private:
 		res = fwrite( data, 1, size, flog );
 		if ( res != size )
 			return false;
+//		fflush( flog );
 
 		return true;
 	}

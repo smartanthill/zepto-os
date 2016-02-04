@@ -166,7 +166,7 @@ void testing_scenario_at_src_add_errors_at_random( const uint8_t* packet_buff, i
 {
 	// TODO: think about spoiling more bits, etc
 	uint8_t packet_buff_to_send[1024];
-	bool add_errors = (tester_get_rand_val() & 1 ) == 0;
+	bool add_errors = (tester_get_rand_val() & 3 ) == 0;
 	if ( add_errors )
 	{
 		uint16_t error_count = (tester_get_rand_val() & 0x7) + 1;

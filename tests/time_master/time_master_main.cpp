@@ -414,8 +414,8 @@ int main( int argc, char *argv[] )
 	ZEPTO_DEBUG_PRINTF_1( "TIME MASTER started\n" );
 	ZEPTO_DEBUG_PRINTF_1( "===================\n\n" );
 
-//	bool for_recording = true; // TODO: from command line or alike
-	bool for_recording = false; // TODO: from command line or alike
+	bool for_recording = true; // TODO: from command line or alike
+//	bool for_recording = false; // TODO: from command line or alike
 
     if ( !time_main_init( for_recording ) )
 	{

@@ -1693,8 +1693,7 @@ void zepto_copy_response_to_response_of_another_handle( MEMORY_HANDLE mem_h, MEM
 	ASSERT_MEMORY_HANDLE_VALID( target_mem_h )
 //	ZEPTO_DEBUG_ASSERT( target_mem_h != MEMORY_HANDLE_INVALID );
 	// cleanup
-	zepto_response_to_request( target_mem_h );
-	zepto_response_to_request( target_mem_h );
+	zepto_parser_free_memory( target_mem_h );
 	// copying
 	uint8_t* dest_buff = memory_object_append( target_mem_h, memory_object_get_response_size( mem_h ) );
 	uint8_t* src_buff = memory_object_get_request_ptr( mem_h ) + memory_object_get_request_size( mem_h );
@@ -1725,8 +1724,7 @@ zepto_mem_man_check_sanity();
 	ASSERT_MEMORY_HANDLE_VALID( target_mem_h );
 //	ZEPTO_DEBUG_ASSERT( target_mem_h != MEMORY_HANDLE_INVALID );
 	// cleanup
-	zepto_response_to_request( target_mem_h );
-	zepto_response_to_request( target_mem_h );
+	zepto_parser_free_memory( target_mem_h );
 	// copying
 	uint8_t* dest_buff = memory_object_append( target_mem_h, memory_object_get_request_size( mem_h ) );
 	uint8_t* src_buff = memory_object_get_request_ptr( mem_h );
@@ -1744,8 +1742,7 @@ void zepto_copy_part_of_request_to_response_of_another_handle( MEMORY_HANDLE mem
 	ZEPTO_DEBUG_ASSERT( po_start->mem_handle != MEMORY_HANDLE_INVALID );
 	ZEPTO_DEBUG_ASSERT( po_start->offset <= po_end->offset );
 	// cleanup
-	zepto_response_to_request( target_mem_h );
-	zepto_response_to_request( target_mem_h );
+	zepto_parser_free_memory( target_mem_h );
 	// appending
 	uint8_t* dest_buff = memory_object_append( target_mem_h, po_end->offset - po_start->offset );
 	uint8_t* src_buff = memory_object_get_request_ptr( po_start->mem_handle ) + po_start->offset;
